@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Colors, Spacing, FontSizes } from '../types';
+import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 interface HeaderProps {
   name: string;
@@ -15,7 +16,7 @@ export const Header: React.FC<HeaderProps> = ({ name, onProfilePress }) => {
         <Text style={styles.subtitle}>Que bom te ver por aqui!</Text>
       </View>
       <TouchableOpacity style={styles.profileButton} onPress={onProfilePress}>
-        <Text style={{ fontSize: 20 }}>👤</Text>
+        <Ionicons name="person" size={20} color={Colors.primary} />
         <View style={styles.onlineDot} />
       </TouchableOpacity>
     </View>

@@ -9,11 +9,11 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
-  Keyboard,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Spacing, FontSizes, BorderRadii } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 export const LoginPage: React.FC = () => {
   const { login, register } = useAuth();
@@ -45,7 +45,6 @@ export const LoginPage: React.FC = () => {
       Alert.alert('Erro', 'Informe seu nome completo');
       return;
     }
-
     setLoading(true);
     try {
       if (isLogin) {
@@ -81,7 +80,7 @@ export const LoginPage: React.FC = () => {
         <View style={styles.form}>
           {!isLogin && (
             <View style={styles.inputContainer}>
-              <Text style={styles.inputIcon}>👤</Text>
+              <Ionicons name="person-outline" size={20} color={Colors.textMuted} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Nome completo"
@@ -94,7 +93,7 @@ export const LoginPage: React.FC = () => {
           )}
 
           <View style={styles.inputContainer}>
-            <Text style={styles.inputIcon}>🪪</Text>
+            <MaterialCommunityIcons name="card-account-details-outline" size={20} color={Colors.textMuted} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="CPF"
@@ -107,7 +106,7 @@ export const LoginPage: React.FC = () => {
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.inputIcon}>🔒</Text>
+            <Ionicons name="lock-closed-outline" size={20} color="#FFB300" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="Senha"
@@ -120,7 +119,7 @@ export const LoginPage: React.FC = () => {
               onPress={() => setShowPassword(!showPassword)}
               style={styles.eyeButton}
             >
-              <Text style={styles.eyeIcon}>{showPassword ? '🙈' : '👁'}</Text>
+              <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color={Colors.textMuted} />
             </TouchableOpacity>
           </View>
 
@@ -158,94 +157,34 @@ export const LoginPage: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  inner: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.xxl,
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: Spacing.huge,
-  },
+  inner: { flex: 1, justifyContent: 'center', paddingHorizontal: Spacing.xxl },
+  logoContainer: { alignItems: 'center', marginBottom: Spacing.huge },
   logoCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.lg,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+    width: 80, height: 80, borderRadius: 40, backgroundColor: Colors.primary,
+    justifyContent: 'center', alignItems: 'center', marginBottom: Spacing.lg,
+    elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2, shadowRadius: 8,
   },
-  logoText: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: Colors.white,
-    letterSpacing: -2,
-  },
-  appName: {
-    fontSize: FontSizes.huge,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    marginBottom: Spacing.xs,
-  },
-  appSubtitle: {
-    fontSize: FontSizes.lg,
-    color: Colors.textSecondary,
-  },
+  logoText: { fontSize: 32, fontWeight: '800', color: Colors.white, letterSpacing: -2 },
+  appName: { fontSize: FontSizes.huge, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.xs },
+  appSubtitle: { fontSize: FontSizes.lg, color: Colors.textSecondary },
   form: { gap: Spacing.lg },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.inputBg,
-    borderRadius: BorderRadii.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: Spacing.lg,
-    height: 52,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.inputBg,
+    borderRadius: BorderRadii.lg, borderWidth: 1, borderColor: Colors.border,
+    paddingHorizontal: Spacing.lg, height: 52,
   },
-  inputIcon: { marginRight: Spacing.md, fontSize: 18 },
-  input: {
-    flex: 1,
-    fontSize: FontSizes.lg,
-    color: Colors.textPrimary,
-  },
+  inputIcon: { marginRight: Spacing.md },
+  input: { flex: 1, fontSize: FontSizes.lg, color: Colors.textPrimary },
   eyeButton: { padding: Spacing.sm },
-  eyeIcon: { fontSize: 18 },
   primaryButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadii.lg,
-    height: 52,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: Spacing.sm,
-    elevation: 2,
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    backgroundColor: Colors.primary, borderRadius: BorderRadii.lg, height: 52,
+    justifyContent: 'center', alignItems: 'center', marginTop: Spacing.sm,
+    elevation: 2, shadowColor: Colors.primary, shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3, shadowRadius: 8,
   },
-  primaryButtonText: {
-    color: Colors.white,
-    fontSize: FontSizes.lg,
-    fontWeight: '600',
-  },
-  toggleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: Spacing.xxl,
-  },
-  toggleText: {
-    fontSize: FontSizes.md,
-    color: Colors.textSecondary,
-  },
-  toggleLink: {
-    fontSize: FontSizes.md,
-    color: Colors.accent,
-    fontWeight: '600',
-  },
+  primaryButtonText: { color: Colors.white, fontSize: FontSizes.lg, fontWeight: '600' },
+  toggleContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: Spacing.xxl },
+  toggleText: { fontSize: FontSizes.md, color: Colors.textSecondary },
+  toggleLink: { fontSize: FontSizes.md, color: Colors.accent, fontWeight: '600' },
 });

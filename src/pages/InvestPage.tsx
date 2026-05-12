@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { Colors, Spacing, FontSizes, BorderRadii } from '../types';
+import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 interface Investment {
   id: string;
@@ -10,7 +11,7 @@ interface Investment {
   yieldRate: number;
   yieldType: string;
   color: string;
-  icon: string;
+  iconName: string;
 }
 
 const typeLabels: Record<string, string> = {
@@ -19,25 +20,36 @@ const typeLabels: Record<string, string> = {
 };
 const yieldLabels: Record<string, string> = { pre: 'Pré-fixado', pos: 'Pós-fixado', ipca: 'IPCA+' };
 
+const investIcons: Record<string, string> = {
+  cdb: 'bank',
+  tesouro: 'chart-bar',
+  fii: 'grid',
+  poupanca: 'piggy-bank',
+};
+
 export const InvestPage: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState('todos');
   const filters = ['todos', 'renda_fixa', 'renda_variavel'];
 
   const mockInvestments: Investment[] = [
-    { id: '1', name: 'CDB Banco Inter', type: 'cdb', amount: 5000, yieldRate: 12.5, yieldType: 'pre', color: '#1A237E', icon: '🏦' },
-    { id: '2', name: 'Tesouro IPCA+ 2029', type: 'tesouro', amount: 10000, yieldRate: 6.2, yieldType: 'ipca', color: '#00C9A7', icon: '📊' },
-    { id: '3', name: 'MXRF11', type: 'fii', amount: 3200, yieldRate: 8.4, yieldType: 'pos', color: '#FF6B35', icon: '🏢' },
-    { id: '4', name: 'Poupança', type: 'poupanca', amount: 1500, yieldRate: 7.1, yieldType: 'pos', color: '#3949AB', icon: '🐷' },
+    { id: '1', name: 'CDB Banco Inter', type: 'cdb', amount: 5000, yieldRate: 12.5, yieldType: 'pre', color: '#1A237E', iconName: 'bank' },
+    { id: '2', name: 'Tesouro IPCA+ 2029', type: 'tesouro', amount: 10000, yieldRate: 6.2, yieldType: 'ipca', color: '#00C9A7', iconName: 'chart-bar' },
+    { id: '3', name: 'MXRF11', type: 'fii', amount: 3200, yieldRate: 8.4, yieldType: 'pos', color: '#FF6B35', iconName: 'grid' },
+    { id: '4', name: 'Poupança', type: 'poupanca', amount: 1500, yieldRate: 7.1, yieldType: 'pos', color: '#3949AB', iconName: 'piggy-bank' },
   ];
 
   const totalInvested = mockInvestments.reduce((acc, inv) => acc + inv.amount, 0);
+
+  const renderInvestIcon = (iconName: string, color: string) => {
+    return <MaterialCommunityIcons name={iconName as any} size={22} color="#FFFFFF" />;
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Investimentos</Text>
         <TouchableOpacity style={styles.addButton}>
-          <Text style={{ fontSize: 18 }}>➕</Text>
+          <Feather name="plus" size={20} color={Colors.accent} />
         </TouchableOpacity>
       </View>
 
@@ -47,7 +59,7 @@ export const InvestPage: React.FC = () => {
           R$ {totalInvested.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
         </Text>
         <View style={styles.summaryRow}>
-          <Text style={{ fontSize: 14 }}>📈</Text>
+          <MaterialCommunityIcons name="chart-line" size={16} color={Colors.accent} />
           <Text style={styles.summaryChange}>+ 8.2% rendimento médio</Text>
         </View>
       </View>
@@ -70,7 +82,7 @@ export const InvestPage: React.FC = () => {
         {mockInvestments.map((item) => (
           <TouchableOpacity key={item.id} style={styles.investmentItem}>
             <View style={[styles.investIcon, { backgroundColor: item.color }]}>
-              <Text style={{ fontSize: 20 }}>{item.icon}</Text>
+              {renderInvestIcon(item.iconName, item.color)}
             </View>
             <View style={styles.investInfo}>
               <Text style={styles.investName}>{item.name}</Text>

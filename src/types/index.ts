@@ -16,7 +16,7 @@ export const Colors = {
   textWhite: '#FFFFFF',
   textAccent: '#00C9A7',
   positive: '#00C9A7',
-  negative: '#1A237E',
+  negative: '#E53935',
   border: '#E0E0E0',
   inputBg: '#F5F5F5',
   shadow: 'rgba(0, 0, 0, 0.1)',
@@ -25,6 +25,14 @@ export const Colors = {
   pagar: '#1A237E',
   transferir: '#3949AB',
   emprestimo: '#FF6B35',
+  pixBg: '#E0F2FE',
+  pagarBg: '#E8EAF6',
+  transferirBg: '#E8EAF6',
+  emprestimoBg: '#FFF3E0',
+  pixIcon: '#00C9A7',
+  pagarIcon: '#1A237E',
+  transferirIcon: '#3949AB',
+  emprestimoIcon: '#FF6B35',
 };
 
 export const Spacing = {

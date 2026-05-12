@@ -65,40 +65,11 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
   const balance = userData ? centsToBRL(userData.saldo_centavos) : 0;
   const firstName = userData?.nome?.split(' ')[0] || 'Usuário';
 
-  // Fallback mock transactions if API extrato has issues
   const displayTransactions: DisplayTransaction[] = transactions.length > 0 ? transactions : [
-    {
-      id: '1',
-      type: 'pix_received',
-      title: 'Pix recebido',
-      subtitle: 'Maria Oliveira',
-      amount: 850,
-      date: 'Hoje, 10:30',
-    },
-    {
-      id: '2',
-      type: 'pix_sent',
-      title: 'Pix enviado',
-      subtitle: 'João da Silva',
-      amount: -300,
-      date: 'Hoje, 09:15',
-    },
-    {
-      id: '3',
-      type: 'deposit',
-      title: 'Depósito',
-      subtitle: 'Banco Brasil',
-      amount: 200,
-      date: 'Ontem, 16:45',
-    },
-    {
-      id: '4',
-      type: 'withdraw',
-      title: 'Saque',
-      subtitle: 'ATM 24h',
-      amount: -50,
-      date: 'Ontem, 14:20',
-    },
+    { id: '1', type: 'pix_received', title: 'Pix recebido', subtitle: 'Maria Oliveira', amount: 850, date: 'Hoje, 10:30' },
+    { id: '2', type: 'pix_sent', title: 'Pix enviado', subtitle: 'João da Silva', amount: -300, date: 'Hoje, 09:15' },
+    { id: '3', type: 'deposit', title: 'Depósito', subtitle: 'Banco Brasil', amount: 200, date: 'Ontem, 16:45' },
+    { id: '4', type: 'withdraw', title: 'Saque', subtitle: 'ATM 24h', amount: -50, date: 'Ontem, 14:20' },
   ];
 
   return (
@@ -109,37 +80,15 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00C9A7" />}
       >
         <Header name={firstName} onProfilePress={() => navigation?.navigate?.('Profile')} />
-
-        <BalanceCard
-          balance={balance}
-          monthlyChange={320.4}
-          visible={balanceVisible}
-          onToggleVisibility={() => setBalanceVisible(!balanceVisible)}
-          onViewStatement={() => {}}
-        />
-
-        <QuickActions
-          onPix={() => navigation?.navigate?.('Pix')}
-          onPay={() => {}}
-          onTransfer={() => {}}
-          onLoan={() => {}}
-        />
-
-        <TransactionList
-          transactions={displayTransactions}
-          onViewAll={() => {}}
-        />
+        <BalanceCard balance={balance} monthlyChange={320.4} visible={balanceVisible} onToggleVisibility={() => setBalanceVisible(!balanceVisible)} onViewStatement={() => {}} />
+        <QuickActions onPix={() => navigation?.navigate?.('Pix')} onPay={() => {}} onTransfer={() => {}} onLoan={() => {}} />
+        <TransactionList transactions={displayTransactions} onViewAll={() => {}} />
       </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-  scrollContent: {
-    paddingBottom: 100,
-  },
+  container: { flex: 1, backgroundColor: '#F5F5F5' },
+  scrollContent: { paddingBottom: 100 },
 });

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Spacing, FontSizes, BorderRadii } from '../types';
+import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 interface BalanceCardProps {
   balance: number;
@@ -31,7 +32,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
       <View style={styles.balanceHeader}>
         <Text style={styles.balanceLabel}>Saldo em conta</Text>
         <TouchableOpacity onPress={onToggleVisibility} hitSlop={8}>
-          <Text style={{ fontSize: 20 }}>{visible ? '👁' : '🙈'}</Text>
+          <Ionicons name={visible ? 'eye' : 'eye-off'} size={20} color="rgba(255,255,255,0.8)" />
         </TouchableOpacity>
       </View>
 
@@ -40,14 +41,14 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
       </Text>
 
       <View style={styles.monthlyRow}>
-        <Text style={{ fontSize: 14 }}>🔄</Text>
+        <MaterialCommunityIcons name="autorenew" size={16} color={Colors.accent} />
         <Text style={styles.monthlyText}>
           {monthlyChange >= 0 ? '+' : ''} {formatCurrency(monthlyChange)} este mês
         </Text>
       </View>
 
       <TouchableOpacity style={styles.statementButton} onPress={onViewStatement}>
-        <Text style={{ fontSize: 16 }}>📄</Text>
+        <Feather name="file-text" size={16} color="rgba(255,255,255,0.9)" />
         <Text style={styles.statementText}>Ver extrato</Text>
         <Text style={styles.statementArrow}>›</Text>
       </TouchableOpacity>

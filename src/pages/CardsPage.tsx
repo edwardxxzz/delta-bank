@@ -9,6 +9,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Spacing, FontSizes, BorderRadii } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 interface CardItem {
   id: string;
@@ -32,42 +33,9 @@ export const CardsPage: React.FC = () => {
   const { userData } = useAuth();
 
   const mockCards: CardItem[] = [
-    {
-      id: '1',
-      name: 'Cartão Platinum',
-      number: '4532123456789012',
-      flag: 'visa',
-      type: 'credit',
-      limit: 10000,
-      used: 3240.9,
-      expirationDate: '12/28',
-      color: '#1A237E',
-      isVirtual: false,
-    },
-    {
-      id: '2',
-      name: 'Cartão Gold',
-      number: '5412345678901234',
-      flag: 'mastercard',
-      type: 'both',
-      limit: 5000,
-      used: 1200,
-      expirationDate: '06/27',
-      color: '#FF6B35',
-      isVirtual: false,
-    },
-    {
-      id: '3',
-      name: 'Cartão Virtual',
-      number: '4532987654321098',
-      flag: 'visa',
-      type: 'debit',
-      limit: 0,
-      used: 0,
-      expirationDate: 'N/A',
-      color: '#00C9A7',
-      isVirtual: true,
-    },
+    { id: '1', name: 'Cartão Platinum', number: '4532123456789012', flag: 'visa', type: 'credit', limit: 10000, used: 3240.9, expirationDate: '12/28', color: '#1A237E', isVirtual: false },
+    { id: '2', name: 'Cartão Gold', number: '5412345678901234', flag: 'mastercard', type: 'both', limit: 5000, used: 1200, expirationDate: '06/27', color: '#FF6B35', isVirtual: false },
+    { id: '3', name: 'Cartão Virtual', number: '4532987654321098', flag: 'visa', type: 'debit', limit: 0, used: 0, expirationDate: 'N/A', color: '#00C9A7', isVirtual: true },
   ];
 
   const renderCard = ({ item }: { item: CardItem }) => (
@@ -92,7 +60,7 @@ export const CardsPage: React.FC = () => {
       </View>
 
       <View style={styles.cardChip}>
-        <Text style={styles.chipIcon}>💳</Text>
+        <MaterialCommunityIcons name="chip" size={32} color="#FFD54F" />
       </View>
 
       <Text style={styles.cardNumber}>{maskCardNumber(item.number)}</Text>
@@ -126,7 +94,7 @@ export const CardsPage: React.FC = () => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Meus Cartões</Text>
         <TouchableOpacity style={styles.addButton}>
-          <Text style={{ fontSize: 18 }}>➕</Text>
+          <Feather name="plus" size={20} color={Colors.accent} />
         </TouchableOpacity>
       </View>
 
@@ -141,15 +109,15 @@ export const CardsPage: React.FC = () => {
 
       <View style={styles.quickActions}>
         <TouchableOpacity style={styles.actionBtn}>
-          <Text style={{ fontSize: 20 }}>🔒</Text>
+          <Feather name="lock" size={20} color={Colors.textSecondary} />
           <Text style={styles.actionLabel}>Bloquear</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionBtn}>
-          <Text style={{ fontSize: 20 }}>⚙️</Text>
+          <Feather name="settings" size={20} color={Colors.textSecondary} />
           <Text style={styles.actionLabel}>Configurar</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionBtn}>
-          <Text style={{ fontSize: 20 }}>🔓</Text>
+          <Feather name="unlock" size={20} color={Colors.textSecondary} />
           <Text style={styles.actionLabel}>Desbloquear</Text>
         </TouchableOpacity>
       </View>
@@ -159,41 +127,18 @@ export const CardsPage: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F5F5' },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.xxl,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.lg,
-  },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.xxl, paddingTop: Spacing.xl, paddingBottom: Spacing.lg },
   headerTitle: { fontSize: FontSizes.huge, fontWeight: '700', color: Colors.textPrimary },
-  addButton: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: 'rgba(0, 201, 167, 0.1)',
-    justifyContent: 'center', alignItems: 'center',
-  },
+  addButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0, 201, 167, 0.1)', justifyContent: 'center', alignItems: 'center' },
   list: { paddingHorizontal: Spacing.xxl, paddingBottom: Spacing.xxl },
-  card: {
-    borderRadius: BorderRadii.xl, padding: Spacing.xxl,
-    overflow: 'hidden', elevation: 4,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2, shadowRadius: 8,
-    minHeight: 200, justifyContent: 'space-between',
-  },
+  card: { borderRadius: BorderRadii.xl, padding: Spacing.xxl, overflow: 'hidden', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, minHeight: 200, justifyContent: 'space-between' },
   cardPattern: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.06 },
-  cardTriangle: {
-    position: 'absolute', width: 100, height: 100,
-    borderLeftWidth: 50, borderLeftColor: 'transparent',
-    borderRightWidth: 50, borderRightColor: 'transparent',
-    borderBottomWidth: 80, borderBottomColor: '#FFF',
-  },
+  cardTriangle: { position: 'absolute', width: 100, height: 100, borderLeftWidth: 50, borderLeftColor: 'transparent', borderRightWidth: 50, borderRightColor: 'transparent', borderBottomWidth: 80, borderBottomColor: '#FFF' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardName: { fontSize: FontSizes.lg, fontWeight: '600', color: Colors.white },
   virtualBadge: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs, borderRadius: BorderRadii.sm },
   virtualText: { color: Colors.white, fontSize: FontSizes.xs, fontWeight: '600' },
   cardChip: { marginVertical: Spacing.lg },
-  chipIcon: { fontSize: 28 },
   cardNumber: { fontSize: FontSizes.xxl, fontWeight: '500', color: Colors.white, letterSpacing: 2, marginBottom: Spacing.lg },
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
   cardLabel: { fontSize: FontSizes.xs, color: 'rgba(255,255,255,0.6)', marginBottom: 2 },

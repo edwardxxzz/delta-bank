@@ -2,40 +2,45 @@ import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { Colors, Spacing, FontSizes, BorderRadii } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
   const { userData, logout } = useAuth();
 
-  const handleLogout = () => {
-    logout();
-  };
-
   const menuSections = [
     {
-      title: 'Conta',
+      title: 'CONTA',
       items: [
-        { icon: '👤', label: 'Dados pessoais', subtitle: 'Nome, email, telefone' },
-        { icon: '🛡️', label: 'Segurança', subtitle: 'Senha, 2FA, biometria' },
-        { icon: '🔔', label: 'Notificações', subtitle: 'Alertas e Push' },
+        { icon: 'person-outline', iconSet: 'Ionicons' as const, label: 'Dados pessoais', subtitle: 'Nome, email, telefone' },
+        { icon: 'shield-check-outline', iconSet: 'MaterialCommunityIcons' as const, label: 'Segurança', subtitle: 'Senha, 2FA, biometria' },
+        { icon: 'notifications-outline', iconSet: 'Ionicons' as const, label: 'Notificações', subtitle: 'Alertas e Push' },
       ],
     },
     {
-      title: 'Preferências',
+      title: 'PREFERÊNCIAS',
       items: [
-        { icon: '📱', label: 'Aparência', subtitle: 'Tema e idioma' },
-        { icon: '🌐', label: 'Idioma', subtitle: 'Português (BR)' },
-        { icon: '🎨', label: 'Personalização', subtitle: 'Cores e layout' },
+        { icon: 'phone-portrait-outline', iconSet: 'Ionicons' as const, label: 'Aparência', subtitle: 'Tema e idioma' },
+        { icon: 'globe-outline', iconSet: 'Ionicons' as const, label: 'Idioma', subtitle: 'Português (BR)' },
+        { icon: 'palette-outline', iconSet: 'MaterialCommunityIcons' as const, label: 'Personalização', subtitle: 'Cores e layout' },
       ],
     },
     {
-      title: 'Suporte',
+      title: 'SUPORTE',
       items: [
-        { icon: '❓', label: 'Central de ajuda' },
-        { icon: '💬', label: 'Chat com suporte' },
-        { icon: '📄', label: 'Termos e políticas' },
+        { icon: 'help-circle-outline', iconSet: 'Ionicons' as const, label: 'Central de ajuda' },
+        { icon: 'chatbubble-outline', iconSet: 'Ionicons' as const, label: 'Chat com suporte' },
+        { icon: 'file-text-outline', iconSet: 'MaterialCommunityIcons' as const, label: 'Termos e políticas' },
       ],
     },
   ];
+
+  const renderIcon = (icon: string, iconSet: string) => {
+    const size = 18;
+    const color = Colors.primary;
+    if (iconSet === 'Ionicons') return <Ionicons name={icon as any} size={size} color={color} />;
+    if (iconSet === 'MaterialCommunityIcons') return <MaterialCommunityIcons name={icon as any} size={size} color={color} />;
+    return <Feather name={icon as any} size={size} color={color} />;
+  };
 
   return (
     <View style={styles.container}>
@@ -53,7 +58,7 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
           <Text style={styles.profileName}>{userData?.nome || 'Usuário'}</Text>
           <Text style={styles.profileEmail}>CPF: {userData?.cpf || '---'}</Text>
         </View>
-        <Text style={{ fontSize: 24, color: Colors.textMuted }}>›</Text>
+        <Feather name="chevron-right" size={22} color={Colors.textMuted} />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -68,21 +73,21 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
                   onPress={() => {}}
                 >
                   <View style={styles.menuIcon}>
-                    <Text style={{ fontSize: 18 }}>{item.icon}</Text>
+                    {renderIcon(item.icon, item.iconSet)}
                   </View>
                   <View style={styles.menuInfo}>
                     <Text style={styles.menuLabel}>{item.label}</Text>
                     {item.subtitle && <Text style={styles.menuSubtitle}>{item.subtitle}</Text>}
                   </View>
-                  <Text style={{ fontSize: 22, color: Colors.textMuted }}>›</Text>
+                  <Feather name="chevron-right" size={18} color={Colors.textMuted} />
                 </TouchableOpacity>
               ))}
             </View>
           </View>
         ))}
 
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={{ fontSize: 20 }}>🚪</Text>
+        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+          <Feather name="log-out" size={20} color="#E53935" />
           <Text style={styles.logoutText}>Sair da conta</Text>
         </TouchableOpacity>
 
