@@ -3,12 +3,13 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { HomePage } from '../pages/HomePage';
-import { CardsPage } from '../pages/CardsPage';
-import { InvestPage } from '../pages/InvestPage';
 import { MorePage } from '../pages/MorePage';
 import { LoginPage } from '../pages/LoginPage';
 import { ProfilePage } from '../pages/ProfilePage';
 import { PixPage } from '../pages/PixPage';
+import { ExtratoPage } from '../pages/ExtratoPage';
+import { DepositarPage } from '../pages/DepositarPage';
+import { SacarPage } from '../pages/SacarPage';
 import { BottomNav } from '../components/BottomNav';
 import { useAuth } from '../contexts/AuthContext';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
@@ -33,8 +34,7 @@ const MainTabs: React.FC = () => {
       )}
     >
       <Tab.Screen name="home" component={HomePage} />
-      <Tab.Screen name="cards" component={CardsPage} />
-      <Tab.Screen name="invest" component={InvestPage} />
+      <Tab.Screen name="extrato" component={ExtratoPage} />
       <Tab.Screen name="more" component={MorePage} />
     </Tab.Navigator>
   );
@@ -46,6 +46,8 @@ const AppStack: React.FC = () => {
       <Stack.Screen name="Main" component={MainTabs} />
       <Stack.Screen name="Profile" component={ProfilePage} />
       <Stack.Screen name="Pix" component={PixPage} />
+      <Stack.Screen name="Depositar" component={DepositarPage} />
+      <Stack.Screen name="Sacar" component={SacarPage} />
     </Stack.Navigator>
   );
 };
@@ -73,6 +75,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#0A1628',
   },
 });

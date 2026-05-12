@@ -6,41 +6,30 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Spacing, FontSizes, BorderRadii } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { makePix, brlToCents, formatBRL } from '../services/apiService';
+import { sacar, brlToCents, formatBRL, centsToBRL } from '../services/apiService';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
-interface PixPageProps {
+interface SacarPageProps {
   navigation?: any;
 }
 
-export const PixPage: React.FC<PixPageProps> = ({ navigation }) => {
+export const SacarPage: React.FC<SacarPageProps> = ({ navigation }) => {
   const { userData, refreshUserData } = useAuth();
-  const [cpfDestino, setCpfDestino] = useState('');
   const [valor, setValor] = useState('');
   const [senha, setSenha] = useState('');
-  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const formatCPF = (value: string) => {
-    const digits = value.replace(/\D/g, '').slice(0, 11);
-    if (digits.length <= 3) return digits;
-    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-    if (digits.length <= 9)
-      return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
-  };
+  const balance = userData ? centsToBRL(userData.saldo_centavos) : 0;
 
-  const getRawCPF = (formatted: string) => formatted.replace(/\D/g, '');
-
-  const handleSendPix = async () => {
-    const rawCPF = getRawCPF(cpfDestino);
-    if (!rawCPF || !valor || !senha) {
-      Alert.alert('Erro', 'Preencha todos os campos');
-      return;
-    }
+  const handleSacar = async () => {
     const valorBRL = parseFloat(valor.replace(',', '.'));
     if (isNaN(valorBRL) || valorBRL <= 0) {
-      Alert.alert('Erro', 'Valor inválido');
+      Alert.alert('Erro', 'Informe um valor válido');
+      return;
+    }
+    if (!senha) {
+      Alert.alert('Erro', 'Digite sua senha');
       return;
     }
     if (!userData?.cpf) {
@@ -50,16 +39,15 @@ export const PixPage: React.FC<PixPageProps> = ({ navigation }) => {
     setLoading(true);
     try {
       const valorCentavos = brlToCents(valorBRL);
-      const res = await makePix(userData.cpf, rawCPF, valorCentavos, senha);
+      const res = await sacar(userData.cpf, valorCentavos, senha);
       if (res.sucesso) {
-        Alert.alert('Sucesso', `Pix de R$ ${valorBRL.toFixed(2)} enviado com sucesso!`);
-        setCpfDestino('');
+        Alert.alert('Sucesso', `Saque de R$ ${valorBRL.toFixed(2)} realizado!`);
         setValor('');
         setSenha('');
         await refreshUserData();
         navigation?.goBack?.();
       } else {
-        Alert.alert('Erro', res.mensagem || 'Falha ao enviar Pix');
+        Alert.alert('Erro', res.mensagem || 'Falha ao sacar');
       }
     } catch (error: any) {
       Alert.alert('Erro', error.message || 'Erro de conexão');
@@ -68,29 +56,27 @@ export const PixPage: React.FC<PixPageProps> = ({ navigation }) => {
     }
   };
 
-  const balance = userData ? centsToBRL(userData.saldo_centavos) : 0;
+  const quickAmounts = [50, 100, 200, 500];
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <LinearGradient colors={['#0D1F3C', '#162240']} style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack?.()}>
           <Ionicons name="arrow-back" size={24} color={Colors.white} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Enviar Pix</Text>
+        <Text style={styles.headerTitle}>Sacar</Text>
         <View style={{ width: 40 }} />
       </LinearGradient>
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.content}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          {/* Info Card */}
           <View style={styles.infoCard}>
             <View style={styles.infoIconContainer}>
-              <MaterialCommunityIcons name="swap-horizontal-bold" size={36} color={Colors.accent} />
+              <MaterialCommunityIcons name="cash-minus" size={36} color={Colors.sacarIcon} />
             </View>
-            <Text style={styles.infoTitle}>Transferência Pix</Text>
+            <Text style={styles.infoTitle}>Saque</Text>
             <Text style={styles.infoSubtitle}>
-              Envie dinheiro instantaneamente para qualquer conta usando a chave Pix (CPF do destinatário)
+              Retire dinheiro da sua conta Delta Bank
             </Text>
             <View style={styles.balanceChip}>
               <Text style={styles.balanceChipLabel}>Saldo disponível</Text>
@@ -98,26 +84,9 @@ export const PixPage: React.FC<PixPageProps> = ({ navigation }) => {
             </View>
           </View>
 
-          {/* Form */}
           <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Chave Pix (CPF)</Text>
-              <View style={styles.inputContainer}>
-                <MaterialCommunityIcons name="card-account-details-outline" size={18} color={Colors.textMuted} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="000.000.000-00"
-                  placeholderTextColor={Colors.textMuted}
-                  value={cpfDestino}
-                  onChangeText={(text) => setCpfDestino(formatCPF(text))}
-                  keyboardType="numeric"
-                  maxLength={14}
-                />
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Valor</Text>
+              <Text style={styles.label}>Valor do saque</Text>
               <View style={styles.inputContainer}>
                 <Text style={styles.currencyPrefix}>R$</Text>
                 <TextInput
@@ -129,6 +98,18 @@ export const PixPage: React.FC<PixPageProps> = ({ navigation }) => {
                   keyboardType="numeric"
                 />
               </View>
+            </View>
+
+            <View style={styles.quickAmountsRow}>
+              {quickAmounts.map((amount) => (
+                <TouchableOpacity
+                  key={amount}
+                  style={styles.quickAmountBtn}
+                  onPress={() => setValor(String(amount))}
+                >
+                  <Text style={styles.quickAmountText}>R$ {amount}</Text>
+                </TouchableOpacity>
+              ))}
             </View>
 
             <View style={styles.inputGroup}>
@@ -150,13 +131,13 @@ export const PixPage: React.FC<PixPageProps> = ({ navigation }) => {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.sendButton} onPress={handleSendPix} disabled={loading} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.sendButton} onPress={handleSacar} disabled={loading} activeOpacity={0.8}>
             {loading ? (
-              <ActivityIndicator color={Colors.primary} />
+              <ActivityIndicator color={Colors.white} />
             ) : (
               <>
-                <MaterialCommunityIcons name="arrow-up-right" size={22} color={Colors.primary} />
-                <Text style={styles.sendText}>Enviar Pix</Text>
+                <MaterialCommunityIcons name="cash-minus" size={22} color={Colors.white} />
+                <Text style={styles.sendText}>Confirmar saque</Text>
               </>
             )}
           </TouchableOpacity>
@@ -165,8 +146,6 @@ export const PixPage: React.FC<PixPageProps> = ({ navigation }) => {
     </View>
   );
 };
-
-const centsToBRL = (cents: number): number => cents / 100;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
@@ -178,7 +157,6 @@ const styles = StyleSheet.create({
   headerTitle: { color: Colors.white, fontSize: FontSizes.xxl, fontWeight: '700' },
   content: { flex: 1 },
   scrollContent: { padding: Spacing.xxl, paddingBottom: 60 },
-  // Info Card
   infoCard: {
     backgroundColor: Colors.surface, borderRadius: BorderRadii.xl,
     padding: Spacing.xxl, alignItems: 'center', marginBottom: Spacing.xl,
@@ -186,7 +164,7 @@ const styles = StyleSheet.create({
   },
   infoIconContainer: {
     width: 68, height: 68, borderRadius: 34,
-    backgroundColor: Colors.pixBg, justifyContent: 'center', alignItems: 'center',
+    backgroundColor: Colors.sacarBg, justifyContent: 'center', alignItems: 'center',
     marginBottom: Spacing.md,
   },
   infoTitle: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.white, marginBottom: Spacing.xs, marginTop: Spacing.sm },
@@ -199,7 +177,6 @@ const styles = StyleSheet.create({
   },
   balanceChipLabel: { fontSize: FontSizes.sm, color: Colors.textSecondary },
   balanceChipValue: { fontSize: FontSizes.md, fontWeight: '700', color: Colors.accent },
-  // Form
   form: { gap: Spacing.lg },
   inputGroup: { gap: Spacing.sm },
   label: { fontSize: FontSizes.md, fontWeight: '600', color: Colors.white },
@@ -212,12 +189,18 @@ const styles = StyleSheet.create({
   currencyPrefix: { marginRight: Spacing.md, fontSize: 16, fontWeight: '700', color: Colors.accent },
   input: { flex: 1, fontSize: FontSizes.lg, color: Colors.white },
   eyeBtn: { padding: Spacing.sm },
-  // Send Button
+  quickAmountsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.sm },
+  quickAmountBtn: {
+    flex: 1, paddingVertical: Spacing.md, borderRadius: BorderRadii.md,
+    backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: Colors.border,
+  },
+  quickAmountText: { fontSize: FontSizes.md, color: Colors.textSecondary, fontWeight: '500' },
   sendButton: {
-    flexDirection: 'row', backgroundColor: Colors.accent, borderRadius: BorderRadii.lg,
+    flexDirection: 'row', backgroundColor: Colors.sacarIcon, borderRadius: BorderRadii.lg,
     height: 56, justifyContent: 'center', alignItems: 'center', gap: Spacing.md,
-    marginTop: Spacing.xxl, elevation: 4, shadowColor: '#00E676',
+    marginTop: Spacing.xxl, elevation: 4, shadowColor: Colors.sacarIcon,
     shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8,
   },
-  sendText: { color: Colors.primary, fontSize: FontSizes.xxl, fontWeight: '700' },
+  sendText: { color: Colors.white, fontSize: FontSizes.xxl, fontWeight: '700' },
 });

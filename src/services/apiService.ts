@@ -44,6 +44,13 @@ export interface LocalUserData {
 export const centsToBRL = (cents: number): number => cents / 100;
 export const brlToCents = (brl: number): number => Math.round(brl * 100);
 
+export const formatBRL = (value: number): string => {
+  return value.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
 // ── API Calls ──
 
 export const createAccount = async (

@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Spacing, FontSizes, BorderRadii } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { centsToBRL } from '../services/apiService';
-import { Ionicons, Feather } from '@expo/vector-icons';
+import { centsToBRL, formatBRL } from '../services/apiService';
+import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 interface ProfilePageProps {
   navigation?: any;
@@ -14,6 +14,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation }) => {
   const { userData, logout } = useAuth();
 
   const balance = userData ? centsToBRL(userData.saldo_centavos) : 0;
+  const limite = userData ? centsToBRL(userData?.limite_diario || 0) : 0;
   const formattedCPF = userData?.cpf
     ? userData.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
     : '---';
@@ -28,15 +29,27 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation }) => {
   ];
 
   const renderIcon = (icon: string, iconSet: string) => {
-    const size = 18;
-    const color = Colors.primary;
+    const size = 20;
+    const color = Colors.accent;
     if (iconSet === 'Ionicons') return <Ionicons name={icon as any} size={size} color={color} />;
     return <Feather name={icon as any} size={size} color={color} />;
   };
 
+  const handleLogout = () => {
+    Alert.alert(
+      'Sair da conta',
+      'Tem certeza que deseja sair?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Sair', style: 'destructive', onPress: logout },
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
-      <LinearGradient colors={[Colors.primary, Colors.primaryLight]} style={styles.header}>
+      {/* Header */}
+      <LinearGradient colors={['#0D1F3C', '#162240']} style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack?.()}>
           <Ionicons name="arrow-back" size={24} color={Colors.white} />
         </TouchableOpacity>
@@ -45,6 +58,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation }) => {
       </LinearGradient>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        {/* Avatar Section */}
         <View style={styles.profileSection}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
@@ -55,19 +69,25 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation }) => {
           <Text style={styles.cpf}>CPF: {formattedCPF}</Text>
         </View>
 
+        {/* Balance Card */}
         <View style={styles.balanceCard}>
-          <Text style={styles.balanceLabel}>Saldo em conta</Text>
-          <Text style={styles.balanceValue}>
-            R$ {balance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-          </Text>
+          <View style={styles.balanceRow}>
+            <View>
+              <Text style={styles.balanceLabel}>Saldo em conta</Text>
+              <Text style={styles.balanceValue}>R$ {formatBRL(balance)}</Text>
+            </View>
+            <View style={styles.balanceIconContainer}>
+              <MaterialCommunityIcons name="wallet-outline" size={24} color={Colors.accent} />
+            </View>
+          </View>
+          <View style={styles.balanceDivider} />
           <View style={styles.limitRow}>
             <Text style={styles.limitLabel}>Limite diário</Text>
-            <Text style={styles.limitValue}>
-              R$ {centsToBRL(userData?.limite_diario || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-            </Text>
+            <Text style={styles.limitValue}>R$ {formatBRL(limite)}</Text>
           </View>
         </View>
 
+        {/* Menu */}
         <View style={styles.menuSection}>
           {menuItems.map((item, idx) => (
             <TouchableOpacity key={idx} style={[styles.menuItem, idx < menuItems.length - 1 && styles.menuItemBorder]}>
@@ -83,8 +103,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation }) => {
           ))}
         </View>
 
-        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-          <Feather name="log-out" size={20} color="#E53935" />
+        {/* Logout */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Feather name="log-out" size={20} color={Colors.negative} />
           <Text style={styles.logoutText}>Sair da conta</Text>
         </TouchableOpacity>
 
@@ -95,30 +116,68 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: Spacing.lg, paddingTop: Spacing.xl, paddingBottom: Spacing.xxl },
+  container: { flex: 1, backgroundColor: Colors.background },
+  header: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: Spacing.lg, paddingTop: Spacing.xl, paddingBottom: Spacing.xxl,
+  },
   backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { color: Colors.white, fontSize: FontSizes.xxl, fontWeight: '700' },
   scrollContent: { paddingBottom: Spacing.xxxl },
-  profileSection: { alignItems: 'center', backgroundColor: Colors.white, paddingVertical: Spacing.xxl, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: Colors.primary, justifyContent: 'center', alignItems: 'center', marginBottom: Spacing.lg, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8 },
-  avatarText: { fontSize: 32, fontWeight: '700', color: Colors.white },
-  name: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.xs },
+  // Profile
+  profileSection: {
+    alignItems: 'center', backgroundColor: Colors.surface,
+    paddingVertical: Spacing.xxl, borderBottomWidth: 1, borderBottomColor: Colors.border,
+  },
+  avatar: {
+    width: 80, height: 80, borderRadius: 40,
+    backgroundColor: 'rgba(0, 230, 118, 0.15)', justifyContent: 'center', alignItems: 'center',
+    marginBottom: Spacing.lg, borderWidth: 2, borderColor: Colors.accent,
+  },
+  avatarText: { fontSize: 32, fontWeight: '700', color: Colors.accent },
+  name: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.white, marginBottom: Spacing.xs },
   cpf: { fontSize: FontSizes.md, color: Colors.textSecondary },
-  balanceCard: { backgroundColor: Colors.white, marginHorizontal: Spacing.xxl, marginTop: -Spacing.xl, borderRadius: BorderRadii.xl, padding: Spacing.xxl, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8 },
+  // Balance
+  balanceCard: {
+    backgroundColor: Colors.surface, marginHorizontal: Spacing.xxl, marginTop: -Spacing.xl,
+    borderRadius: BorderRadii.xl, padding: Spacing.xxl,
+    borderWidth: 1, borderColor: Colors.border,
+    elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2, shadowRadius: 8,
+  },
+  balanceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   balanceLabel: { fontSize: FontSizes.md, color: Colors.textSecondary, marginBottom: Spacing.xs },
-  balanceValue: { fontSize: FontSizes.giant, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.lg },
-  limitRow: { flexDirection: 'row', justifyContent: 'space-between', paddingTop: Spacing.lg, borderTopWidth: 1, borderTopColor: Colors.border },
+  balanceValue: { fontSize: FontSizes.giant, fontWeight: '700', color: Colors.white },
+  balanceIconContainer: {
+    width: 48, height: 48, borderRadius: 24,
+    backgroundColor: Colors.pixBg, justifyContent: 'center', alignItems: 'center',
+  },
+  balanceDivider: { height: 1, backgroundColor: Colors.border, marginVertical: Spacing.lg },
+  limitRow: { flexDirection: 'row', justifyContent: 'space-between' },
   limitLabel: { fontSize: FontSizes.md, color: Colors.textSecondary },
-  limitValue: { fontSize: FontSizes.md, fontWeight: '600', color: Colors.primary },
-  menuSection: { backgroundColor: Colors.white, marginHorizontal: Spacing.xxl, marginTop: Spacing.xl, borderRadius: BorderRadii.lg, overflow: 'hidden' },
-  menuItem: { flexDirection: 'row', alignItems: 'center', padding: Spacing.lg, borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
-  menuItemBorder: { borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
-  menuIcon: { width: 36, height: 36, borderRadius: BorderRadii.sm, backgroundColor: 'rgba(26, 35, 126, 0.06)', justifyContent: 'center', alignItems: 'center', marginRight: Spacing.lg },
+  limitValue: { fontSize: FontSizes.md, fontWeight: '600', color: Colors.accent },
+  // Menu
+  menuSection: {
+    backgroundColor: Colors.surface, marginHorizontal: Spacing.xxl, marginTop: Spacing.xl,
+    borderRadius: BorderRadii.lg, overflow: 'hidden', borderWidth: 1, borderColor: Colors.border,
+  },
+  menuItem: { flexDirection: 'row', alignItems: 'center', padding: Spacing.lg },
+  menuItemBorder: { borderBottomWidth: 1, borderBottomColor: Colors.border },
+  menuIcon: {
+    width: 38, height: 38, borderRadius: BorderRadii.sm,
+    backgroundColor: 'rgba(0, 230, 118, 0.08)', justifyContent: 'center', alignItems: 'center',
+    marginRight: Spacing.lg,
+  },
   menuInfo: { flex: 1 },
-  menuLabel: { fontSize: FontSizes.lg, fontWeight: '500', color: Colors.textPrimary },
+  menuLabel: { fontSize: FontSizes.lg, fontWeight: '500', color: Colors.white },
   menuSubtitle: { fontSize: FontSizes.sm, color: Colors.textSecondary, marginTop: 2 },
-  logoutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.md, backgroundColor: Colors.white, marginHorizontal: Spacing.xxl, marginTop: Spacing.xl, paddingVertical: Spacing.lg, borderRadius: BorderRadii.lg, borderWidth: 1, borderColor: '#FFCDD2' },
-  logoutText: { fontSize: FontSizes.lg, fontWeight: '600', color: '#E53935' },
+  // Logout
+  logoutButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.md,
+    backgroundColor: Colors.surface, marginHorizontal: Spacing.xxl, marginTop: Spacing.xl,
+    paddingVertical: Spacing.lg, borderRadius: BorderRadii.lg,
+    borderWidth: 1, borderColor: 'rgba(255, 82, 82, 0.2)',
+  },
+  logoutText: { fontSize: FontSizes.lg, fontWeight: '600', color: Colors.negative },
   version: { textAlign: 'center', fontSize: FontSizes.sm, color: Colors.textMuted, marginTop: Spacing.xl },
 });

@@ -39,7 +39,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const session: LocalUserData = JSON.parse(stored);
           setUserData(session);
           setIsLoggedIn(true);
-          // Refresh balance from API
           await refreshWithCpf(session.cpf);
         }
       } catch (e) {
@@ -97,7 +96,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!res.sucesso) {
       throw new Error(res.mensagem || 'Erro ao criar conta');
     }
-    // Auto-login after registration
     await login(cpf, senha);
   };
 

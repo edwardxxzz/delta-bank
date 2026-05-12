@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Colors, Spacing, FontSizes, BorderRadii } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
@@ -7,13 +7,25 @@ import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
   const { userData, logout } = useAuth();
 
+  const formattedCPF = userData?.cpf
+    ? userData.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+    : '---';
+
   const menuSections = [
     {
       title: 'CONTA',
       items: [
-        { icon: 'person-outline', iconSet: 'Ionicons' as const, label: 'Dados pessoais', subtitle: 'Nome, email, telefone' },
-        { icon: 'shield-check-outline', iconSet: 'MaterialCommunityIcons' as const, label: 'Segurança', subtitle: 'Senha, 2FA, biometria' },
+        { icon: 'person-outline', iconSet: 'Ionicons' as const, label: 'Dados pessoais', subtitle: 'Nome, email, telefone', navigate: 'Profile' },
+        { icon: 'shield-check-outline', iconSet: 'Ionicons' as const, label: 'Segurança', subtitle: 'Senha, 2FA, biometria' },
         { icon: 'notifications-outline', iconSet: 'Ionicons' as const, label: 'Notificações', subtitle: 'Alertas e Push' },
+      ],
+    },
+    {
+      title: 'SERVIÇOS',
+      items: [
+        { icon: 'swap-horizontal-bold', iconSet: 'MaterialCommunityIcons' as const, label: 'Pix', subtitle: 'Envio e recebimento', navigate: 'Pix' },
+        { icon: 'cash-plus', iconSet: 'MaterialCommunityIcons' as const, label: 'Depositar', subtitle: 'Adicionar saldo', navigate: 'Depositar' },
+        { icon: 'cash-minus', iconSet: 'MaterialCommunityIcons' as const, label: 'Sacar', subtitle: 'Retirar saldo', navigate: 'Sacar' },
       ],
     },
     {
@@ -21,7 +33,6 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
       items: [
         { icon: 'phone-portrait-outline', iconSet: 'Ionicons' as const, label: 'Aparência', subtitle: 'Tema e idioma' },
         { icon: 'globe-outline', iconSet: 'Ionicons' as const, label: 'Idioma', subtitle: 'Português (BR)' },
-        { icon: 'palette-outline', iconSet: 'MaterialCommunityIcons' as const, label: 'Personalização', subtitle: 'Cores e layout' },
       ],
     },
     {
@@ -35,11 +46,22 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
   ];
 
   const renderIcon = (icon: string, iconSet: string) => {
-    const size = 18;
-    const color = Colors.primary;
+    const size = 20;
+    const color = Colors.accent;
     if (iconSet === 'Ionicons') return <Ionicons name={icon as any} size={size} color={color} />;
     if (iconSet === 'MaterialCommunityIcons') return <MaterialCommunityIcons name={icon as any} size={size} color={color} />;
     return <Feather name={icon as any} size={size} color={color} />;
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Sair da conta',
+      'Tem certeza que deseja sair?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Sair', style: 'destructive', onPress: logout },
+      ]
+    );
   };
 
   return (
@@ -48,7 +70,8 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
         <Text style={styles.headerTitle}>Mais</Text>
       </View>
 
-      <View style={styles.profileCard}>
+      {/* Profile Card */}
+      <TouchableOpacity style={styles.profileCard} onPress={() => navigation?.navigate?.('Profile')}>
         <View style={styles.profileAvatar}>
           <Text style={styles.profileInitial}>
             {userData?.nome?.charAt(0)?.toUpperCase() || 'U'}
@@ -56,10 +79,10 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
         </View>
         <View style={styles.profileInfo}>
           <Text style={styles.profileName}>{userData?.nome || 'Usuário'}</Text>
-          <Text style={styles.profileEmail}>CPF: {userData?.cpf || '---'}</Text>
+          <Text style={styles.profileEmail}>CPF: {formattedCPF}</Text>
         </View>
         <Feather name="chevron-right" size={22} color={Colors.textMuted} />
-      </View>
+      </TouchableOpacity>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {menuSections.map((section, sIdx) => (
@@ -70,7 +93,7 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
                 <TouchableOpacity
                   key={iIdx}
                   style={[styles.menuItem, iIdx < section.items.length - 1 && styles.menuItemBorder]}
-                  onPress={() => {}}
+                  onPress={() => item.navigate ? navigation?.navigate?.(item.navigate) : {}}
                 >
                   <View style={styles.menuIcon}>
                     {renderIcon(item.icon, item.iconSet)}
@@ -86,8 +109,8 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
           </View>
         ))}
 
-        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-          <Feather name="log-out" size={20} color="#E53935" />
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Feather name="log-out" size={20} color={Colors.negative} />
           <Text style={styles.logoutText}>Sair da conta</Text>
         </TouchableOpacity>
 
@@ -98,26 +121,50 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
+  container: { flex: 1, backgroundColor: Colors.background },
   header: { paddingHorizontal: Spacing.xxl, paddingTop: Spacing.xl, paddingBottom: Spacing.lg },
-  headerTitle: { fontSize: FontSizes.huge, fontWeight: '700', color: Colors.textPrimary },
-  profileCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.white, marginHorizontal: Spacing.xxl, borderRadius: BorderRadii.lg, padding: Spacing.lg, marginBottom: Spacing.xl, elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2 },
-  profileAvatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: Colors.primary, justifyContent: 'center', alignItems: 'center', marginRight: Spacing.lg },
-  profileInitial: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.white },
+  headerTitle: { fontSize: FontSizes.huge, fontWeight: '700', color: Colors.white },
+  profileCard: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface,
+    marginHorizontal: Spacing.xxl, borderRadius: BorderRadii.lg, padding: Spacing.lg,
+    marginBottom: Spacing.xl, borderWidth: 1, borderColor: Colors.border,
+  },
+  profileAvatar: {
+    width: 48, height: 48, borderRadius: 24,
+    backgroundColor: 'rgba(0, 230, 118, 0.15)', justifyContent: 'center', alignItems: 'center',
+    marginRight: Spacing.lg, borderWidth: 1.5, borderColor: Colors.accent,
+  },
+  profileInitial: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.accent },
   profileInfo: { flex: 1 },
-  profileName: { fontSize: FontSizes.lg, fontWeight: '600', color: Colors.textPrimary },
+  profileName: { fontSize: FontSizes.lg, fontWeight: '600', color: Colors.white },
   profileEmail: { fontSize: FontSizes.sm, color: Colors.textSecondary, marginTop: 2 },
   scrollContent: { paddingBottom: Spacing.xxl },
   section: { marginBottom: Spacing.lg },
-  sectionTitle: { fontSize: FontSizes.sm, fontWeight: '600', color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, paddingHorizontal: Spacing.xxl, marginBottom: Spacing.sm },
-  sectionCard: { backgroundColor: Colors.white, marginHorizontal: Spacing.xxl, borderRadius: BorderRadii.lg, overflow: 'hidden' },
+  sectionTitle: {
+    fontSize: FontSizes.sm, fontWeight: '600', color: Colors.textMuted,
+    textTransform: 'uppercase', letterSpacing: 0.5,
+    paddingHorizontal: Spacing.xxl, marginBottom: Spacing.sm,
+  },
+  sectionCard: {
+    backgroundColor: Colors.surface, marginHorizontal: Spacing.xxl,
+    borderRadius: BorderRadii.lg, overflow: 'hidden', borderWidth: 1, borderColor: Colors.border,
+  },
   menuItem: { flexDirection: 'row', alignItems: 'center', padding: Spacing.lg },
-  menuItemBorder: { borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
-  menuIcon: { width: 36, height: 36, borderRadius: BorderRadii.sm, backgroundColor: 'rgba(26, 35, 126, 0.06)', justifyContent: 'center', alignItems: 'center', marginRight: Spacing.lg },
+  menuItemBorder: { borderBottomWidth: 1, borderBottomColor: Colors.border },
+  menuIcon: {
+    width: 38, height: 38, borderRadius: BorderRadii.sm,
+    backgroundColor: 'rgba(0, 230, 118, 0.08)', justifyContent: 'center', alignItems: 'center',
+    marginRight: Spacing.lg,
+  },
   menuInfo: { flex: 1 },
-  menuLabel: { fontSize: FontSizes.lg, fontWeight: '500', color: Colors.textPrimary },
+  menuLabel: { fontSize: FontSizes.lg, fontWeight: '500', color: Colors.white },
   menuSubtitle: { fontSize: FontSizes.sm, color: Colors.textSecondary, marginTop: 2 },
-  logoutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.md, backgroundColor: Colors.white, marginHorizontal: Spacing.xxl, marginTop: Spacing.xl, paddingVertical: Spacing.lg, borderRadius: BorderRadii.lg, borderWidth: 1, borderColor: '#FFCDD2' },
-  logoutText: { fontSize: FontSizes.lg, fontWeight: '600', color: '#E53935' },
+  logoutButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.md,
+    backgroundColor: Colors.surface, marginHorizontal: Spacing.xxl, marginTop: Spacing.xl,
+    paddingVertical: Spacing.lg, borderRadius: BorderRadii.lg,
+    borderWidth: 1, borderColor: 'rgba(255, 82, 82, 0.2)',
+  },
+  logoutText: { fontSize: FontSizes.lg, fontWeight: '600', color: Colors.negative },
   version: { textAlign: 'center', fontSize: FontSizes.sm, color: Colors.textMuted, marginTop: Spacing.xl },
 });
