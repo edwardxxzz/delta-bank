@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   View, ScrollView, StyleSheet, RefreshControl, Text,
-  TouchableOpacity, ActivityIndicator, Dimensions,
+  TouchableOpacity, ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../contexts/AuthContext';
@@ -82,7 +82,7 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
       case 'pix_received':
         return { name: 'arrow-down-left', color: Colors.positive, bg: Colors.pixBg };
       case 'pix_sent':
-        return { name: 'arrow-up-right', color: Colors.negative, bg: 'rgba(255, 82, 82, 0.12)' };
+        return { name: 'arrow-up-right', color: Colors.negative, bg: Colors.sacarBg };
       case 'deposit':
         return { name: 'cash-plus', color: Colors.depositarIcon, bg: Colors.depositarBg };
       case 'withdraw':
@@ -110,18 +110,15 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient
-        colors={['#0D1F3C', '#162240']}
-        style={styles.header}
-      >
+      <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack?.()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.white} />
+          <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Extrato</Text>
         <View style={{ width: 40 }} />
-      </LinearGradient>
+      </View>
 
-      {/* Balance Summary */}
+      {/* Balance Row */}
       <View style={styles.balanceRow}>
         <View>
           <Text style={styles.balanceLabel}>Saldo atual</Text>
@@ -201,10 +198,7 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
       ) : (
         <View style={styles.centerContent}>
           <MaterialCommunityIcons name="bank-off-outline" size={56} color={Colors.textMuted} />
-          <Text style={styles.emptyTitle}>Nenhuma transação encontrada</Text>
-          <Text style={styles.emptySub}>
-            {filter !== 'todos' ? 'Tente outro filtro' : 'Suas transações aparecerão aqui'}
-          </Text>
+          <Text style={styles.emptyTitle}>Nenhuma transação</Text>
         </View>
       )}
     </View>
@@ -215,57 +209,47 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg, paddingTop: Spacing.xl, paddingBottom: Spacing.xxl,
+    paddingHorizontal: Spacing.xxl, paddingTop: Spacing.xl, paddingBottom: Spacing.lg,
   },
   backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { color: Colors.white, fontSize: FontSizes.xxl, fontWeight: '700' },
-  // Balance Row
+  headerTitle: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.textPrimary },
   balanceRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: Spacing.xxl, paddingVertical: Spacing.lg,
   },
   balanceLabel: { fontSize: FontSizes.md, color: Colors.textSecondary, marginBottom: Spacing.xs },
-  balanceValue: { fontSize: FontSizes.huge, fontWeight: '700', color: Colors.white },
+  balanceValue: { fontSize: FontSizes.huge, fontWeight: '700', color: Colors.textPrimary },
   refreshBtn: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.surface,
-    justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: Colors.border,
+    width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.surfaceLight,
+    justifyContent: 'center', alignItems: 'center',
   },
-  // Filters
-  filtersRow: {
-    flexDirection: 'row', paddingHorizontal: Spacing.xxl, marginBottom: Spacing.lg,
-    maxHeight: 44,
-  },
+  filtersRow: { flexDirection: 'row', paddingHorizontal: Spacing.xxl, marginBottom: Spacing.lg, maxHeight: 44 },
   filterBtn: {
     paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderRadius: BorderRadii.full,
-    backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border,
+    backgroundColor: Colors.white, borderWidth: 1, borderColor: Colors.border,
     marginRight: Spacing.sm,
   },
   filterBtnActive: { backgroundColor: Colors.accent, borderColor: Colors.accent },
   filterText: { fontSize: FontSizes.sm, color: Colors.textSecondary, fontWeight: '500' },
-  filterTextActive: { color: Colors.primary, fontWeight: '600' },
-  // Content
+  filterTextActive: { color: Colors.white, fontWeight: '600' },
   centerContent: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: Spacing.xxl },
-  loadingText: { color: Colors.textSecondary, marginTop: Spacing.lg, fontSize: FontSizes.md },
-  // Error
+  loadingText: { color: Colors.textSecondary, marginTop: Spacing.lg },
   errorCard: {
-    backgroundColor: Colors.surface, borderRadius: BorderRadii.xl,
-    padding: Spacing.xxxl, alignItems: 'center', borderWidth: 1, borderColor: Colors.border,
-    width: '100%',
+    backgroundColor: Colors.white, borderRadius: BorderRadii.xl,
+    padding: Spacing.xxxl, alignItems: 'center', borderWidth: 1, borderColor: Colors.border, width: '100%',
   },
-  errorTitle: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.white, marginTop: Spacing.lg, marginBottom: Spacing.sm },
+  errorTitle: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.textPrimary, marginTop: Spacing.lg, marginBottom: Spacing.sm },
   errorMessage: { fontSize: FontSizes.md, color: Colors.textSecondary, textAlign: 'center', lineHeight: 22 },
   retryBtn: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
-    backgroundColor: 'rgba(0, 230, 118, 0.1)', borderRadius: BorderRadii.lg,
+    backgroundColor: Colors.pixBg, borderRadius: BorderRadii.lg,
     paddingVertical: Spacing.md, paddingHorizontal: Spacing.xl, marginTop: Spacing.xxl,
-    borderWidth: 1, borderColor: 'rgba(0, 230, 118, 0.2)',
   },
   retryBtnText: { color: Colors.accent, fontSize: FontSizes.lg, fontWeight: '600' },
-  // List
   listContent: { paddingHorizontal: Spacing.xxl, paddingBottom: Spacing.xxxl },
   transactionItem: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: Colors.surface, borderRadius: BorderRadii.lg,
+    backgroundColor: Colors.white, borderRadius: BorderRadii.lg,
     padding: Spacing.lg, marginBottom: Spacing.md,
     borderWidth: 1, borderColor: Colors.border,
   },
@@ -274,12 +258,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center', marginRight: Spacing.lg,
   },
   txInfo: { flex: 1 },
-  txTitle: { fontSize: FontSizes.lg, fontWeight: '600', color: Colors.white, marginBottom: 2 },
+  txTitle: { fontSize: FontSizes.lg, fontWeight: '600', color: Colors.textPrimary, marginBottom: 2 },
   txSubtitle: { fontSize: FontSizes.sm, color: Colors.textSecondary, marginBottom: 2 },
   txDate: { fontSize: FontSizes.xs, color: Colors.textMuted },
   txRight: { alignItems: 'flex-end' },
   txAmount: { fontSize: FontSizes.lg, fontWeight: '700' },
-  // Empty
   emptyTitle: { fontSize: FontSizes.xxl, fontWeight: '600', color: Colors.textSecondary, marginTop: Spacing.lg },
-  emptySub: { fontSize: FontSizes.md, color: Colors.textMuted, marginTop: Spacing.xs },
 });

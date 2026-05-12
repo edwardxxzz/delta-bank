@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, RefreshControl, TouchableOpacity, Text, Dimensions } from 'react-native';
+import { View, ScrollView, StyleSheet, RefreshControl, TouchableOpacity, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../contexts/AuthContext';
 import { centsToBRL, getExtrato, formatBRL } from '../services/apiService';
@@ -55,7 +55,6 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
           setExtratoError(true);
         }
       } catch (e) {
-        console.error('Erro ao carregar extrato:', e);
         setExtratoError(true);
       }
     }
@@ -78,13 +77,13 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
   const firstName = userData?.nome?.split(' ')[0] || 'Usuário';
 
   const quickActions = [
-    { label: 'Pix', icon: 'swap-horizontal-bold', iconSet: 'MaterialCommunityIcons' as const, bgColor: Colors.pixBg, iconColor: Colors.pixIcon, onPress: () => navigation?.navigate?.('Pix') },
+    { label: 'Pix', icon: 'qrcode', iconSet: 'Ionicons' as const, bgColor: Colors.pixBg, iconColor: Colors.pixIcon, onPress: () => navigation?.navigate?.('Pix') },
     { label: 'Pagar', icon: 'barcode-scan', iconSet: 'MaterialCommunityIcons' as const, bgColor: Colors.pagarBg, iconColor: Colors.pagarIcon, onPress: () => {} },
-    { label: 'Depositar', icon: 'cash-plus', iconSet: 'MaterialCommunityIcons' as const, bgColor: Colors.depositarBg, iconColor: Colors.depositarIcon, onPress: () => navigation?.navigate?.('Depositar') },
-    { label: 'Sacar', icon: 'cash-minus', iconSet: 'MaterialCommunityIcons' as const, bgColor: Colors.sacarBg, iconColor: Colors.sacarIcon, onPress: () => navigation?.navigate?.('Sacar') },
+    { label: 'Transferir', icon: 'swap-horizontal', iconSet: 'MaterialCommunityIcons' as const, bgColor: Colors.transferirBg, iconColor: Colors.transferirIcon, onPress: () => {} },
+    { label: 'Empréstimos', icon: 'cash', iconSet: 'MaterialCommunityIcons' as const, bgColor: Colors.emprestimoBg, iconColor: Colors.emprestimoIcon, onPress: () => {} },
   ];
 
-  const renderIcon = (action: typeof quickActions[0]) => {
+  const renderActionIcon = (action: typeof quickActions[0]) => {
     const size = 24;
     if (action.iconSet === 'MaterialCommunityIcons') {
       return <MaterialCommunityIcons name={action.icon as any} size={size} color={action.iconColor} />;
@@ -97,7 +96,7 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
       case 'pix_received':
         return { name: 'arrow-down-left', color: Colors.positive, bg: Colors.pixBg };
       case 'pix_sent':
-        return { name: 'arrow-up-right', color: Colors.negative, bg: 'rgba(255, 82, 82, 0.12)' };
+        return { name: 'arrow-up-right', color: Colors.negative, bg: Colors.sacarBg };
       case 'deposit':
         return { name: 'cash-plus', color: Colors.depositarIcon, bg: Colors.depositarBg };
       case 'withdraw':
@@ -114,38 +113,42 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
       >
         {/* Header */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Olá, {firstName}</Text>
-            <Text style={styles.greetingSub}>Bem-vindo ao Delta Bank</Text>
+          <View style={styles.headerLeft}>
+            <View style={styles.logoTriangle} />
+            <Text style={styles.logoText}>DELTA BANK</Text>
           </View>
           <TouchableOpacity style={styles.profileButton} onPress={() => navigation?.navigate?.('Profile')}>
-            <Ionicons name="person" size={22} color={Colors.accent} />
-            <View style={styles.onlineDot} />
+            <Ionicons name="person" size={22} color={Colors.primary} />
           </TouchableOpacity>
         </View>
 
         {/* Balance Card */}
         <LinearGradient
-          colors={['#0D1F3C', '#162240', '#0D1F3C']}
+          colors={[Colors.cardGradientStart, Colors.cardGradientEnd]}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={styles.balanceCard}
         >
+          {/* Triangle decoration */}
+          <View style={styles.cardTriangleDecor} />
+
           <View style={styles.balanceHeader}>
-            <Text style={styles.balanceLabel}>Saldo disponível</Text>
+            <Text style={styles.balanceLabel}>Saldo em conta</Text>
             <TouchableOpacity onPress={() => setBalanceVisible(!balanceVisible)} hitSlop={8}>
-              <Ionicons name={balanceVisible ? 'eye' : 'eye-off'} size={20} color={Colors.textSecondary} />
+              <Ionicons name={balanceVisible ? 'eye' : 'eye-off'} size={20} color="rgba(255,255,255,0.7)" />
             </TouchableOpacity>
           </View>
           <Text style={styles.balanceAmount}>
             {balanceVisible ? `R$ ${formatBRL(balance)}` : 'R$ ••••••'}
           </Text>
-          <View style={styles.balanceFooter}>
-            <TouchableOpacity style={styles.statementBtn} onPress={() => navigation?.navigate?.('extrato')}>
-              <Feather name="file-text" size={14} color={Colors.accent} />
-              <Text style={styles.statementBtnText}>Ver extrato</Text>
-              <Ionicons name="chevron-forward" size={14} color={Colors.accent} />
-            </TouchableOpacity>
+          <View style={styles.monthlyRow}>
+            <MaterialCommunityIcons name="autorenew" size={16} color={Colors.accent} />
+            <Text style={styles.monthlyText}>+ R$ 320,40 este mês</Text>
           </View>
+          <TouchableOpacity style={styles.statementButton} onPress={() => navigation?.navigate?.('Extrato')}>
+            <Feather name="file-text" size={14} color="rgba(255,255,255,0.9)" />
+            <Text style={styles.statementText}>Ver extrato</Text>
+            <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.7)" />
+          </TouchableOpacity>
         </LinearGradient>
 
         {/* Quick Actions */}
@@ -153,7 +156,7 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
           {quickActions.map((action, index) => (
             <TouchableOpacity key={index} style={styles.actionItem} onPress={action.onPress} activeOpacity={0.7}>
               <View style={[styles.iconContainer, { backgroundColor: action.bgColor }]}>
-                {renderIcon(action)}
+                {renderActionIcon(action)}
               </View>
               <Text style={styles.actionLabel}>{action.label}</Text>
             </TouchableOpacity>
@@ -163,18 +166,16 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
         {/* Transactions */}
         <View style={styles.transactionsSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Atividades recentes</Text>
-            <TouchableOpacity onPress={() => navigation?.navigate?.('extrato')}>
+            <Text style={styles.sectionTitle}>Últimas atividades</Text>
+            <TouchableOpacity onPress={() => navigation?.navigate?.('Extrato')}>
               <Text style={styles.viewAllText}>Ver todas</Text>
             </TouchableOpacity>
           </View>
 
           {extratoError && (
             <View style={styles.errorBanner}>
-              <Ionicons name="alert-circle-outline" size={18} color={Colors.warning} />
-              <Text style={styles.errorBannerText}>
-                Extrato temporariamente indisponível no servidor
-              </Text>
+              <Ionicons name="alert-circle-outline" size={16} color={Colors.warning} />
+              <Text style={styles.errorBannerText}>Extrato temporariamente indisponível</Text>
             </View>
           )}
 
@@ -202,9 +203,8 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
             })
           ) : !extratoError ? (
             <View style={styles.emptyState}>
-              <MaterialCommunityIcons name="bank-off-outline" size={48} color={Colors.textMuted} />
+              <MaterialCommunityIcons name="bank-off-outline" size={44} color={Colors.textMuted} />
               <Text style={styles.emptyText}>Nenhuma atividade recente</Text>
-              <Text style={styles.emptySub}>Suas transações aparecerão aqui</Text>
             </View>
           ) : null}
         </View>
@@ -221,64 +221,72 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: Spacing.xxl, paddingTop: Spacing.lg, paddingBottom: Spacing.md,
   },
-  greeting: { fontSize: FontSizes.huge, fontWeight: '700', color: Colors.white },
-  greetingSub: { fontSize: FontSizes.md, color: Colors.textSecondary, marginTop: 2 },
-  profileButton: {
-    width: 46, height: 46, borderRadius: 23,
-    backgroundColor: Colors.surface, justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1.5, borderColor: Colors.border, position: 'relative',
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  logoTriangle: {
+    width: 0, height: 0,
+    borderLeftWidth: 10, borderLeftColor: 'transparent',
+    borderRightWidth: 10, borderRightColor: 'transparent',
+    borderBottomWidth: 16, borderBottomColor: Colors.accent,
   },
-  onlineDot: {
-    position: 'absolute', top: 6, right: 6, width: 10, height: 10, borderRadius: 5,
-    backgroundColor: Colors.accent, borderWidth: 2, borderColor: Colors.surface,
+  logoText: { fontSize: FontSizes.lg, fontWeight: '700', color: Colors.textPrimary, letterSpacing: 0.5 },
+  profileButton: {
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: Colors.surfaceLight, justifyContent: 'center', alignItems: 'center',
   },
   // Balance Card
   balanceCard: {
     borderRadius: BorderRadii.xl, padding: Spacing.xxl, paddingTop: Spacing.xl,
     marginHorizontal: Spacing.xxl, marginVertical: Spacing.lg, overflow: 'hidden',
-    borderWidth: 1, borderColor: Colors.border,
     elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2, shadowRadius: 8,
+    shadowOpacity: 0.15, shadowRadius: 8,
+  },
+  cardTriangleDecor: {
+    position: 'absolute', top: -15, left: -15,
+    width: 0, height: 0,
+    borderLeftWidth: 50, borderLeftColor: 'transparent',
+    borderRightWidth: 50, borderRightColor: 'transparent',
+    borderBottomWidth: 80, borderBottomColor: Colors.accent,
+    opacity: 0.15,
   },
   balanceHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm,
   },
-  balanceLabel: { color: Colors.textSecondary, fontSize: FontSizes.md },
+  balanceLabel: { color: Colors.textWhite, fontSize: FontSizes.md, opacity: 0.9 },
   balanceAmount: {
-    color: Colors.white, fontSize: FontSizes.balance, fontWeight: '700',
-    marginBottom: Spacing.lg, letterSpacing: -0.5,
+    color: Colors.textWhite, fontSize: FontSizes.balance, fontWeight: '700',
+    marginBottom: Spacing.md, letterSpacing: -0.5,
   },
-  balanceFooter: { flexDirection: 'row', justifyContent: 'flex-start' },
-  statementBtn: {
+  monthlyRow: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.xl,
+  },
+  monthlyText: { color: Colors.accent, fontSize: FontSizes.md, fontWeight: '500' },
+  statementButton: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
-    backgroundColor: 'rgba(0, 230, 118, 0.08)', paddingVertical: Spacing.sm,
+    backgroundColor: 'rgba(255,255,255,0.1)', paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg, borderRadius: BorderRadii.md,
   },
-  statementBtnText: { color: Colors.accent, fontSize: FontSizes.md, fontWeight: '600' },
+  statementText: { color: Colors.textWhite, fontSize: FontSizes.md, fontWeight: '500' },
   // Quick Actions
   quickActionsContainer: {
     flexDirection: 'row', justifyContent: 'space-between',
     paddingHorizontal: Spacing.xxl, paddingVertical: Spacing.lg,
   },
-  actionItem: { alignItems: 'center', gap: Spacing.sm, flex: 1 },
+  actionItem: { alignItems: 'center', gap: Spacing.sm },
   iconContainer: {
-    width: 54, height: 54, borderRadius: BorderRadii.md,
+    width: 56, height: 56, borderRadius: BorderRadii.md,
     justifyContent: 'center', alignItems: 'center',
   },
   actionLabel: { fontSize: FontSizes.sm, color: Colors.textSecondary, fontWeight: '500' },
   // Transactions
-  transactionsSection: {
-    paddingHorizontal: Spacing.xxl, paddingVertical: Spacing.lg,
-  },
+  transactionsSection: { paddingHorizontal: Spacing.xxl, paddingVertical: Spacing.lg },
   sectionHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     marginBottom: Spacing.lg,
   },
-  sectionTitle: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.white },
+  sectionTitle: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.textPrimary },
   viewAllText: { fontSize: FontSizes.md, color: Colors.accent, fontWeight: '600' },
   transactionItem: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingVertical: Spacing.md,
+    flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.md,
     borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
   txIconCircle: {
@@ -286,7 +294,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center', marginRight: Spacing.lg,
   },
   txInfo: { flex: 1 },
-  txTitle: { fontSize: FontSizes.md, fontWeight: '600', color: Colors.white, marginBottom: 2 },
+  txTitle: { fontSize: FontSizes.md, fontWeight: '600', color: Colors.textPrimary, marginBottom: 2 },
   txSubtitle: { fontSize: FontSizes.sm, color: Colors.textSecondary },
   txRight: { alignItems: 'flex-end' },
   txAmount: { fontSize: FontSizes.md, fontWeight: '700', marginBottom: 2 },
@@ -294,13 +302,11 @@ const styles = StyleSheet.create({
   // Error
   errorBanner: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
-    backgroundColor: 'rgba(255, 215, 64, 0.08)', borderRadius: BorderRadii.md,
-    padding: Spacing.lg, marginBottom: Spacing.md,
-    borderWidth: 1, borderColor: 'rgba(255, 215, 64, 0.15)',
+    backgroundColor: '#FFF7ED', borderRadius: BorderRadii.md,
+    padding: Spacing.md, marginBottom: Spacing.md,
   },
-  errorBannerText: { fontSize: FontSizes.sm, color: Colors.warning, flex: 1 },
+  errorBannerText: { fontSize: FontSizes.sm, color: Colors.warning },
   // Empty
-  emptyState: { alignItems: 'center', paddingVertical: Spacing.huge },
+  emptyState: { alignItems: 'center', paddingVertical: Spacing.xxxl },
   emptyText: { fontSize: FontSizes.lg, color: Colors.textSecondary, marginTop: Spacing.lg },
-  emptySub: { fontSize: FontSizes.md, color: Colors.textMuted, marginTop: Spacing.xs },
 });

@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Spacing, FontSizes, BorderRadii } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { centsToBRL, formatBRL } from '../services/apiService';
@@ -37,8 +36,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation }) => {
 
   const handleLogout = () => {
     Alert.alert(
-      'Sair da conta',
-      'Tem certeza que deseja sair?',
+      'Sair da conta', 'Tem certeza que deseja sair?',
       [
         { text: 'Cancelar', style: 'cancel' },
         { text: 'Sair', style: 'destructive', onPress: logout },
@@ -49,16 +47,16 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={['#0D1F3C', '#162240']} style={styles.header}>
+      <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack?.()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.white} />
+          <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Perfil</Text>
         <View style={{ width: 40 }} />
-      </LinearGradient>
+      </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Avatar Section */}
+        {/* Avatar */}
         <View style={styles.profileSection}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
@@ -119,35 +117,33 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg, paddingTop: Spacing.xl, paddingBottom: Spacing.xxl,
+    paddingHorizontal: Spacing.xxl, paddingTop: Spacing.xl, paddingBottom: Spacing.lg,
   },
   backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { color: Colors.white, fontSize: FontSizes.xxl, fontWeight: '700' },
+  headerTitle: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.textPrimary },
   scrollContent: { paddingBottom: Spacing.xxxl },
-  // Profile
   profileSection: {
-    alignItems: 'center', backgroundColor: Colors.surface,
+    alignItems: 'center', backgroundColor: Colors.white,
     paddingVertical: Spacing.xxl, borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
   avatar: {
     width: 80, height: 80, borderRadius: 40,
-    backgroundColor: 'rgba(0, 230, 118, 0.15)', justifyContent: 'center', alignItems: 'center',
+    backgroundColor: Colors.pixBg, justifyContent: 'center', alignItems: 'center',
     marginBottom: Spacing.lg, borderWidth: 2, borderColor: Colors.accent,
   },
   avatarText: { fontSize: 32, fontWeight: '700', color: Colors.accent },
-  name: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.white, marginBottom: Spacing.xs },
+  name: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.xs },
   cpf: { fontSize: FontSizes.md, color: Colors.textSecondary },
-  // Balance
   balanceCard: {
-    backgroundColor: Colors.surface, marginHorizontal: Spacing.xxl, marginTop: -Spacing.xl,
+    backgroundColor: Colors.white, marginHorizontal: Spacing.xxl, marginTop: -Spacing.xl,
     borderRadius: BorderRadii.xl, padding: Spacing.xxl,
     borderWidth: 1, borderColor: Colors.border,
     elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2, shadowRadius: 8,
+    shadowOpacity: 0.08, shadowRadius: 8,
   },
   balanceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   balanceLabel: { fontSize: FontSizes.md, color: Colors.textSecondary, marginBottom: Spacing.xs },
-  balanceValue: { fontSize: FontSizes.giant, fontWeight: '700', color: Colors.white },
+  balanceValue: { fontSize: FontSizes.giant, fontWeight: '700', color: Colors.textPrimary },
   balanceIconContainer: {
     width: 48, height: 48, borderRadius: 24,
     backgroundColor: Colors.pixBg, justifyContent: 'center', alignItems: 'center',
@@ -156,27 +152,25 @@ const styles = StyleSheet.create({
   limitRow: { flexDirection: 'row', justifyContent: 'space-between' },
   limitLabel: { fontSize: FontSizes.md, color: Colors.textSecondary },
   limitValue: { fontSize: FontSizes.md, fontWeight: '600', color: Colors.accent },
-  // Menu
   menuSection: {
-    backgroundColor: Colors.surface, marginHorizontal: Spacing.xxl, marginTop: Spacing.xl,
+    backgroundColor: Colors.white, marginHorizontal: Spacing.xxl, marginTop: Spacing.xl,
     borderRadius: BorderRadii.lg, overflow: 'hidden', borderWidth: 1, borderColor: Colors.border,
   },
   menuItem: { flexDirection: 'row', alignItems: 'center', padding: Spacing.lg },
-  menuItemBorder: { borderBottomWidth: 1, borderBottomColor: Colors.border },
+  menuItemBorder: { borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
   menuIcon: {
     width: 38, height: 38, borderRadius: BorderRadii.sm,
-    backgroundColor: 'rgba(0, 230, 118, 0.08)', justifyContent: 'center', alignItems: 'center',
+    backgroundColor: Colors.pixBg, justifyContent: 'center', alignItems: 'center',
     marginRight: Spacing.lg,
   },
   menuInfo: { flex: 1 },
-  menuLabel: { fontSize: FontSizes.lg, fontWeight: '500', color: Colors.white },
+  menuLabel: { fontSize: FontSizes.lg, fontWeight: '500', color: Colors.textPrimary },
   menuSubtitle: { fontSize: FontSizes.sm, color: Colors.textSecondary, marginTop: 2 },
-  // Logout
   logoutButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.md,
-    backgroundColor: Colors.surface, marginHorizontal: Spacing.xxl, marginTop: Spacing.xl,
+    backgroundColor: Colors.white, marginHorizontal: Spacing.xxl, marginTop: Spacing.xl,
     paddingVertical: Spacing.lg, borderRadius: BorderRadii.lg,
-    borderWidth: 1, borderColor: 'rgba(255, 82, 82, 0.2)',
+    borderWidth: 1, borderColor: '#FEE2E2',
   },
   logoutText: { fontSize: FontSizes.lg, fontWeight: '600', color: Colors.negative },
   version: { textAlign: 'center', fontSize: FontSizes.sm, color: Colors.textMuted, marginTop: Spacing.xl },

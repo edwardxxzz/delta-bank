@@ -8,7 +8,7 @@ export default function App() {
   return (
     <AuthProvider>
       <SafeAreaView style={styles.container}>
-        <StatusBar style="light" backgroundColor="#0A1628" />
+        <StatusBar style="dark" backgroundColor="#FFFFFF" />
         <AppNavigator />
       </SafeAreaView>
     </AuthProvider>
@@ -18,6 +18,6 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A1628',
+    backgroundColor: '#FFFFFF',
   },
 });

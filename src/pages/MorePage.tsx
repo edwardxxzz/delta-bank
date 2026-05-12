@@ -55,8 +55,7 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
 
   const handleLogout = () => {
     Alert.alert(
-      'Sair da conta',
-      'Tem certeza que deseja sair?',
+      'Sair da conta', 'Tem certeza que deseja sair?',
       [
         { text: 'Cancelar', style: 'cancel' },
         { text: 'Sair', style: 'destructive', onPress: logout },
@@ -70,7 +69,6 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
         <Text style={styles.headerTitle}>Mais</Text>
       </View>
 
-      {/* Profile Card */}
       <TouchableOpacity style={styles.profileCard} onPress={() => navigation?.navigate?.('Profile')}>
         <View style={styles.profileAvatar}>
           <Text style={styles.profileInitial}>
@@ -123,20 +121,20 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   header: { paddingHorizontal: Spacing.xxl, paddingTop: Spacing.xl, paddingBottom: Spacing.lg },
-  headerTitle: { fontSize: FontSizes.huge, fontWeight: '700', color: Colors.white },
+  headerTitle: { fontSize: FontSizes.huge, fontWeight: '700', color: Colors.textPrimary },
   profileCard: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.white,
     marginHorizontal: Spacing.xxl, borderRadius: BorderRadii.lg, padding: Spacing.lg,
     marginBottom: Spacing.xl, borderWidth: 1, borderColor: Colors.border,
   },
   profileAvatar: {
     width: 48, height: 48, borderRadius: 24,
-    backgroundColor: 'rgba(0, 230, 118, 0.15)', justifyContent: 'center', alignItems: 'center',
+    backgroundColor: Colors.pixBg, justifyContent: 'center', alignItems: 'center',
     marginRight: Spacing.lg, borderWidth: 1.5, borderColor: Colors.accent,
   },
   profileInitial: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.accent },
   profileInfo: { flex: 1 },
-  profileName: { fontSize: FontSizes.lg, fontWeight: '600', color: Colors.white },
+  profileName: { fontSize: FontSizes.lg, fontWeight: '600', color: Colors.textPrimary },
   profileEmail: { fontSize: FontSizes.sm, color: Colors.textSecondary, marginTop: 2 },
   scrollContent: { paddingBottom: Spacing.xxl },
   section: { marginBottom: Spacing.lg },
@@ -146,24 +144,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xxl, marginBottom: Spacing.sm,
   },
   sectionCard: {
-    backgroundColor: Colors.surface, marginHorizontal: Spacing.xxl,
+    backgroundColor: Colors.white, marginHorizontal: Spacing.xxl,
     borderRadius: BorderRadii.lg, overflow: 'hidden', borderWidth: 1, borderColor: Colors.border,
   },
   menuItem: { flexDirection: 'row', alignItems: 'center', padding: Spacing.lg },
-  menuItemBorder: { borderBottomWidth: 1, borderBottomColor: Colors.border },
+  menuItemBorder: { borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
   menuIcon: {
     width: 38, height: 38, borderRadius: BorderRadii.sm,
-    backgroundColor: 'rgba(0, 230, 118, 0.08)', justifyContent: 'center', alignItems: 'center',
+    backgroundColor: Colors.pixBg, justifyContent: 'center', alignItems: 'center',
     marginRight: Spacing.lg,
   },
   menuInfo: { flex: 1 },
-  menuLabel: { fontSize: FontSizes.lg, fontWeight: '500', color: Colors.white },
+  menuLabel: { fontSize: FontSizes.lg, fontWeight: '500', color: Colors.textPrimary },
   menuSubtitle: { fontSize: FontSizes.sm, color: Colors.textSecondary, marginTop: 2 },
   logoutButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.md,
-    backgroundColor: Colors.surface, marginHorizontal: Spacing.xxl, marginTop: Spacing.xl,
+    backgroundColor: Colors.white, marginHorizontal: Spacing.xxl, marginTop: Spacing.xl,
     paddingVertical: Spacing.lg, borderRadius: BorderRadii.lg,
-    borderWidth: 1, borderColor: 'rgba(255, 82, 82, 0.2)',
+    borderWidth: 1, borderColor: '#FEE2E2',
   },
   logoutText: { fontSize: FontSizes.lg, fontWeight: '600', color: Colors.negative },
   version: { textAlign: 'center', fontSize: FontSizes.sm, color: Colors.textMuted, marginTop: Spacing.xl },

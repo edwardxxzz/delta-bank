@@ -3,10 +3,9 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   Alert, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Spacing, FontSizes, BorderRadii } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { makePix, brlToCents, formatBRL } from '../services/apiService';
+import { makePix, brlToCents, formatBRL, centsToBRL } from '../services/apiService';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 interface PixPageProps {
@@ -73,13 +72,13 @@ export const PixPage: React.FC<PixPageProps> = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={['#0D1F3C', '#162240']} style={styles.header}>
+      <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack?.()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.white} />
+          <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Enviar Pix</Text>
         <View style={{ width: 40 }} />
-      </LinearGradient>
+      </View>
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.content}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -90,7 +89,7 @@ export const PixPage: React.FC<PixPageProps> = ({ navigation }) => {
             </View>
             <Text style={styles.infoTitle}>Transferência Pix</Text>
             <Text style={styles.infoSubtitle}>
-              Envie dinheiro instantaneamente para qualquer conta usando a chave Pix (CPF do destinatário)
+              Envie dinheiro instantaneamente usando a chave Pix (CPF)
             </Text>
             <View style={styles.balanceChip}>
               <Text style={styles.balanceChipLabel}>Saldo disponível</Text>
@@ -152,10 +151,10 @@ export const PixPage: React.FC<PixPageProps> = ({ navigation }) => {
 
           <TouchableOpacity style={styles.sendButton} onPress={handleSendPix} disabled={loading} activeOpacity={0.8}>
             {loading ? (
-              <ActivityIndicator color={Colors.primary} />
+              <ActivityIndicator color={Colors.white} />
             ) : (
               <>
-                <MaterialCommunityIcons name="arrow-up-right" size={22} color={Colors.primary} />
+                <MaterialCommunityIcons name="arrow-up-right" size={22} color={Colors.white} />
                 <Text style={styles.sendText}>Enviar Pix</Text>
               </>
             )}
@@ -166,21 +165,18 @@ export const PixPage: React.FC<PixPageProps> = ({ navigation }) => {
   );
 };
 
-const centsToBRL = (cents: number): number => cents / 100;
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg, paddingTop: Spacing.xl, paddingBottom: Spacing.xxl,
+    paddingHorizontal: Spacing.xxl, paddingTop: Spacing.xl, paddingBottom: Spacing.lg,
   },
   backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { color: Colors.white, fontSize: FontSizes.xxl, fontWeight: '700' },
+  headerTitle: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.textPrimary },
   content: { flex: 1 },
   scrollContent: { padding: Spacing.xxl, paddingBottom: 60 },
-  // Info Card
   infoCard: {
-    backgroundColor: Colors.surface, borderRadius: BorderRadii.xl,
+    backgroundColor: Colors.white, borderRadius: BorderRadii.xl,
     padding: Spacing.xxl, alignItems: 'center', marginBottom: Spacing.xl,
     borderWidth: 1, borderColor: Colors.border,
   },
@@ -189,35 +185,32 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.pixBg, justifyContent: 'center', alignItems: 'center',
     marginBottom: Spacing.md,
   },
-  infoTitle: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.white, marginBottom: Spacing.xs, marginTop: Spacing.sm },
+  infoTitle: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.xs, marginTop: Spacing.sm },
   infoSubtitle: { fontSize: FontSizes.md, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 },
   balanceChip: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
-    backgroundColor: 'rgba(0, 230, 118, 0.08)', borderRadius: BorderRadii.full,
+    backgroundColor: Colors.pixBg, borderRadius: BorderRadii.full,
     paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, marginTop: Spacing.lg,
-    borderWidth: 1, borderColor: 'rgba(0, 230, 118, 0.15)',
   },
   balanceChipLabel: { fontSize: FontSizes.sm, color: Colors.textSecondary },
   balanceChipValue: { fontSize: FontSizes.md, fontWeight: '700', color: Colors.accent },
-  // Form
   form: { gap: Spacing.lg },
   inputGroup: { gap: Spacing.sm },
-  label: { fontSize: FontSizes.md, fontWeight: '600', color: Colors.white },
+  label: { fontSize: FontSizes.md, fontWeight: '600', color: Colors.textPrimary },
   inputContainer: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.white,
     borderRadius: BorderRadii.lg, borderWidth: 1, borderColor: Colors.border,
     paddingHorizontal: Spacing.lg, height: 54,
   },
   inputIcon: { marginRight: Spacing.md },
   currencyPrefix: { marginRight: Spacing.md, fontSize: 16, fontWeight: '700', color: Colors.accent },
-  input: { flex: 1, fontSize: FontSizes.lg, color: Colors.white },
+  input: { flex: 1, fontSize: FontSizes.lg, color: Colors.textPrimary },
   eyeBtn: { padding: Spacing.sm },
-  // Send Button
   sendButton: {
     flexDirection: 'row', backgroundColor: Colors.accent, borderRadius: BorderRadii.lg,
     height: 56, justifyContent: 'center', alignItems: 'center', gap: Spacing.md,
-    marginTop: Spacing.xxl, elevation: 4, shadowColor: '#00E676',
+    marginTop: Spacing.xxl, elevation: 3, shadowColor: Colors.accent,
     shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8,
   },
-  sendText: { color: Colors.primary, fontSize: FontSizes.xxl, fontWeight: '700' },
+  sendText: { color: Colors.white, fontSize: FontSizes.xxl, fontWeight: '700' },
 });

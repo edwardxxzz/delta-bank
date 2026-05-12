@@ -3,7 +3,6 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   Alert, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Spacing, FontSizes, BorderRadii } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { depositar, brlToCents, formatBRL, centsToBRL } from '../services/apiService';
@@ -53,13 +52,13 @@ export const DepositarPage: React.FC<DepositarPageProps> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#0D1F3C', '#162240']} style={styles.header}>
+      <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack?.()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.white} />
+          <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Depositar</Text>
         <View style={{ width: 40 }} />
-      </LinearGradient>
+      </View>
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.content}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -68,9 +67,7 @@ export const DepositarPage: React.FC<DepositarPageProps> = ({ navigation }) => {
               <MaterialCommunityIcons name="cash-plus" size={36} color={Colors.depositarIcon} />
             </View>
             <Text style={styles.infoTitle}>Depósito</Text>
-            <Text style={styles.infoSubtitle}>
-              Adicione dinheiro à sua conta Delta Bank
-            </Text>
+            <Text style={styles.infoSubtitle}>Adicione dinheiro à sua conta Delta Bank</Text>
             <View style={styles.balanceChip}>
               <Text style={styles.balanceChipLabel}>Saldo atual</Text>
               <Text style={styles.balanceChipValue}>R$ {formatBRL(balance)}</Text>
@@ -83,23 +80,15 @@ export const DepositarPage: React.FC<DepositarPageProps> = ({ navigation }) => {
               <View style={styles.inputContainer}>
                 <Text style={styles.currencyPrefix}>R$</Text>
                 <TextInput
-                  style={styles.input}
-                  placeholder="0,00"
-                  placeholderTextColor={Colors.textMuted}
-                  value={valor}
-                  onChangeText={setValor}
-                  keyboardType="numeric"
+                  style={styles.input} placeholder="0,00" placeholderTextColor={Colors.textMuted}
+                  value={valor} onChangeText={setValor} keyboardType="numeric"
                 />
               </View>
             </View>
 
             <View style={styles.quickAmountsRow}>
               {quickAmounts.map((amount) => (
-                <TouchableOpacity
-                  key={amount}
-                  style={styles.quickAmountBtn}
-                  onPress={() => setValor(String(amount))}
-                >
+                <TouchableOpacity key={amount} style={styles.quickAmountBtn} onPress={() => setValor(String(amount))}>
                   <Text style={styles.quickAmountText}>R$ {amount}</Text>
                 </TouchableOpacity>
               ))}
@@ -108,10 +97,10 @@ export const DepositarPage: React.FC<DepositarPageProps> = ({ navigation }) => {
 
           <TouchableOpacity style={styles.sendButton} onPress={handleDepositar} disabled={loading} activeOpacity={0.8}>
             {loading ? (
-              <ActivityIndicator color={Colors.primary} />
+              <ActivityIndicator color={Colors.white} />
             ) : (
               <>
-                <MaterialCommunityIcons name="cash-plus" size={22} color={Colors.primary} />
+                <MaterialCommunityIcons name="cash-plus" size={22} color={Colors.white} />
                 <Text style={styles.sendText}>Confirmar depósito</Text>
               </>
             )}
@@ -126,14 +115,14 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg, paddingTop: Spacing.xl, paddingBottom: Spacing.xxl,
+    paddingHorizontal: Spacing.xxl, paddingTop: Spacing.xl, paddingBottom: Spacing.lg,
   },
   backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { color: Colors.white, fontSize: FontSizes.xxl, fontWeight: '700' },
+  headerTitle: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.textPrimary },
   content: { flex: 1 },
   scrollContent: { padding: Spacing.xxl, paddingBottom: 60 },
   infoCard: {
-    backgroundColor: Colors.surface, borderRadius: BorderRadii.xl,
+    backgroundColor: Colors.white, borderRadius: BorderRadii.xl,
     padding: Spacing.xxl, alignItems: 'center', marginBottom: Spacing.xl,
     borderWidth: 1, borderColor: Colors.border,
   },
@@ -142,38 +131,36 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.depositarBg, justifyContent: 'center', alignItems: 'center',
     marginBottom: Spacing.md,
   },
-  infoTitle: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.white, marginBottom: Spacing.xs, marginTop: Spacing.sm },
+  infoTitle: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.xs, marginTop: Spacing.sm },
   infoSubtitle: { fontSize: FontSizes.md, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 },
   balanceChip: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
-    backgroundColor: 'rgba(0, 230, 118, 0.08)', borderRadius: BorderRadii.full,
+    backgroundColor: Colors.pixBg, borderRadius: BorderRadii.full,
     paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, marginTop: Spacing.lg,
-    borderWidth: 1, borderColor: 'rgba(0, 230, 118, 0.15)',
   },
   balanceChipLabel: { fontSize: FontSizes.sm, color: Colors.textSecondary },
   balanceChipValue: { fontSize: FontSizes.md, fontWeight: '700', color: Colors.accent },
   form: { gap: Spacing.lg },
   inputGroup: { gap: Spacing.sm },
-  label: { fontSize: FontSizes.md, fontWeight: '600', color: Colors.white },
+  label: { fontSize: FontSizes.md, fontWeight: '600', color: Colors.textPrimary },
   inputContainer: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.white,
     borderRadius: BorderRadii.lg, borderWidth: 1, borderColor: Colors.border,
     paddingHorizontal: Spacing.lg, height: 54,
   },
   currencyPrefix: { marginRight: Spacing.md, fontSize: 16, fontWeight: '700', color: Colors.accent },
-  input: { flex: 1, fontSize: FontSizes.lg, color: Colors.white },
+  input: { flex: 1, fontSize: FontSizes.lg, color: Colors.textPrimary },
   quickAmountsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.sm },
   quickAmountBtn: {
     flex: 1, paddingVertical: Spacing.md, borderRadius: BorderRadii.md,
-    backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: Colors.white, alignItems: 'center', justifyContent: 'center',
     borderWidth: 1, borderColor: Colors.border,
   },
   quickAmountText: { fontSize: FontSizes.md, color: Colors.textSecondary, fontWeight: '500' },
   sendButton: {
     flexDirection: 'row', backgroundColor: Colors.depositarIcon, borderRadius: BorderRadii.lg,
     height: 56, justifyContent: 'center', alignItems: 'center', gap: Spacing.md,
-    marginTop: Spacing.xxl, elevation: 4, shadowColor: Colors.depositarIcon,
-    shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8,
+    marginTop: Spacing.xxl,
   },
-  sendText: { color: Colors.primary, fontSize: FontSizes.xxl, fontWeight: '700' },
+  sendText: { color: Colors.white, fontSize: FontSizes.xxl, fontWeight: '700' },
 });
