@@ -1,0 +1,61 @@
+export const Colors = {
+  primary: '#1A237E',
+  primaryDark: '#0D1B4A',
+  primaryLight: '#3949AB',
+  accent: '#00C9A7',
+  accentLight: '#00E5BF',
+  accentDark: '#00A88A',
+  white: '#FFFFFF',
+  background: '#F5F5F5',
+  cardBg: '#0D1B4A',
+  cardGradientStart: '#0D1B4A',
+  cardGradientEnd: '#1A237E',
+  textPrimary: '#1A237E',
+  textSecondary: '#757575',
+  textMuted: '#9E9E9E',
+  textWhite: '#FFFFFF',
+  textAccent: '#00C9A7',
+  positive: '#00C9A7',
+  negative: '#1A237E',
+  border: '#E0E0E0',
+  inputBg: '#F5F5F5',
+  shadow: 'rgba(0, 0, 0, 0.1)',
+  overlay: 'rgba(0, 0, 0, 0.5)',
+  pix: '#00C9A7',
+  pagar: '#1A237E',
+  transferir: '#3949AB',
+  emprestimo: '#FF6B35',
+};
+
+export const Spacing = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+  xxxl: 32,
+  huge: 40,
+};
+
+export const FontSizes = {
+  xs: 10,
+  sm: 12,
+  md: 14,
+  lg: 16,
+  xl: 18,
+  xxl: 20,
+  xxxl: 24,
+  huge: 28,
+  giant: 34,
+  balance: 38,
+};
+
+export const BorderRadii = {
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+  full: 9999,
+};

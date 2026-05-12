@@ -1,0 +1,10 @@
+node_modules/
+.expo/
+dist/
+.env
+.env.local
+*.tsbuildinfo
+.DS_Store
+download/
+upload/
+skills/
