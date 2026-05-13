@@ -51,6 +51,39 @@ export const formatBRL = (value: number): string => {
   });
 };
 
+// ── Safe fetch wrapper ──
+async function safeFetch<T>(url: string, options?: RequestInit): Promise<ApiResponse<T>> {
+  try {
+    const res = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options?.headers || {}),
+      },
+    });
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      let errorMsg = `Erro do servidor (${res.status})`;
+      try {
+        const parsed = JSON.parse(text);
+        errorMsg = parsed.mensagem || parsed.error || errorMsg;
+      } catch {}
+      return { sucesso: false, mensagem: errorMsg };
+    }
+
+    const data = await res.json();
+    return data;
+  } catch (error: any) {
+    return {
+      sucesso: false,
+      mensagem: error.message === 'Network request failed'
+        ? 'Sem conexão com o servidor. Verifique sua internet.'
+        : `Erro de conexão: ${error.message || 'Desconhecido'}`,
+    };
+  }
+}
+
 // ── API Calls ──
 
 export const createAccount = async (
@@ -59,34 +92,28 @@ export const createAccount = async (
   senha: string,
   saldoInicial: number
 ): Promise<ApiResponse<Account>> => {
-  const res = await fetch(`${BASE_URL}/api/contas`, {
+  return safeFetch<Account>(`${BASE_URL}/api/contas`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ nome, cpf, senha, saldo_inicial: saldoInicial }),
   });
-  return res.json();
 };
 
 export const loginAPI = async (
   cpf: string,
   senha: string
 ): Promise<ApiResponse<Account>> => {
-  const res = await fetch(`${BASE_URL}/api/login`, {
+  return safeFetch<Account>(`${BASE_URL}/api/login`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ cpf, senha }),
   });
-  return res.json();
 };
 
 export const getSaldo = async (cpf: string): Promise<ApiResponse<SaldoData>> => {
-  const res = await fetch(`${BASE_URL}/api/saldo/${cpf}`);
-  return res.json();
+  return safeFetch<SaldoData>(`${BASE_URL}/api/saldo/${cpf}`);
 };
 
 export const getExtrato = async (cpf: string): Promise<ApiResponse<any>> => {
-  const res = await fetch(`${BASE_URL}/api/extrato/${cpf}`);
-  return res.json();
+  return safeFetch<any>(`${BASE_URL}/api/extrato/${cpf}`);
 };
 
 export const makePix = async (
@@ -95,9 +122,8 @@ export const makePix = async (
   valor: number,
   senha: string
 ): Promise<ApiResponse<PixTransaction>> => {
-  const res = await fetch(`${BASE_URL}/api/pix`, {
+  return safeFetch<PixTransaction>(`${BASE_URL}/api/pix`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       cpf_origem: cpfOrigem,
       cpf_destino: cpfDestino,
@@ -105,19 +131,16 @@ export const makePix = async (
       senha,
     }),
   });
-  return res.json();
 };
 
 export const depositar = async (
   cpf: string,
   valor: number
 ): Promise<ApiResponse<{ novo_saldo: number }>> => {
-  const res = await fetch(`${BASE_URL}/api/depositar`, {
+  return safeFetch<{ novo_saldo: number }>(`${BASE_URL}/api/depositar`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ cpf, valor }),
   });
-  return res.json();
 };
 
 export const sacar = async (
@@ -125,15 +148,12 @@ export const sacar = async (
   valor: number,
   senha: string
 ): Promise<ApiResponse<{ novo_saldo: number }>> => {
-  const res = await fetch(`${BASE_URL}/api/sacar`, {
+  return safeFetch<{ novo_saldo: number }>(`${BASE_URL}/api/sacar`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ cpf, valor, senha }),
   });
-  return res.json();
 };
 
 export const getChavesPix = async (cpf: string): Promise<ApiResponse<any>> => {
-  const res = await fetch(`${BASE_URL}/api/chaves-pix/${cpf}`);
-  return res.json();
+  return safeFetch<any>(`${BASE_URL}/api/chaves-pix/${cpf}`);
 };
