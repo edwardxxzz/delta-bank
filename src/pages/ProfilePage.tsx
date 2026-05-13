@@ -88,7 +88,17 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation }) => {
         {/* Menu */}
         <View style={styles.menuSection}>
           {menuItems.map((item, idx) => (
-            <TouchableOpacity key={idx} style={[styles.menuItem, idx < menuItems.length - 1 && styles.menuItemBorder]}>
+            <TouchableOpacity
+              key={idx}
+              style={[styles.menuItem, idx < menuItems.length - 1 && styles.menuItemBorder]}
+              onPress={() => {
+                if (item.label === 'Dados pessoais') {
+                  navigation?.navigate?.('Conta');
+                } else if (item.label === 'Notificações' || item.label === 'Aparência' || item.label === 'Central de ajuda') {
+                  navigation?.navigate?.('Config');
+                }
+              }}
+            >
               <View style={styles.menuIcon}>
                 {renderIcon(item.icon, item.iconSet)}
               </View>

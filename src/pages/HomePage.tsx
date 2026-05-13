@@ -111,14 +111,12 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.accent} />}
       >
-        {/* Header */}
+        {/* Header - matching dashboard reference */}
         <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <View style={styles.logoTriangle} />
-            <Text style={styles.logoText}>DELTA BANK</Text>
-          </View>
+          <Text style={styles.greeting}>Olá {firstName}</Text>
           <TouchableOpacity style={styles.profileButton} onPress={() => navigation?.navigate?.('Profile')}>
             <Ionicons name="person" size={22} color={Colors.primary} />
+            <View style={styles.onlineDot} />
           </TouchableOpacity>
         </View>
 
@@ -130,6 +128,12 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
         >
           {/* Triangle decoration */}
           <View style={styles.cardTriangleDecor} />
+
+          {/* Bank logo row */}
+          <View style={styles.cardLogoRow}>
+            <View style={styles.cardLogoTriangle} />
+            <Text style={styles.cardBankName}>DELTA BANK</Text>
+          </View>
 
           <View style={styles.balanceHeader}>
             <Text style={styles.balanceLabel}>Saldo em conta</Text>
@@ -143,6 +147,9 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
           <View style={styles.monthlyRow}>
             <MaterialCommunityIcons name="autorenew" size={16} color={Colors.accent} />
             <Text style={styles.monthlyText}>+ R$ 320,40 este mês</Text>
+            <TouchableOpacity hitSlop={8}>
+              <Ionicons name="information-circle-outline" size={16} color="rgba(255,255,255,0.5)" />
+            </TouchableOpacity>
           </View>
           <TouchableOpacity style={styles.statementButton} onPress={() => navigation?.navigate?.('Extrato')}>
             <Feather name="file-text" size={14} color="rgba(255,255,255,0.9)" />
@@ -221,17 +228,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: Spacing.xxl, paddingTop: Spacing.lg, paddingBottom: Spacing.md,
   },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  logoTriangle: {
-    width: 0, height: 0,
-    borderLeftWidth: 10, borderLeftColor: 'transparent',
-    borderRightWidth: 10, borderRightColor: 'transparent',
-    borderBottomWidth: 16, borderBottomColor: Colors.accent,
-  },
-  logoText: { fontSize: FontSizes.lg, fontWeight: '700', color: Colors.textPrimary, letterSpacing: 0.5 },
+  greeting: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.textPrimary },
   profileButton: {
     width: 44, height: 44, borderRadius: 22,
     backgroundColor: Colors.surfaceLight, justifyContent: 'center', alignItems: 'center',
+    position: 'relative',
+  },
+  onlineDot: {
+    position: 'absolute', top: 2, right: 2,
+    width: 10, height: 10, borderRadius: 5,
+    backgroundColor: Colors.accent, borderWidth: 2, borderColor: Colors.white,
   },
   // Balance Card
   balanceCard: {
@@ -248,6 +254,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 80, borderBottomColor: Colors.accent,
     opacity: 0.15,
   },
+  cardLogoRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.lg },
+  cardLogoTriangle: {
+    width: 0, height: 0,
+    borderLeftWidth: 8, borderLeftColor: 'transparent',
+    borderRightWidth: 8, borderRightColor: 'transparent',
+    borderBottomWidth: 14, borderBottomColor: Colors.accent,
+  },
+  cardBankName: { fontSize: FontSizes.md, fontWeight: '700', color: Colors.white, letterSpacing: 1 },
   balanceHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm,
   },

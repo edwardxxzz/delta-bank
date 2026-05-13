@@ -23,7 +23,7 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
     {
       title: 'MINHA CONTA',
       items: [
-        { icon: 'person-outline', iconSet: 'Ionicons' as const, label: 'Dados da conta', navigate: 'Profile' },
+        { icon: 'person-outline', iconSet: 'Ionicons' as const, label: 'Dados da conta', navigate: 'Conta' },
         { icon: 'file-text-outline', iconSet: 'MaterialCommunityIcons' as const, label: 'Extrato completo', navigate: 'Extrato' },
         { icon: 'trending-up', iconSet: 'Feather' as const, label: 'Investimentos', navigate: 'invest' },
         { icon: 'card-outline', iconSet: 'Ionicons' as const, label: 'Cartões', navigate: 'cards' },
@@ -41,7 +41,7 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
     {
       title: 'CONFIGURAÇÕES',
       items: [
-        { icon: 'settings-outline', iconSet: 'Ionicons' as const, label: 'Configurações do app' },
+        { icon: 'settings-outline', iconSet: 'Ionicons' as const, label: 'Configurações do app', navigate: 'Config' },
       ],
     },
   ];
