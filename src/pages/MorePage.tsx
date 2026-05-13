@@ -13,34 +13,35 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
 
   const menuSections = [
     {
-      title: 'CONTA',
+      title: 'PIX',
       items: [
-        { icon: 'person-outline', iconSet: 'Ionicons' as const, label: 'Dados pessoais', subtitle: 'Nome, email, telefone', navigate: 'Profile' },
-        { icon: 'shield-check-outline', iconSet: 'Ionicons' as const, label: 'Segurança', subtitle: 'Senha, 2FA, biometria' },
-        { icon: 'notifications-outline', iconSet: 'Ionicons' as const, label: 'Notificações', subtitle: 'Alertas e Push' },
+        { icon: 'qrcode', iconSet: 'MaterialCommunityIcons' as const, label: 'Gerar QR Code', navigate: 'QRCode' },
+        { icon: 'qrcode-scan', iconSet: 'MaterialCommunityIcons' as const, label: 'Ler QR Code', navigate: 'Pagar' },
+        { icon: 'key-variant', iconSet: 'MaterialCommunityIcons' as const, label: 'Minhas chaves Pix' },
+      ],
+    },
+    {
+      title: 'MINHA CONTA',
+      items: [
+        { icon: 'person-outline', iconSet: 'Ionicons' as const, label: 'Dados da conta', navigate: 'Profile' },
+        { icon: 'file-text-outline', iconSet: 'MaterialCommunityIcons' as const, label: 'Extrato completo', navigate: 'Extrato' },
+        { icon: 'trending-up', iconSet: 'Feather' as const, label: 'Investimentos', navigate: 'invest' },
+        { icon: 'card-outline', iconSet: 'Ionicons' as const, label: 'Cartões', navigate: 'cards' },
       ],
     },
     {
       title: 'SERVIÇOS',
       items: [
-        { icon: 'swap-horizontal-bold', iconSet: 'MaterialCommunityIcons' as const, label: 'Pix', subtitle: 'Envio e recebimento', navigate: 'Pix' },
-        { icon: 'cash-plus', iconSet: 'MaterialCommunityIcons' as const, label: 'Depositar', subtitle: 'Adicionar saldo', navigate: 'Depositar' },
-        { icon: 'cash-minus', iconSet: 'MaterialCommunityIcons' as const, label: 'Sacar', subtitle: 'Retirar saldo', navigate: 'Sacar' },
+        { icon: 'cellphone', iconSet: 'MaterialCommunityIcons' as const, label: 'Recarga de celular' },
+        { icon: 'swap-horizontal', iconSet: 'MaterialCommunityIcons' as const, label: 'Câmbio' },
+        { icon: 'shield-check-outline', iconSet: 'Ionicons' as const, label: 'Seguros' },
+        { icon: 'cash', iconSet: 'MaterialCommunityIcons' as const, label: 'Empréstimos' },
       ],
     },
     {
-      title: 'PREFERÊNCIAS',
+      title: 'CONFIGURAÇÕES',
       items: [
-        { icon: 'phone-portrait-outline', iconSet: 'Ionicons' as const, label: 'Aparência', subtitle: 'Tema e idioma' },
-        { icon: 'globe-outline', iconSet: 'Ionicons' as const, label: 'Idioma', subtitle: 'Português (BR)' },
-      ],
-    },
-    {
-      title: 'SUPORTE',
-      items: [
-        { icon: 'help-circle-outline', iconSet: 'Ionicons' as const, label: 'Central de ajuda' },
-        { icon: 'chatbubble-outline', iconSet: 'Ionicons' as const, label: 'Chat com suporte' },
-        { icon: 'file-text-outline', iconSet: 'MaterialCommunityIcons' as const, label: 'Termos e políticas' },
+        { icon: 'settings-outline', iconSet: 'Ionicons' as const, label: 'Configurações do app' },
       ],
     },
   ];
@@ -51,6 +52,16 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
     if (iconSet === 'Ionicons') return <Ionicons name={icon as any} size={size} color={color} />;
     if (iconSet === 'MaterialCommunityIcons') return <MaterialCommunityIcons name={icon as any} size={size} color={color} />;
     return <Feather name={icon as any} size={size} color={color} />;
+  };
+
+  const handlePress = (item: any) => {
+    if (!item.navigate) return;
+    // Tab navigation items need special handling - navigate to Main and then switch tab
+    if (item.navigate === 'invest' || item.navigate === 'cards' || item.navigate === 'home') {
+      navigation?.navigate('Main', { screen: item.navigate });
+    } else {
+      navigation?.navigate(item.navigate);
+    }
   };
 
   const handleLogout = () => {
@@ -65,22 +76,10 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Mais</Text>
+        <Text style={styles.headerTitle}>Mais serviços</Text>
       </View>
-
-      <TouchableOpacity style={styles.profileCard} onPress={() => navigation?.navigate?.('Profile')}>
-        <View style={styles.profileAvatar}>
-          <Text style={styles.profileInitial}>
-            {userData?.nome?.charAt(0)?.toUpperCase() || 'U'}
-          </Text>
-        </View>
-        <View style={styles.profileInfo}>
-          <Text style={styles.profileName}>{userData?.nome || 'Usuário'}</Text>
-          <Text style={styles.profileEmail}>CPF: {formattedCPF}</Text>
-        </View>
-        <Feather name="chevron-right" size={22} color={Colors.textMuted} />
-      </TouchableOpacity>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {menuSections.map((section, sIdx) => (
@@ -91,15 +90,13 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
                 <TouchableOpacity
                   key={iIdx}
                   style={[styles.menuItem, iIdx < section.items.length - 1 && styles.menuItemBorder]}
-                  onPress={() => item.navigate ? navigation?.navigate?.(item.navigate) : {}}
+                  onPress={() => handlePress(item)}
+                  activeOpacity={0.7}
                 >
                   <View style={styles.menuIcon}>
                     {renderIcon(item.icon, item.iconSet)}
                   </View>
-                  <View style={styles.menuInfo}>
-                    <Text style={styles.menuLabel}>{item.label}</Text>
-                    {item.subtitle && <Text style={styles.menuSubtitle}>{item.subtitle}</Text>}
-                  </View>
+                  <Text style={styles.menuLabel}>{item.label}</Text>
                   <Feather name="chevron-right" size={18} color={Colors.textMuted} />
                 </TouchableOpacity>
               ))}
@@ -122,24 +119,10 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   header: { paddingHorizontal: Spacing.xxl, paddingTop: Spacing.xl, paddingBottom: Spacing.lg },
   headerTitle: { fontSize: FontSizes.huge, fontWeight: '700', color: Colors.textPrimary },
-  profileCard: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.white,
-    marginHorizontal: Spacing.xxl, borderRadius: BorderRadii.lg, padding: Spacing.lg,
-    marginBottom: Spacing.xl, borderWidth: 1, borderColor: Colors.border,
-  },
-  profileAvatar: {
-    width: 48, height: 48, borderRadius: 24,
-    backgroundColor: Colors.pixBg, justifyContent: 'center', alignItems: 'center',
-    marginRight: Spacing.lg, borderWidth: 1.5, borderColor: Colors.accent,
-  },
-  profileInitial: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.accent },
-  profileInfo: { flex: 1 },
-  profileName: { fontSize: FontSizes.lg, fontWeight: '600', color: Colors.textPrimary },
-  profileEmail: { fontSize: FontSizes.sm, color: Colors.textSecondary, marginTop: 2 },
-  scrollContent: { paddingBottom: Spacing.xxl },
+  scrollContent: { paddingBottom: Spacing.xxxl },
   section: { marginBottom: Spacing.lg },
   sectionTitle: {
-    fontSize: FontSizes.sm, fontWeight: '600', color: Colors.textMuted,
+    fontSize: FontSizes.sm, fontWeight: '700', color: Colors.textMuted,
     textTransform: 'uppercase', letterSpacing: 0.5,
     paddingHorizontal: Spacing.xxl, marginBottom: Spacing.sm,
   },
@@ -147,16 +130,16 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white, marginHorizontal: Spacing.xxl,
     borderRadius: BorderRadii.lg, overflow: 'hidden', borderWidth: 1, borderColor: Colors.border,
   },
-  menuItem: { flexDirection: 'row', alignItems: 'center', padding: Spacing.lg },
+  menuItem: {
+    flexDirection: 'row', alignItems: 'center', padding: Spacing.lg,
+  },
   menuItemBorder: { borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
   menuIcon: {
     width: 38, height: 38, borderRadius: BorderRadii.sm,
     backgroundColor: Colors.pixBg, justifyContent: 'center', alignItems: 'center',
     marginRight: Spacing.lg,
   },
-  menuInfo: { flex: 1 },
-  menuLabel: { fontSize: FontSizes.lg, fontWeight: '500', color: Colors.textPrimary },
-  menuSubtitle: { fontSize: FontSizes.sm, color: Colors.textSecondary, marginTop: 2 },
+  menuLabel: { flex: 1, fontSize: FontSizes.lg, fontWeight: '500', color: Colors.textPrimary },
   logoutButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.md,
     backgroundColor: Colors.white, marginHorizontal: Spacing.xxl, marginTop: Spacing.xl,

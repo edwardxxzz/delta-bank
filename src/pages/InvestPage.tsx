@@ -33,7 +33,11 @@ const totalInvested = mockInvestments.reduce((acc, inv) => acc + inv.amount, 0);
 const totalYield = mockInvestments.reduce((acc, inv) => acc + (inv.amount * inv.yieldRate / 100), 0);
 const totalPatrimony = totalInvested + totalYield;
 
-export const InvestPage: React.FC = () => {
+interface InvestPageProps {
+  navigation?: any;
+}
+
+export const InvestPage: React.FC<InvestPageProps> = ({ navigation }) => {
   const [selectedFilter, setSelectedFilter] = useState('todos');
   const filters = ['todos', 'renda_fixa', 'renda_variavel'];
 

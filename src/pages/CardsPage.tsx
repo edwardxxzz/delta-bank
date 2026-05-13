@@ -30,7 +30,11 @@ const mockCards: CardItem[] = [
   { id: '3', name: 'Delta Bank', number: '4532987654321098', flag: 'visa', type: 'debit', limit: 0, used: 0, expirationDate: 'N/A', color: '#0A192F', isVirtual: true },
 ];
 
-export const CardsPage: React.FC = () => {
+interface CardsPageProps {
+  navigation?: any;
+}
+
+export const CardsPage: React.FC<CardsPageProps> = ({ navigation }) => {
   const [selectedTab, setSelectedTab] = useState<'debito' | 'virtual' | 'credito'>('debito');
   const [showDetails, setShowDetails] = useState(false);
 

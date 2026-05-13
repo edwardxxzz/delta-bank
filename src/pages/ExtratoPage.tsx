@@ -1,9 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   View, ScrollView, StyleSheet, RefreshControl, Text,
-  TouchableOpacity, ActivityIndicator,
+  TouchableOpacity, ActivityIndicator, TextInput,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../contexts/AuthContext';
 import { centsToBRL, getExtrato, formatBRL } from '../services/apiService';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
@@ -16,6 +15,7 @@ export interface DisplayTransaction {
   subtitle: string;
   amount: number;
   date: string;
+  rawDate: Date;
 }
 
 interface ExtratoPageProps {
@@ -28,7 +28,8 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
   const [transactions, setTransactions] = useState<DisplayTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filter, setFilter] = useState<'todos' | 'pix' | 'deposito' | 'saque'>('todos');
+  const [filter, setFilter] = useState<'todos' | 'pix' | 'cartao' | 'transferencias'>('todos');
+  const [searchText, setSearchText] = useState('');
 
   const loadTransactions = useCallback(async () => {
     if (userData?.cpf) {
@@ -51,9 +52,9 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
               ? -centsToBRL(t.valor_centavos)
               : centsToBRL(t.valor_centavos),
             date: new Date(t.data_hora).toLocaleString('pt-BR', {
-              day: '2-digit', month: '2-digit', year: '2-digit',
-              hour: '2-digit', minute: '2-digit'
+              day: '2-digit', month: 'short',
             }),
+            rawDate: new Date(t.data_hora),
           }));
           setTransactions(mapped);
         } else {
@@ -91,20 +92,41 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
   };
 
   const filteredTransactions = transactions.filter((tx) => {
-    if (filter === 'todos') return true;
+    // Filter by type
     if (filter === 'pix') return tx.type === 'pix_sent' || tx.type === 'pix_received';
-    if (filter === 'deposito') return tx.type === 'deposit';
-    if (filter === 'saque') return tx.type === 'withdraw';
+    if (filter === 'cartao') return tx.type === 'deposit';
+    if (filter === 'transferencias') return tx.type === 'pix_sent' || tx.type === 'pix_received';
     return true;
+  }).filter((tx) => {
+    // Filter by search text
+    if (!searchText) return true;
+    const lower = searchText.toLowerCase();
+    return tx.title.toLowerCase().includes(lower) || tx.subtitle.toLowerCase().includes(lower);
   });
+
+  // Group by month
+  const groupByMonth = (txs: DisplayTransaction[]) => {
+    const groups: { month: string; items: DisplayTransaction[] }[] = [];
+    const monthMap = new Map<string, DisplayTransaction[]>();
+    txs.forEach((tx) => {
+      const monthKey = tx.rawDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+      const capitalized = monthKey.charAt(0).toUpperCase() + monthKey.slice(1);
+      if (!monthMap.has(capitalized)) monthMap.set(capitalized, []);
+      monthMap.get(capitalized)!.push(tx);
+    });
+    monthMap.forEach((items, month) => groups.push({ month, items }));
+    return groups;
+  };
+
+  const grouped = groupByMonth(filteredTransactions);
 
   const balance = userData ? centsToBRL(userData.saldo_centavos) : 0;
 
   const filters: { key: typeof filter; label: string }[] = [
     { key: 'todos', label: 'Todos' },
     { key: 'pix', label: 'Pix' },
-    { key: 'deposito', label: 'Depósitos' },
-    { key: 'saque', label: 'Saques' },
+    { key: 'cartao', label: 'Cartão' },
+    { key: 'transferencias', label: 'Transferências' },
   ];
 
   return (
@@ -115,21 +137,24 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
           <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Extrato</Text>
-        <View style={{ width: 40 }} />
-      </View>
-
-      {/* Balance Row */}
-      <View style={styles.balanceRow}>
-        <View>
-          <Text style={styles.balanceLabel}>Saldo atual</Text>
-          <Text style={styles.balanceValue}>R$ {formatBRL(balance)}</Text>
-        </View>
-        <TouchableOpacity onPress={onRefresh} style={styles.refreshBtn}>
-          <Ionicons name="refresh" size={20} color={Colors.accent} />
+        <TouchableOpacity style={styles.downloadBtn} onPress={onRefresh}>
+          <Feather name="download" size={20} color={Colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
-      {/* Filters */}
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={18} color={Colors.textMuted} style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Buscar transação..."
+          placeholderTextColor={Colors.textMuted}
+          value={searchText}
+          onChangeText={setSearchText}
+        />
+      </View>
+
+      {/* Filter Tabs */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersRow}>
         {filters.map((f) => (
           <TouchableOpacity
@@ -167,33 +192,38 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         </View>
-      ) : filteredTransactions.length > 0 ? (
+      ) : grouped.length > 0 ? (
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.accent} />}
         >
-          {filteredTransactions.map((tx) => {
-            const iconCfg = getTransactionIcon(tx.type);
-            const isPositive = tx.amount >= 0;
-            return (
-              <View key={tx.id} style={styles.transactionItem}>
-                <View style={[styles.txIconCircle, { backgroundColor: iconCfg.bg }]}>
-                  <MaterialCommunityIcons name={iconCfg.name as any} size={22} color={iconCfg.color} />
-                </View>
-                <View style={styles.txInfo}>
-                  <Text style={styles.txTitle}>{tx.title}</Text>
-                  <Text style={styles.txSubtitle}>{tx.subtitle}</Text>
-                  <Text style={styles.txDate}>{tx.date}</Text>
-                </View>
-                <View style={styles.txRight}>
-                  <Text style={[styles.txAmount, { color: isPositive ? Colors.positive : Colors.negative }]}>
-                    {isPositive ? '+' : '-'} R$ {formatBRL(Math.abs(tx.amount))}
-                  </Text>
-                </View>
-              </View>
-            );
-          })}
+          {grouped.map((group, gIdx) => (
+            <View key={gIdx} style={styles.monthGroup}>
+              <Text style={styles.monthHeader}>{group.month}</Text>
+              {group.items.map((tx) => {
+                const iconCfg = getTransactionIcon(tx.type);
+                const isPositive = tx.amount >= 0;
+                return (
+                  <View key={tx.id} style={styles.transactionItem}>
+                    <View style={[styles.txIconCircle, { backgroundColor: iconCfg.bg }]}>
+                      <MaterialCommunityIcons name={iconCfg.name as any} size={20} color={iconCfg.color} />
+                    </View>
+                    <View style={styles.txInfo}>
+                      <Text style={styles.txTitle}>{tx.title}</Text>
+                      <Text style={styles.txSubtitle}>{tx.subtitle}</Text>
+                    </View>
+                    <View style={styles.txRight}>
+                      <Text style={[styles.txAmount, { color: isPositive ? Colors.positive : Colors.negative }]}>
+                        {isPositive ? '+' : '-'} R$ {formatBRL(Math.abs(tx.amount))}
+                      </Text>
+                      <Text style={styles.txDate}>{tx.date}</Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          ))}
         </ScrollView>
       ) : (
         <View style={styles.centerContent}>
@@ -213,16 +243,16 @@ const styles = StyleSheet.create({
   },
   backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.textPrimary },
-  balanceRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: Spacing.xxl, paddingVertical: Spacing.lg,
+  downloadBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
+  searchContainer: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: Colors.white, borderRadius: BorderRadii.lg,
+    borderWidth: 1, borderColor: Colors.border,
+    marginHorizontal: Spacing.xxl, marginBottom: Spacing.lg,
+    paddingHorizontal: Spacing.lg, height: 48,
   },
-  balanceLabel: { fontSize: FontSizes.md, color: Colors.textSecondary, marginBottom: Spacing.xs },
-  balanceValue: { fontSize: FontSizes.huge, fontWeight: '700', color: Colors.textPrimary },
-  refreshBtn: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.surfaceLight,
-    justifyContent: 'center', alignItems: 'center',
-  },
+  searchIcon: { marginRight: Spacing.md },
+  searchInput: { flex: 1, fontSize: FontSizes.md, color: Colors.textPrimary },
   filtersRow: { flexDirection: 'row', paddingHorizontal: Spacing.xxl, marginBottom: Spacing.lg, maxHeight: 44 },
   filterBtn: {
     paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderRadius: BorderRadii.full,
@@ -247,21 +277,26 @@ const styles = StyleSheet.create({
   },
   retryBtnText: { color: Colors.accent, fontSize: FontSizes.lg, fontWeight: '600' },
   listContent: { paddingHorizontal: Spacing.xxl, paddingBottom: Spacing.xxxl },
+  monthGroup: { marginBottom: Spacing.lg },
+  monthHeader: {
+    fontSize: FontSizes.md, fontWeight: '600', color: Colors.textSecondary,
+    marginBottom: Spacing.md, marginTop: Spacing.sm,
+  },
   transactionItem: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: Colors.white, borderRadius: BorderRadii.lg,
-    padding: Spacing.lg, marginBottom: Spacing.md,
+    padding: Spacing.lg, marginBottom: Spacing.sm,
     borderWidth: 1, borderColor: Colors.border,
   },
   txIconCircle: {
-    width: 44, height: 44, borderRadius: 22,
+    width: 42, height: 42, borderRadius: 21,
     justifyContent: 'center', alignItems: 'center', marginRight: Spacing.lg,
   },
   txInfo: { flex: 1 },
-  txTitle: { fontSize: FontSizes.lg, fontWeight: '600', color: Colors.textPrimary, marginBottom: 2 },
-  txSubtitle: { fontSize: FontSizes.sm, color: Colors.textSecondary, marginBottom: 2 },
-  txDate: { fontSize: FontSizes.xs, color: Colors.textMuted },
+  txTitle: { fontSize: FontSizes.md, fontWeight: '600', color: Colors.textPrimary, marginBottom: 2 },
+  txSubtitle: { fontSize: FontSizes.sm, color: Colors.textSecondary },
   txRight: { alignItems: 'flex-end' },
-  txAmount: { fontSize: FontSizes.lg, fontWeight: '700' },
+  txAmount: { fontSize: FontSizes.md, fontWeight: '700', marginBottom: 2 },
+  txDate: { fontSize: FontSizes.xs, color: Colors.textMuted },
   emptyTitle: { fontSize: FontSizes.xxl, fontWeight: '600', color: Colors.textSecondary, marginTop: Spacing.lg },
 });

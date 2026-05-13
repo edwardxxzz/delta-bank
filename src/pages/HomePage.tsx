@@ -77,10 +77,10 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
   const firstName = userData?.nome?.split(' ')[0] || 'Usuário';
 
   const quickActions = [
-    { label: 'Pix', icon: 'qrcode', iconSet: 'Ionicons' as const, bgColor: Colors.pixBg, iconColor: Colors.pixIcon, onPress: () => navigation?.navigate?.('Pix') },
-    { label: 'Pagar', icon: 'barcode-scan', iconSet: 'MaterialCommunityIcons' as const, bgColor: Colors.pagarBg, iconColor: Colors.pagarIcon, onPress: () => {} },
-    { label: 'Transferir', icon: 'swap-horizontal', iconSet: 'MaterialCommunityIcons' as const, bgColor: Colors.transferirBg, iconColor: Colors.transferirIcon, onPress: () => {} },
-    { label: 'Empréstimos', icon: 'cash', iconSet: 'MaterialCommunityIcons' as const, bgColor: Colors.emprestimoBg, iconColor: Colors.emprestimoIcon, onPress: () => {} },
+    { label: 'Pix', icon: 'swap-horizontal-bold', iconSet: 'MaterialCommunityIcons' as const, bgColor: Colors.pixBg, iconColor: Colors.pixIcon, onPress: () => navigation?.navigate?.('Transferir') },
+    { label: 'Pagar', icon: 'qrcode-scan', iconSet: 'MaterialCommunityIcons' as const, bgColor: Colors.pagarBg, iconColor: Colors.pagarIcon, onPress: () => navigation?.navigate?.('Pagar') },
+    { label: 'Transferir', icon: 'arrow-up-right', iconSet: 'MaterialCommunityIcons' as const, bgColor: Colors.transferirBg, iconColor: Colors.transferirIcon, onPress: () => navigation?.navigate?.('Transferir') },
+    { label: 'Receber', icon: 'qrcode', iconSet: 'MaterialCommunityIcons' as const, bgColor: Colors.emprestimoBg, iconColor: Colors.emprestimoIcon, onPress: () => navigation?.navigate?.('Receber') },
   ];
 
   const renderActionIcon = (action: typeof quickActions[0]) => {
