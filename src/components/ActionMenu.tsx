@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Modal, StyleSheet, TouchableWithoutFeedback } from 'react-native';
-import { Colors, Spacing, FontSizes, BorderRadii } from '../types';
+import { Spacing, FontSizes, BorderRadii } from '../types';
+import { useTheme } from '../contexts/ThemeContext';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 interface ActionMenuProps {
@@ -12,54 +13,56 @@ interface ActionMenuProps {
 }
 
 export const ActionMenu: React.FC<ActionMenuProps> = ({ visible, onClose, onPagar, onTransferir, onReceber }) => {
+  const { colors } = useTheme();
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
-            <View style={styles.menuCard}>
+            <View style={[styles.menuCard, { backgroundColor: colors.sectionCardBg }]}>
               {/* Triangle pointer at top */}
               <View style={styles.pointerContainer}>
-                <View style={styles.pointer} />
+                <View style={[styles.pointer, { borderBottomColor: colors.sectionCardBg }]} />
               </View>
 
-              <Text style={styles.menuTitle}>Ações rápidas</Text>
+              <Text style={[styles.menuTitle, { color: colors.textPrimary }]}>Ações rápidas</Text>
 
               <TouchableOpacity style={styles.menuItem} onPress={onPagar} activeOpacity={0.7}>
-                <View style={[styles.menuIcon, { backgroundColor: Colors.pagarBg }]}>
-                  <MaterialCommunityIcons name="qrcode-scan" size={22} color={Colors.pagarIcon} />
+                <View style={[styles.menuIcon, { backgroundColor: colors.pagarBg }]}>
+                  <MaterialCommunityIcons name="qrcode-scan" size={22} color={colors.pagarIcon} />
                 </View>
                 <View style={styles.menuInfo}>
-                  <Text style={styles.menuLabel}>Pagar com Pix</Text>
-                  <Text style={styles.menuSub}>Escaneie ou digite a chave</Text>
+                  <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>Pagar com Pix</Text>
+                  <Text style={[styles.menuSub, { color: colors.textSecondary }]}>Escaneie ou digite a chave</Text>
                 </View>
-                <Feather name="chevron-right" size={18} color={Colors.textMuted} />
+                <Feather name="chevron-right" size={18} color={colors.textMuted} />
               </TouchableOpacity>
 
-              <View style={styles.divider} />
+              <View style={[styles.divider, { backgroundColor: colors.menuDivider }]} />
 
               <TouchableOpacity style={styles.menuItem} onPress={onTransferir} activeOpacity={0.7}>
-                <View style={[styles.menuIcon, { backgroundColor: Colors.transferirBg }]}>
-                  <MaterialCommunityIcons name="swap-horizontal-bold" size={22} color={Colors.transferirIcon} />
+                <View style={[styles.menuIcon, { backgroundColor: colors.transferirBg }]}>
+                  <MaterialCommunityIcons name="swap-horizontal-bold" size={22} color={colors.transferirIcon} />
                 </View>
                 <View style={styles.menuInfo}>
-                  <Text style={styles.menuLabel}>Transferir</Text>
-                  <Text style={styles.menuSub}>Envie Pix para alguém</Text>
+                  <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>Transferir</Text>
+                  <Text style={[styles.menuSub, { color: colors.textSecondary }]}>Envie Pix para alguém</Text>
                 </View>
-                <Feather name="chevron-right" size={18} color={Colors.textMuted} />
+                <Feather name="chevron-right" size={18} color={colors.textMuted} />
               </TouchableOpacity>
 
-              <View style={styles.divider} />
+              <View style={[styles.divider, { backgroundColor: colors.menuDivider }]} />
 
               <TouchableOpacity style={styles.menuItem} onPress={onReceber} activeOpacity={0.7}>
-                <View style={[styles.menuIcon, { backgroundColor: Colors.pixBg }]}>
-                  <MaterialCommunityIcons name="qrcode" size={22} color={Colors.pixIcon} />
+                <View style={[styles.menuIcon, { backgroundColor: colors.pixBg }]}>
+                  <MaterialCommunityIcons name="qrcode" size={22} color={colors.pixIcon} />
                 </View>
                 <View style={styles.menuInfo}>
-                  <Text style={styles.menuLabel}>Receber</Text>
-                  <Text style={styles.menuSub}>Gere QR Code ou compartilhe chave</Text>
+                  <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>Receber</Text>
+                  <Text style={[styles.menuSub, { color: colors.textSecondary }]}>Gere QR Code ou compartilhe chave</Text>
                 </View>
-                <Feather name="chevron-right" size={18} color={Colors.textMuted} />
+                <Feather name="chevron-right" size={18} color={colors.textMuted} />
               </TouchableOpacity>
             </View>
           </TouchableWithoutFeedback>
@@ -78,7 +81,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
   },
   menuCard: {
-    backgroundColor: Colors.white,
     borderRadius: BorderRadii.xl,
     padding: Spacing.xl,
     elevation: 8,
@@ -100,12 +102,10 @@ const styles = StyleSheet.create({
     borderRightWidth: 16,
     borderRightColor: 'transparent',
     borderBottomWidth: 20,
-    borderBottomColor: Colors.white,
   },
   menuTitle: {
     fontSize: FontSizes.xxl,
     fontWeight: '700',
-    color: Colors.textPrimary,
     marginBottom: Spacing.lg,
   },
   menuItem: {
@@ -127,15 +127,12 @@ const styles = StyleSheet.create({
   menuLabel: {
     fontSize: FontSizes.lg,
     fontWeight: '600',
-    color: Colors.textPrimary,
     marginBottom: 2,
   },
   menuSub: {
     fontSize: FontSizes.sm,
-    color: Colors.textSecondary,
   },
   divider: {
     height: 1,
-    backgroundColor: Colors.border,
   },
 });

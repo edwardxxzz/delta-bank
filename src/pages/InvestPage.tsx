@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors, Spacing, FontSizes, BorderRadii } from '../types';
+import { Spacing, FontSizes, BorderRadii } from '../types';
+import { useTheme } from '../contexts/ThemeContext';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 interface Investment {
@@ -38,6 +39,7 @@ interface InvestPageProps {
 }
 
 export const InvestPage: React.FC<InvestPageProps> = ({ navigation }) => {
+  const { colors, isDark } = useTheme();
   const [selectedFilter, setSelectedFilter] = useState('todos');
   const filters = ['todos', 'renda_fixa', 'renda_variavel'];
 
@@ -48,12 +50,12 @@ export const InvestPage: React.FC<InvestPageProps> = ({ navigation }) => {
   });
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Investimentos</Text>
-        <TouchableOpacity style={styles.investBtn}>
-          <Feather name="plus" size={16} color={Colors.white} />
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Investimentos</Text>
+        <TouchableOpacity style={[styles.investBtn, { backgroundColor: colors.accent }]}>
+          <Feather name="plus" size={16} color="#FFFFFF" />
           <Text style={styles.investBtnText}>Investir</Text>
         </TouchableOpacity>
       </View>
@@ -61,7 +63,7 @@ export const InvestPage: React.FC<InvestPageProps> = ({ navigation }) => {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Patrimony Section */}
         <LinearGradient
-          colors={[Colors.investBlue, Colors.cardBlueLight]}
+          colors={[colors.cardGradientStart, colors.cardGradientEnd]}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={styles.patrimonyCard}
         >
@@ -70,7 +72,7 @@ export const InvestPage: React.FC<InvestPageProps> = ({ navigation }) => {
             R$ {totalPatrimony.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
           </Text>
           <View style={styles.yieldRow}>
-            <Text style={styles.yieldValue}>
+            <Text style={[styles.yieldValue, { color: colors.accent }]}>
               +R$ {totalYield.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (+{(totalYield / totalInvested * 100).toFixed(2)}%)
             </Text>
             <Text style={styles.yieldLabel}> rendimento total</Text>
@@ -84,8 +86,8 @@ export const InvestPage: React.FC<InvestPageProps> = ({ navigation }) => {
             </View>
             <View style={styles.splitDivider} />
             <View style={styles.splitItem}>
-              <Text style={[styles.splitLabel, { color: Colors.accent }]}>RENDIMENTO</Text>
-              <Text style={[styles.splitValue, { color: Colors.accent }]}>
+              <Text style={[styles.splitLabel, { color: colors.accent }]}>RENDIMENTO</Text>
+              <Text style={[styles.splitValue, { color: colors.accent }]}>
                 R$ {totalYield.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </Text>
             </View>
@@ -94,56 +96,56 @@ export const InvestPage: React.FC<InvestPageProps> = ({ navigation }) => {
 
         {/* Category Cards */}
         <View style={styles.categoryRow}>
-          <View style={styles.categoryCard}>
-            <View style={[styles.categoryIcon, { backgroundColor: 'rgba(99, 102, 241, 0.1)' }]}>
-              <MaterialCommunityIcons name="bank" size={22} color={Colors.rendaFixa} />
+          <View style={[styles.categoryCard, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
+            <View style={[styles.categoryIcon, { backgroundColor: `${colors.rendaFixa}15` }]}>
+              <MaterialCommunityIcons name="bank" size={22} color={colors.rendaFixa} />
             </View>
-            <Text style={styles.categoryTitle}>Renda Fixa</Text>
-            <Text style={styles.categorySub}>Segurança</Text>
+            <Text style={[styles.categoryTitle, { color: colors.textPrimary }]}>Renda Fixa</Text>
+            <Text style={[styles.categorySub, { color: colors.textSecondary }]}>Segurança</Text>
           </View>
-          <View style={styles.categoryCard}>
-            <View style={[styles.categoryIcon, { backgroundColor: 'rgba(249, 115, 22, 0.1)' }]}>
-              <MaterialCommunityIcons name="chart-line-variant" size={22} color={Colors.acoes} />
+          <View style={[styles.categoryCard, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
+            <View style={[styles.categoryIcon, { backgroundColor: `${colors.acoes}15` }]}>
+              <MaterialCommunityIcons name="chart-line-variant" size={22} color={colors.acoes} />
             </View>
-            <Text style={styles.categoryTitle}>Ações</Text>
-            <Text style={styles.categorySub}>Crescimento</Text>
+            <Text style={[styles.categoryTitle, { color: colors.textPrimary }]}>Ações</Text>
+            <Text style={[styles.categorySub, { color: colors.textSecondary }]}>Crescimento</Text>
           </View>
-          <View style={styles.categoryCard}>
-            <View style={[styles.categoryIcon, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
-              <MaterialCommunityIcons name="shield-check" size={22} color={Colors.tesouro} />
+          <View style={[styles.categoryCard, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
+            <View style={[styles.categoryIcon, { backgroundColor: `${colors.tesouro}15` }]}>
+              <MaterialCommunityIcons name="shield-check" size={22} color={colors.tesouro} />
             </View>
-            <Text style={styles.categoryTitle}>Tesouro</Text>
-            <Text style={styles.categorySub}>Garantido</Text>
+            <Text style={[styles.categoryTitle, { color: colors.textPrimary }]}>Tesouro</Text>
+            <Text style={[styles.categorySub, { color: colors.textSecondary }]}>Garantido</Text>
           </View>
         </View>
 
         {/* Minha Carteira */}
         <View style={styles.carteiraSection}>
-          <Text style={styles.carteiraTitle}>MINHA CARTEIRA</Text>
+          <Text style={[styles.carteiraTitle, { color: colors.textSecondary }]}>MINHA CARTEIRA</Text>
           {filteredInvestments.map((item) => (
-            <View key={item.id} style={styles.investmentItem}>
+            <View key={item.id} style={[styles.investmentItem, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
               <View style={[styles.investIcon, { backgroundColor: `${item.color}15` }]}>
                 <MaterialCommunityIcons name={item.iconName as any} size={22} color={item.color} />
               </View>
               <View style={styles.investInfo}>
-                <Text style={styles.investName}>{item.name}</Text>
-                <Text style={styles.investType}>
+                <Text style={[styles.investName, { color: colors.textPrimary }]}>{item.name}</Text>
+                <Text style={[styles.investType, { color: colors.textSecondary }]}>
                   {typeLabels[item.type] || item.type} · {item.issuer}
                 </Text>
                 {item.maturity ? (
-                  <Text style={styles.investMaturity}>Vence: {item.maturity}</Text>
+                  <Text style={[styles.investMaturity, { color: colors.textMuted }]}>Vence: {item.maturity}</Text>
                 ) : null}
               </View>
               <View style={styles.investRight}>
-                <Text style={styles.investAmount}>
+                <Text style={[styles.investAmount, { color: colors.textPrimary }]}>
                   R$ {item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </Text>
-                <Text style={[styles.investYield, { color: item.yieldRate >= 0 ? Colors.positive : Colors.negative }]}>
+                <Text style={[styles.investYield, { color: item.yieldRate >= 0 ? colors.positive : colors.negative }]}>
                   {item.yieldRate >= 0 ? '+' : ''}{item.yieldRate}%
                 </Text>
               </View>
               <TouchableOpacity style={styles.moreBtn}>
-                <MaterialCommunityIcons name="dots-vertical" size={20} color={Colors.textMuted} />
+                <MaterialCommunityIcons name="dots-vertical" size={20} color={colors.textMuted} />
               </TouchableOpacity>
             </View>
           ))}
@@ -154,22 +156,19 @@ export const InvestPage: React.FC<InvestPageProps> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  // Header
+  container: { flex: 1 },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: Spacing.xxl, paddingTop: Spacing.xl, paddingBottom: Spacing.lg,
   },
-  headerTitle: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.textPrimary },
+  headerTitle: { fontSize: FontSizes.xxl, fontWeight: '700' },
   investBtn: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.xs,
-    backgroundColor: Colors.accent, borderRadius: BorderRadii.md,
+    borderRadius: BorderRadii.md,
     paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm,
   },
-  investBtnText: { color: Colors.white, fontSize: FontSizes.md, fontWeight: '600' },
-  // Scroll
+  investBtnText: { color: '#FFFFFF', fontSize: FontSizes.md, fontWeight: '600' },
   scrollContent: { paddingBottom: Spacing.xxxl },
-  // Patrimony
   patrimonyCard: {
     marginHorizontal: Spacing.xxl, borderRadius: BorderRadii.xl,
     padding: Spacing.xxl, marginBottom: Spacing.xl,
@@ -178,10 +177,10 @@ const styles = StyleSheet.create({
   },
   patrimonyLabel: { fontSize: FontSizes.md, color: 'rgba(255,255,255,0.7)', marginBottom: Spacing.xs },
   patrimonyValue: {
-    fontSize: FontSizes.giant, fontWeight: '700', color: Colors.white, marginBottom: Spacing.md,
+    fontSize: FontSizes.giant, fontWeight: '700', color: '#FFFFFF', marginBottom: Spacing.md,
   },
   yieldRow: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.lg },
-  yieldValue: { fontSize: FontSizes.lg, color: Colors.accent, fontWeight: '500' },
+  yieldValue: { fontSize: FontSizes.lg, fontWeight: '500' },
   yieldLabel: { fontSize: FontSizes.md, color: 'rgba(255,255,255,0.6)' },
   patrimonySplit: {
     flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.08)',
@@ -190,46 +189,42 @@ const styles = StyleSheet.create({
   splitItem: { flex: 1 },
   splitDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.15)', marginHorizontal: Spacing.lg },
   splitLabel: { fontSize: FontSizes.xs, color: 'rgba(255,255,255,0.6)', fontWeight: '600', letterSpacing: 0.5, marginBottom: Spacing.xs },
-  splitValue: { fontSize: FontSizes.xxl, color: Colors.white, fontWeight: '600' },
-  // Category Cards
+  splitValue: { fontSize: FontSizes.xxl, color: '#FFFFFF', fontWeight: '600' },
   categoryRow: {
     flexDirection: 'row', paddingHorizontal: Spacing.xxl, marginBottom: Spacing.xl, gap: Spacing.md,
   },
   categoryCard: {
-    flex: 1, backgroundColor: Colors.white, borderRadius: BorderRadii.lg,
+    flex: 1, borderRadius: BorderRadii.lg,
     padding: Spacing.lg, alignItems: 'center',
-    borderWidth: 1, borderColor: Colors.border,
-    elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05, shadowRadius: 2,
+    borderWidth: 1,
   },
   categoryIcon: {
     width: 48, height: 48, borderRadius: BorderRadii.md,
     justifyContent: 'center', alignItems: 'center', marginBottom: Spacing.sm,
   },
-  categoryTitle: { fontSize: FontSizes.md, fontWeight: '600', color: Colors.textPrimary },
-  categorySub: { fontSize: FontSizes.sm, color: Colors.textSecondary },
-  // Carteira
+  categoryTitle: { fontSize: FontSizes.md, fontWeight: '600' },
+  categorySub: { fontSize: FontSizes.sm },
   carteiraSection: { paddingHorizontal: Spacing.xxl },
   carteiraTitle: {
-    fontSize: FontSizes.md, fontWeight: '700', color: Colors.textSecondary,
+    fontSize: FontSizes.md, fontWeight: '700',
     letterSpacing: 0.5, marginBottom: Spacing.lg,
   },
   investmentItem: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: Colors.white, borderRadius: BorderRadii.lg,
+    borderRadius: BorderRadii.lg,
     padding: Spacing.lg, marginBottom: Spacing.md,
-    borderWidth: 1, borderColor: Colors.border,
+    borderWidth: 1,
   },
   investIcon: {
     width: 44, height: 44, borderRadius: BorderRadii.md,
     justifyContent: 'center', alignItems: 'center', marginRight: Spacing.lg,
   },
   investInfo: { flex: 1 },
-  investName: { fontSize: FontSizes.md, fontWeight: '600', color: Colors.textPrimary, marginBottom: 2 },
-  investType: { fontSize: FontSizes.sm, color: Colors.textSecondary },
-  investMaturity: { fontSize: FontSizes.sm, color: Colors.textMuted, marginTop: 2 },
+  investName: { fontSize: FontSizes.md, fontWeight: '600', marginBottom: 2 },
+  investType: { fontSize: FontSizes.sm },
+  investMaturity: { fontSize: FontSizes.sm, marginTop: 2 },
   investRight: { alignItems: 'flex-end', marginRight: Spacing.sm },
-  investAmount: { fontSize: FontSizes.lg, fontWeight: '700', color: Colors.textPrimary, marginBottom: 2 },
+  investAmount: { fontSize: FontSizes.lg, fontWeight: '700', marginBottom: 2 },
   investYield: { fontSize: FontSizes.sm, fontWeight: '600' },
   moreBtn: { padding: Spacing.xs },
 });

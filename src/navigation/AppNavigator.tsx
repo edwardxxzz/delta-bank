@@ -21,8 +21,8 @@ import { ConfigPage } from '../pages/ConfigPage';
 import { BottomNav } from '../components/BottomNav';
 import { ActionMenu } from '../components/ActionMenu';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
-import { Colors } from '../types';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -93,11 +93,12 @@ const AppStack: React.FC = () => {
 
 export const AppNavigator: React.FC = () => {
   const { isLoggedIn, loading } = useAuth();
+  const { colors } = useTheme();
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.accent} />
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
   }
@@ -114,6 +115,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
   },
 });

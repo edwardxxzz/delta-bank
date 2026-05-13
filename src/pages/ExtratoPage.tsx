@@ -6,7 +6,8 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { centsToBRL, getExtrato, formatBRL } from '../services/apiService';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
-import { Colors, Spacing, FontSizes, BorderRadii } from '../types';
+import { Spacing, FontSizes, BorderRadii } from '../types';
+import { useTheme } from '../contexts/ThemeContext';
 
 export interface DisplayTransaction {
   id: string;
@@ -23,6 +24,7 @@ interface ExtratoPageProps {
 }
 
 export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
+  const { colors } = useTheme();
   const { userData, refreshUserData } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [transactions, setTransactions] = useState<DisplayTransaction[]>([]);
@@ -81,13 +83,13 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
   const getTransactionIcon = (type: DisplayTransaction['type']) => {
     switch (type) {
       case 'pix_received':
-        return { name: 'arrow-down-left', color: Colors.positive, bg: Colors.pixBg };
+        return { name: 'arrow-down-left', color: colors.positive, bg: colors.pixBg };
       case 'pix_sent':
-        return { name: 'arrow-up-right', color: Colors.negative, bg: Colors.sacarBg };
+        return { name: 'arrow-up-right', color: colors.negative, bg: colors.sacarBg };
       case 'deposit':
-        return { name: 'cash-plus', color: Colors.depositarIcon, bg: Colors.depositarBg };
+        return { name: 'cash-plus', color: colors.depositarIcon, bg: colors.depositarBg };
       case 'withdraw':
-        return { name: 'cash-minus', color: Colors.sacarIcon, bg: Colors.sacarBg };
+        return { name: 'cash-minus', color: colors.sacarIcon, bg: colors.sacarBg };
     }
   };
 
@@ -130,25 +132,25 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
   ];
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack?.()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
+          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Extrato</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Extrato</Text>
         <TouchableOpacity style={styles.downloadBtn} onPress={onRefresh}>
-          <Feather name="download" size={20} color={Colors.textPrimary} />
+          <Feather name="download" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
       {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={18} color={Colors.textMuted} style={styles.searchIcon} />
+      <View style={[styles.searchContainer, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
+        <Ionicons name="search" size={18} color={colors.textMuted} style={styles.searchIcon} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: colors.textPrimary }]}
           placeholder="Buscar transação..."
-          placeholderTextColor={Colors.textMuted}
+          placeholderTextColor={colors.textMuted}
           value={searchText}
           onChangeText={setSearchText}
         />
@@ -159,10 +161,14 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
         {filters.map((f) => (
           <TouchableOpacity
             key={f.key}
-            style={[styles.filterBtn, filter === f.key && styles.filterBtnActive]}
+            style={[
+              styles.filterBtn,
+              { backgroundColor: colors.cardBg, borderColor: colors.border },
+              filter === f.key && { backgroundColor: colors.accent, borderColor: colors.accent },
+            ]}
             onPress={() => setFilter(f.key)}
           >
-            <Text style={[styles.filterText, filter === f.key && styles.filterTextActive]}>
+            <Text style={[styles.filterText, { color: colors.textSecondary }, filter === f.key && styles.filterTextActive]}>
               {f.label}
             </Text>
           </TouchableOpacity>
@@ -172,23 +178,23 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
       {/* Content */}
       {loading ? (
         <View style={styles.centerContent}>
-          <ActivityIndicator size="large" color={Colors.accent} />
-          <Text style={styles.loadingText}>Carregando extrato...</Text>
+          <ActivityIndicator size="large" color={colors.accent} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Carregando extrato...</Text>
         </View>
       ) : error ? (
         <View style={styles.centerContent}>
-          <View style={styles.errorCard}>
-            <MaterialCommunityIcons name="alert-circle-outline" size={56} color={Colors.warning} />
-            <Text style={styles.errorTitle}>Extrato indisponível</Text>
-            <Text style={styles.errorMessage}>
+          <View style={[styles.errorCard, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
+            <MaterialCommunityIcons name="alert-circle-outline" size={56} color={colors.warning} />
+            <Text style={[styles.errorTitle, { color: colors.textPrimary }]}>Extrato indisponível</Text>
+            <Text style={[styles.errorMessage, { color: colors.textSecondary }]}>
               {error.includes('ambiguous')
                 ? 'O servidor está com um problema técnico na consulta de extrato. Nossa equipe já foi notificada.'
                 : error
               }
             </Text>
-            <TouchableOpacity style={styles.retryBtn} onPress={onRefresh}>
-              <Ionicons name="refresh" size={18} color={Colors.accent} />
-              <Text style={styles.retryBtnText}>Tentar novamente</Text>
+            <TouchableOpacity style={[styles.retryBtn, { backgroundColor: colors.pixBg }]} onPress={onRefresh}>
+              <Ionicons name="refresh" size={18} color={colors.accent} />
+              <Text style={[styles.retryBtnText, { color: colors.accent }]}>Tentar novamente</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -196,28 +202,28 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.accent} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
         >
           {grouped.map((group, gIdx) => (
             <View key={gIdx} style={styles.monthGroup}>
-              <Text style={styles.monthHeader}>{group.month}</Text>
+              <Text style={[styles.monthHeader, { color: colors.textSecondary }]}>{group.month}</Text>
               {group.items.map((tx) => {
                 const iconCfg = getTransactionIcon(tx.type);
                 const isPositive = tx.amount >= 0;
                 return (
-                  <View key={tx.id} style={styles.transactionItem}>
+                  <View key={tx.id} style={[styles.transactionItem, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
                     <View style={[styles.txIconCircle, { backgroundColor: iconCfg.bg }]}>
                       <MaterialCommunityIcons name={iconCfg.name as any} size={20} color={iconCfg.color} />
                     </View>
                     <View style={styles.txInfo}>
-                      <Text style={styles.txTitle}>{tx.title}</Text>
-                      <Text style={styles.txSubtitle}>{tx.subtitle}</Text>
+                      <Text style={[styles.txTitle, { color: colors.textPrimary }]}>{tx.title}</Text>
+                      <Text style={[styles.txSubtitle, { color: colors.textSecondary }]}>{tx.subtitle}</Text>
                     </View>
                     <View style={styles.txRight}>
-                      <Text style={[styles.txAmount, { color: isPositive ? Colors.positive : Colors.negative }]}>
+                      <Text style={[styles.txAmount, { color: isPositive ? colors.positive : colors.negative }]}>
                         {isPositive ? '+' : '-'} R$ {formatBRL(Math.abs(tx.amount))}
                       </Text>
-                      <Text style={styles.txDate}>{tx.date}</Text>
+                      <Text style={[styles.txDate, { color: colors.textMuted }]}>{tx.date}</Text>
                     </View>
                   </View>
                 );
@@ -227,8 +233,8 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
         </ScrollView>
       ) : (
         <View style={styles.centerContent}>
-          <MaterialCommunityIcons name="bank-off-outline" size={56} color={Colors.textMuted} />
-          <Text style={styles.emptyTitle}>Nenhuma transação</Text>
+          <MaterialCommunityIcons name="bank-off-outline" size={56} color={colors.textMuted} />
+          <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>Nenhuma transação</Text>
         </View>
       )}
     </View>
@@ -236,67 +242,66 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: Spacing.xxl, paddingTop: Spacing.xl, paddingBottom: Spacing.lg,
   },
   backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.textPrimary },
+  headerTitle: { fontSize: FontSizes.xxl, fontWeight: '700' },
   downloadBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
   searchContainer: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: Colors.white, borderRadius: BorderRadii.lg,
-    borderWidth: 1, borderColor: Colors.border,
+    borderRadius: BorderRadii.lg,
+    borderWidth: 1,
     marginHorizontal: Spacing.xxl, marginBottom: Spacing.lg,
     paddingHorizontal: Spacing.lg, height: 48,
   },
   searchIcon: { marginRight: Spacing.md },
-  searchInput: { flex: 1, fontSize: FontSizes.md, color: Colors.textPrimary },
+  searchInput: { flex: 1, fontSize: FontSizes.md },
   filtersRow: { flexDirection: 'row', paddingHorizontal: Spacing.xxl, marginBottom: Spacing.lg, maxHeight: 44 },
   filterBtn: {
     paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderRadius: BorderRadii.full,
-    backgroundColor: Colors.white, borderWidth: 1, borderColor: Colors.border,
+    borderWidth: 1,
     marginRight: Spacing.sm,
   },
-  filterBtnActive: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  filterText: { fontSize: FontSizes.sm, color: Colors.textSecondary, fontWeight: '500' },
-  filterTextActive: { color: Colors.white, fontWeight: '600' },
+  filterTextActive: { color: '#FFFFFF', fontWeight: '600' },
+  filterText: { fontSize: FontSizes.sm, fontWeight: '500' },
   centerContent: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: Spacing.xxl },
-  loadingText: { color: Colors.textSecondary, marginTop: Spacing.lg },
+  loadingText: { marginTop: Spacing.lg },
   errorCard: {
-    backgroundColor: Colors.white, borderRadius: BorderRadii.xl,
-    padding: Spacing.xxxl, alignItems: 'center', borderWidth: 1, borderColor: Colors.border, width: '100%',
+    borderRadius: BorderRadii.xl,
+    padding: Spacing.xxxl, alignItems: 'center', borderWidth: 1, width: '100%',
   },
-  errorTitle: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.textPrimary, marginTop: Spacing.lg, marginBottom: Spacing.sm },
-  errorMessage: { fontSize: FontSizes.md, color: Colors.textSecondary, textAlign: 'center', lineHeight: 22 },
+  errorTitle: { fontSize: FontSizes.xxl, fontWeight: '700', marginTop: Spacing.lg, marginBottom: Spacing.sm },
+  errorMessage: { fontSize: FontSizes.md, textAlign: 'center', lineHeight: 22 },
   retryBtn: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
-    backgroundColor: Colors.pixBg, borderRadius: BorderRadii.lg,
+    borderRadius: BorderRadii.lg,
     paddingVertical: Spacing.md, paddingHorizontal: Spacing.xl, marginTop: Spacing.xxl,
   },
-  retryBtnText: { color: Colors.accent, fontSize: FontSizes.lg, fontWeight: '600' },
+  retryBtnText: { fontSize: FontSizes.lg, fontWeight: '600' },
   listContent: { paddingHorizontal: Spacing.xxl, paddingBottom: Spacing.xxxl },
   monthGroup: { marginBottom: Spacing.lg },
   monthHeader: {
-    fontSize: FontSizes.md, fontWeight: '600', color: Colors.textSecondary,
+    fontSize: FontSizes.md, fontWeight: '600',
     marginBottom: Spacing.md, marginTop: Spacing.sm,
   },
   transactionItem: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: Colors.white, borderRadius: BorderRadii.lg,
+    borderRadius: BorderRadii.lg,
     padding: Spacing.lg, marginBottom: Spacing.sm,
-    borderWidth: 1, borderColor: Colors.border,
+    borderWidth: 1,
   },
   txIconCircle: {
     width: 42, height: 42, borderRadius: 21,
     justifyContent: 'center', alignItems: 'center', marginRight: Spacing.lg,
   },
   txInfo: { flex: 1 },
-  txTitle: { fontSize: FontSizes.md, fontWeight: '600', color: Colors.textPrimary, marginBottom: 2 },
-  txSubtitle: { fontSize: FontSizes.sm, color: Colors.textSecondary },
+  txTitle: { fontSize: FontSizes.md, fontWeight: '600', marginBottom: 2 },
+  txSubtitle: { fontSize: FontSizes.sm },
   txRight: { alignItems: 'flex-end' },
   txAmount: { fontSize: FontSizes.md, fontWeight: '700', marginBottom: 2 },
-  txDate: { fontSize: FontSizes.xs, color: Colors.textMuted },
-  emptyTitle: { fontSize: FontSizes.xxl, fontWeight: '600', color: Colors.textSecondary, marginTop: Spacing.lg },
+  txDate: { fontSize: FontSizes.xs },
+  emptyTitle: { fontSize: FontSizes.xxl, fontWeight: '600', marginTop: Spacing.lg },
 });

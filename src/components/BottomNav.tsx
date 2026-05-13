@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Colors, Spacing, FontSizes } from '../types';
+import { Spacing, FontSizes } from '../types';
+import { useTheme } from '../contexts/ThemeContext';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 interface BottomNavProps {
@@ -25,9 +26,11 @@ const sideTabs: SideTab[] = [
 ];
 
 export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabPress, onCentralPress }) => {
+  const { colors } = useTheme();
+
   const renderIcon = (tab: SideTab, isActive: boolean) => {
     const size = 22;
-    const color = isActive ? Colors.accent : Colors.textMuted;
+    const color = isActive ? colors.accent : colors.textMuted;
     if (tab.iconSet === 'Ionicons') return <Ionicons name={tab.icon as any} size={size} color={color} />;
     if (tab.iconSet === 'Feather') return <Feather name={tab.icon as any} size={size} color={color} />;
     if (tab.iconSet === 'MaterialCommunityIcons') return <MaterialCommunityIcons name={tab.icon as any} size={size} color={color} />;
@@ -35,11 +38,11 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabPress, onC
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.bottomNavBg, borderTopColor: colors.bottomNavBorder }]}>
       {/* Início */}
       <TouchableOpacity style={styles.tabItem} onPress={() => onTabPress('home')} activeOpacity={0.7}>
         {renderIcon(sideTabs[0], activeTab === 'home')}
-        <Text style={[styles.tabLabel, { color: activeTab === 'home' ? Colors.accent : Colors.textMuted }]}>
+        <Text style={[styles.tabLabel, { color: activeTab === 'home' ? colors.accent : colors.textMuted }]}>
           Início
         </Text>
       </TouchableOpacity>
@@ -47,22 +50,22 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabPress, onC
       {/* Cartões */}
       <TouchableOpacity style={styles.tabItem} onPress={() => onTabPress('cards')} activeOpacity={0.7}>
         {renderIcon(sideTabs[1], activeTab === 'cards')}
-        <Text style={[styles.tabLabel, { color: activeTab === 'cards' ? Colors.accent : Colors.textMuted }]}>
+        <Text style={[styles.tabLabel, { color: activeTab === 'cards' ? colors.accent : colors.textMuted }]}>
           Cartões
         </Text>
       </TouchableOpacity>
 
       {/* Center Triangle Button */}
       <TouchableOpacity style={styles.centerTab} onPress={onCentralPress} activeOpacity={0.7}>
-        <View style={styles.centerCircle}>
-          <View style={styles.triangleIcon} />
+        <View style={[styles.centerCircle, { backgroundColor: colors.accent }]}>
+          <View style={[styles.triangleIcon, { borderBottomColor: colors.white }]} />
         </View>
       </TouchableOpacity>
 
       {/* Investir */}
       <TouchableOpacity style={styles.tabItem} onPress={() => onTabPress('invest')} activeOpacity={0.7}>
         {renderIcon(sideTabs[2], activeTab === 'invest')}
-        <Text style={[styles.tabLabel, { color: activeTab === 'invest' ? Colors.accent : Colors.textMuted }]}>
+        <Text style={[styles.tabLabel, { color: activeTab === 'invest' ? colors.accent : colors.textMuted }]}>
           Investir
         </Text>
       </TouchableOpacity>
@@ -70,7 +73,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabPress, onC
       {/* Mais */}
       <TouchableOpacity style={styles.tabItem} onPress={() => onTabPress('more')} activeOpacity={0.7}>
         {renderIcon(sideTabs[3], activeTab === 'more')}
-        <Text style={[styles.tabLabel, { color: activeTab === 'more' ? Colors.accent : Colors.textMuted }]}>
+        <Text style={[styles.tabLabel, { color: activeTab === 'more' ? colors.accent : colors.textMuted }]}>
           Mais
         </Text>
       </TouchableOpacity>
@@ -81,11 +84,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabPress, onC
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: Colors.white,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
     alignItems: 'center',
     justifyContent: 'space-around',
     paddingBottom: Spacing.xl,
@@ -108,7 +109,6 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: Colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 6,
@@ -125,7 +125,6 @@ const styles = StyleSheet.create({
     borderRightWidth: 12,
     borderRightColor: 'transparent',
     borderBottomWidth: 20,
-    borderBottomColor: Colors.white,
     marginTop: -4,
   },
 });

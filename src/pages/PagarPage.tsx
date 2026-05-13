@@ -1,150 +1,338 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, ScrollView, Alert,
+  KeyboardAvoidingView, Platform, ScrollView, Alert, Dimensions,
 } from 'react-native';
-import { Colors, Spacing, FontSizes, BorderRadii } from '../types';
+import { CameraView, CameraType, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
+import { Spacing, FontSizes, BorderRadii } from '../types';
+import { useTheme } from '../contexts/ThemeContext';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { makePix, brlToCents, centsToBRL, formatBRL } from '../services/apiService';
 import { useAuth } from '../contexts/AuthContext';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface PagarPageProps {
   navigation?: any;
 }
 
 export const PagarPage: React.FC<PagarPageProps> = ({ navigation }) => {
-  const { userData, refreshUserData } = useAuth();
+  const { colors, isDark } = useTheme();
+  const { userData } = useAuth();
   const [chavePix, setChavePix] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [permission, requestPermission] = useCameraPermissions();
+  const [scanned, setScanned] = useState(false);
+  const [facing, setFacing] = useState<CameraType>('back');
 
-  const balance = userData ? centsToBRL(userData.saldo_centavos) : 0;
+  const handleBarCodeScanned = (result: BarcodeScanningResult) => {
+    if (scanned) return;
+    setScanned(true);
+    const { data } = result;
+    // Try to extract pix key from QR data
+    Alert.alert(
+      'QR Code detectado',
+      'Deseja prosseguir com o pagamento?',
+      [
+        { text: 'Cancelar', style: 'cancel', onPress: () => setScanned(false) },
+        {
+          text: 'Prosseguir',
+          onPress: () => {
+            navigation?.navigate?.('Transferir', { chaveDestino: data });
+          },
+        },
+      ]
+    );
+  };
 
-  return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack?.()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Pagar com Pix</Text>
-        <View style={{ width: 40 }} />
+  // Permission denied or not granted yet
+  if (!permission) {
+    return (
+      <View style={[styles.container, styles.centerContent, { backgroundColor: '#000' }]}>
+        <MaterialCommunityIcons name="camera" size={48} color="rgba(255,255,255,0.5)" />
+        <Text style={styles.loadingText}>Preparando câmera...</Text>
       </View>
+    );
+  }
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.content}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          {/* Subtitle */}
-          <Text style={styles.subtitle}>Escaneie ou digite a chave</Text>
+  if (!permission.granted) {
+    return (
+      <View style={[styles.container, styles.centerContent, { backgroundColor: isDark ? '#0A1628' : '#FFFFFF' }]}>
+        <View style={[styles.permissionCard, { backgroundColor: isDark ? '#111D32' : '#F9FAFB' }]}>
+          <MaterialCommunityIcons name="camera-outline" size={56} color={colors.accent} />
+          <Text style={[styles.permissionTitle, { color: colors.textPrimary }]}>Acesso à câmera</Text>
+          <Text style={[styles.permissionText, { color: colors.textSecondary }]}>
+            Para escanear QR Codes e realizar pagamentos, precisamos de acesso à câmera do seu dispositivo.
+          </Text>
+          <TouchableOpacity style={[styles.permissionBtn, { backgroundColor: colors.accent }]} onPress={requestPermission}>
+            <Text style={styles.permissionBtnText}>Permitir acesso</Text>
+          </TouchableOpacity>
+        </View>
 
-          {/* QR Scanner Placeholder */}
-          <View style={styles.qrScannerArea}>
-            <View style={styles.qrFrame}>
-              <View style={[styles.qrCorner, styles.qrCornerTL]} />
-              <View style={[styles.qrCorner, styles.qrCornerTR]} />
-              <View style={[styles.qrCorner, styles.qrCornerBL]} />
-              <View style={[styles.qrCorner, styles.qrCornerBR]} />
-            </View>
-            <View style={styles.qrContent}>
-              <MaterialCommunityIcons name="qrcode-scan" size={64} color="rgba(255,255,255,0.3)" />
-              <Text style={styles.qrText}>Aponte a câmera para o QR Code</Text>
-              <Text style={styles.qrSubtext}>(Funcionalidade de câmera disponível em dispositivos móveis)</Text>
-            </View>
-          </View>
+        {/* Manual input option */}
+        <TouchableOpacity style={styles.manualToggle} onPress={() => setShowManualInput(true)}>
+          <Text style={[styles.manualToggleText, { color: colors.accent }]}>
+            Ou digite a chave Pix manualmente
+          </Text>
+        </TouchableOpacity>
 
-          {/* Or type key */}
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>ou digite a chave</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <View style={styles.inputSection}>
-            <Text style={styles.inputHint}>CPF, CNPJ, e-mail ou chave aleatória</Text>
-            <View style={styles.inputContainer}>
-              <MaterialCommunityIcons name="key-variant" size={20} color={Colors.textMuted} style={styles.inputIcon} />
+        {showManualInput && (
+          <View style={styles.manualInputSection}>
+            <View style={[styles.inputContainer, { backgroundColor: colors.inputBgColor, borderColor: colors.inputBorder }]}>
+              <MaterialCommunityIcons name="key-variant" size={20} color={colors.textMuted} style={styles.inputIcon} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: colors.textPrimary }]}
                 placeholder="Digite a chave Pix"
-                placeholderTextColor={Colors.textMuted}
+                placeholderTextColor={colors.textMuted}
                 value={chavePix}
                 onChangeText={setChavePix}
                 autoCapitalize="none"
               />
             </View>
+            <TouchableOpacity
+              style={[styles.continueBtn, !chavePix && styles.continueBtnDisabled, { backgroundColor: chavePix ? colors.accent : colors.surfaceHover }]}
+              onPress={() => {
+                if (chavePix) {
+                  navigation?.navigate?.('Transferir', { chaveDestino: chavePix });
+                }
+              }}
+              disabled={!chavePix}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.continueText}>Continuar</Text>
+              <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+    );
+  }
+
+  // Full-screen camera with overlay
+  return (
+    <View style={styles.container}>
+      {/* Full-screen Camera */}
+      <CameraView
+        style={styles.camera}
+        facing={facing}
+        onBarcodeScanned={handleBarCodeScanned}
+        barcodeScannerSettings={{
+          barcodeTypes: ['qr'],
+        }}
+      >
+        {/* Dark overlay with transparent center square */}
+        <View style={styles.overlay}>
+          {/* Top overlay */}
+          <View style={styles.overlayTop} />
+
+          {/* Middle row with cutout */}
+          <View style={styles.overlayMiddle}>
+            <View style={styles.overlaySide} />
+            <View style={styles.scanArea}>
+              {/* Corner accents */}
+              <View style={[styles.corner, styles.cornerTL]} />
+              <View style={[styles.corner, styles.cornerTR]} />
+              <View style={[styles.corner, styles.cornerBL]} />
+              <View style={[styles.corner, styles.cornerBR]} />
+            </View>
+            <View style={styles.overlaySide} />
           </View>
 
-          <TouchableOpacity
-            style={[styles.continueBtn, !chavePix && styles.continueBtnDisabled]}
-            onPress={() => {
-              if (chavePix) {
-                navigation?.navigate('Transferir', { chaveDestino: chavePix });
-              }
-            }}
-            disabled={!chavePix}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.continueText}>Continuar</Text>
-            <Ionicons name="arrow-forward" size={20} color={Colors.white} />
-          </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
+          {/* Bottom overlay */}
+          <View style={styles.overlayBottom}>
+            {/* Back button */}
+            <TouchableOpacity style={styles.overlayBackBtn} onPress={() => navigation?.goBack?.()}>
+              <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            {/* Scan hint */}
+            <Text style={styles.scanHint}>Aponte a câmera para o QR Code</Text>
+
+            {/* Flip camera */}
+            <TouchableOpacity style={styles.flipBtn} onPress={() => setFacing(facing === 'back' ? 'front' : 'back')}>
+              <Ionicons name="camera-reverse-outline" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            {/* Or type key */}
+            <TouchableOpacity
+              style={styles.manualInputBtn}
+              onPress={() => setShowManualInput(!showManualInput)}
+            >
+              <MaterialCommunityIcons name="keyboard-outline" size={18} color="#FFFFFF" />
+              <Text style={styles.manualInputText}>Digitar chave</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </CameraView>
+
+      {/* Manual input overlay */}
+      {showManualInput && (
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.manualOverlay}>
+          <View style={[styles.manualCard, { backgroundColor: isDark ? '#111D32' : '#FFFFFF' }]}>
+            <View style={styles.manualCardHeader}>
+              <Text style={[styles.manualCardTitle, { color: colors.textPrimary }]}>Digitar chave Pix</Text>
+              <TouchableOpacity onPress={() => setShowManualInput(false)}>
+                <Ionicons name="close" size={24} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <Text style={[styles.inputHint, { color: colors.textMuted }]}>CPF, CNPJ, e-mail ou chave aleatória</Text>
+            <View style={[styles.inputContainer, { backgroundColor: colors.inputBgColor, borderColor: colors.inputBorder }]}>
+              <MaterialCommunityIcons name="key-variant" size={20} color={colors.textMuted} style={styles.inputIcon} />
+              <TextInput
+                style={[styles.input, { color: colors.textPrimary }]}
+                placeholder="Digite a chave Pix"
+                placeholderTextColor={colors.textMuted}
+                value={chavePix}
+                onChangeText={setChavePix}
+                autoCapitalize="none"
+                autoFocus
+              />
+            </View>
+            <TouchableOpacity
+              style={[styles.continueBtn, !chavePix && styles.continueBtnDisabled, { backgroundColor: chavePix ? colors.accent : colors.surfaceHover }]}
+              onPress={() => {
+                if (chavePix) {
+                  navigation?.navigate?.('Transferir', { chaveDestino: chavePix });
+                }
+              }}
+              disabled={!chavePix}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.continueText}>Continuar</Text>
+              <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      )}
     </View>
   );
 };
 
+const SCAN_SIZE = 250;
+const SIDE_OVERLAY = (SCREEN_WIDTH - SCAN_SIZE) / 2;
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: Spacing.xxl, paddingTop: Spacing.xl, paddingBottom: Spacing.lg,
+  container: { flex: 1 },
+  centerContent: { justifyContent: 'center', alignItems: 'center' },
+  loadingText: { color: 'rgba(255,255,255,0.6)', fontSize: FontSizes.md, marginTop: Spacing.md },
+  // Camera
+  camera: { flex: 1 },
+  overlay: { flex: 1 },
+  overlayTop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
   },
-  backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.textPrimary },
-  content: { flex: 1 },
-  scrollContent: { paddingHorizontal: Spacing.xxl, paddingBottom: 40 },
-  subtitle: {
-    fontSize: FontSizes.md, color: Colors.textSecondary, marginBottom: Spacing.lg,
+  overlayMiddle: {
+    flexDirection: 'row',
+    height: SCAN_SIZE,
   },
-  qrScannerArea: {
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadii.xl,
-    height: 240,
-    justifyContent: 'center',
+  overlaySide: {
+    width: SIDE_OVERLAY,
+    height: SCAN_SIZE,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  scanArea: {
+    width: SCAN_SIZE,
+    height: SCAN_SIZE,
+    backgroundColor: 'transparent',
+  },
+  corner: {
+    position: 'absolute',
+    width: 30,
+    height: 30,
+    borderColor: '#10B981',
+    borderWidth: 3,
+  },
+  cornerTL: { top: 0, left: 0, borderBottomWidth: 0, borderRightWidth: 0, borderTopLeftRadius: 8 },
+  cornerTR: { top: 0, right: 0, borderBottomWidth: 0, borderLeftWidth: 0, borderTopRightRadius: 8 },
+  cornerBL: { bottom: 0, left: 0, borderTopWidth: 0, borderRightWidth: 0, borderBottomLeftRadius: 8 },
+  cornerBR: { bottom: 0, right: 0, borderTopWidth: 0, borderLeftWidth: 0, borderBottomRightRadius: 8 },
+  overlayBottom: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
     alignItems: 'center',
-    marginBottom: Spacing.xl,
-    overflow: 'hidden',
-    position: 'relative',
+    paddingTop: Spacing.xl,
+    paddingHorizontal: Spacing.xxl,
   },
-  qrFrame: {
-    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+  overlayBackBtn: {
+    position: 'absolute', top: Spacing.md, left: Spacing.xxl,
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center', alignItems: 'center',
   },
-  qrCorner: {
-    position: 'absolute', width: 30, height: 30, borderColor: Colors.accent, borderWidth: 3,
+  scanHint: {
+    color: '#FFFFFF', fontSize: FontSizes.lg, fontWeight: '600',
+    marginTop: Spacing.md,
   },
-  qrCornerTL: { top: 20, left: 20, borderBottomWidth: 0, borderRightWidth: 0, borderTopLeftRadius: 8 },
-  qrCornerTR: { top: 20, right: 20, borderBottomWidth: 0, borderLeftWidth: 0, borderTopRightRadius: 8 },
-  qrCornerBL: { bottom: 20, left: 20, borderTopWidth: 0, borderRightWidth: 0, borderBottomLeftRadius: 8 },
-  qrCornerBR: { bottom: 20, right: 20, borderTopWidth: 0, borderLeftWidth: 0, borderBottomRightRadius: 8 },
-  qrContent: { alignItems: 'center' },
-  qrText: { color: 'rgba(255,255,255,0.6)', fontSize: FontSizes.md, marginTop: Spacing.md },
-  qrSubtext: { color: 'rgba(255,255,255,0.4)', fontSize: FontSizes.xs, marginTop: Spacing.xs },
-  dividerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.lg },
-  dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
-  dividerText: { fontSize: FontSizes.sm, color: Colors.textMuted, marginHorizontal: Spacing.md },
-  inputSection: { marginBottom: Spacing.xl },
-  inputHint: { fontSize: FontSizes.sm, color: Colors.textMuted, marginBottom: Spacing.sm },
+  flipBtn: {
+    position: 'absolute', top: Spacing.md, right: Spacing.xxl,
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  manualInputBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
+    marginTop: Spacing.xl,
+    paddingVertical: Spacing.md, paddingHorizontal: Spacing.xl,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: BorderRadii.lg,
+  },
+  manualInputText: { color: '#FFFFFF', fontSize: FontSizes.md, fontWeight: '500' },
+  // Permission
+  permissionCard: {
+    width: '85%',
+    borderRadius: BorderRadii.xl,
+    padding: Spacing.xxl,
+    alignItems: 'center',
+  },
+  permissionTitle: { fontSize: FontSizes.xxl, fontWeight: '700', marginTop: Spacing.lg },
+  permissionText: { fontSize: FontSizes.md, textAlign: 'center', marginTop: Spacing.md, lineHeight: 22 },
+  permissionBtn: {
+    marginTop: Spacing.xl,
+    paddingVertical: Spacing.lg, paddingHorizontal: Spacing.xxxl,
+    borderRadius: BorderRadii.lg,
+  },
+  permissionBtnText: { color: '#FFFFFF', fontSize: FontSizes.lg, fontWeight: '700' },
+  manualToggle: { marginTop: Spacing.xl },
+  manualToggleText: { fontSize: FontSizes.md, fontWeight: '500' },
+  // Manual input section (no camera)
+  manualInputSection: {
+    width: '85%',
+    marginTop: Spacing.xl,
+  },
+  // Manual overlay (when camera is available)
+  manualOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  manualCard: {
+    borderTopLeftRadius: BorderRadii.xxl,
+    borderTopRightRadius: BorderRadii.xxl,
+    padding: Spacing.xxl,
+    paddingBottom: Spacing.xxxl,
+  },
+  manualCardHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  manualCardTitle: { fontSize: FontSizes.xxl, fontWeight: '700' },
+  inputHint: { fontSize: FontSizes.sm, marginBottom: Spacing.sm },
   inputContainer: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.white,
-    borderRadius: BorderRadii.lg, borderWidth: 1, borderColor: Colors.border,
+    flexDirection: 'row', alignItems: 'center',
+    borderRadius: BorderRadii.lg, borderWidth: 1,
     paddingHorizontal: Spacing.lg, height: 54,
   },
   inputIcon: { marginRight: Spacing.md },
-  input: { flex: 1, fontSize: FontSizes.lg, color: Colors.textPrimary },
+  input: { flex: 1, fontSize: FontSizes.lg },
   continueBtn: {
-    flexDirection: 'row', backgroundColor: Colors.accent, borderRadius: BorderRadii.lg,
+    flexDirection: 'row', borderRadius: BorderRadii.lg,
     height: 56, justifyContent: 'center', alignItems: 'center', gap: Spacing.md,
-    elevation: 3, shadowColor: Colors.accent, shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3, shadowRadius: 8,
+    marginTop: Spacing.lg,
+    elevation: 3,
   },
-  continueBtnDisabled: { backgroundColor: Colors.surfaceHover },
-  continueText: { color: Colors.white, fontSize: FontSizes.xxl, fontWeight: '700' },
+  continueBtnDisabled: {},
+  continueText: { color: '#FFFFFF', fontSize: FontSizes.xxl, fontWeight: '700' },
 });

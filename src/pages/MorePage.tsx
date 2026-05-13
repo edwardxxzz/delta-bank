@@ -1,11 +1,13 @@
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { Colors, Spacing, FontSizes, BorderRadii } from '../types';
+import { Spacing, FontSizes, BorderRadii } from '../types';
+import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
   const { userData, logout } = useAuth();
+  const { colors, isDark } = useTheme();
 
   const formattedCPF = userData?.cpf
     ? userData.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
@@ -48,7 +50,7 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
 
   const renderIcon = (icon: string, iconSet: string) => {
     const size = 20;
-    const color = Colors.accent;
+    const color = colors.accent;
     if (iconSet === 'Ionicons') return <Ionicons name={icon as any} size={size} color={color} />;
     if (iconSet === 'MaterialCommunityIcons') return <MaterialCommunityIcons name={icon as any} size={size} color={color} />;
     return <Feather name={icon as any} size={size} color={color} />;
@@ -56,7 +58,6 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
 
   const handlePress = (item: any) => {
     if (!item.navigate) return;
-    // Tab navigation items need special handling - navigate to Main and then switch tab
     if (item.navigate === 'invest' || item.navigate === 'cards' || item.navigate === 'home') {
       navigation?.navigate('Main', { screen: item.navigate });
     } else {
@@ -75,77 +76,76 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Mais serviços</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Mais serviços</Text>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {menuSections.map((section, sIdx) => (
           <View key={sIdx} style={styles.section}>
-            <Text style={styles.sectionTitle}>{section.title}</Text>
-            <View style={styles.sectionCard}>
+            <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>{section.title}</Text>
+            <View style={[styles.sectionCard, { backgroundColor: colors.sectionCardBg, borderColor: colors.border }]}>
               {section.items.map((item: any, iIdx: number) => (
                 <TouchableOpacity
                   key={iIdx}
-                  style={[styles.menuItem, iIdx < section.items.length - 1 && styles.menuItemBorder]}
+                  style={[styles.menuItem, iIdx < section.items.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.menuDivider }]}
                   onPress={() => handlePress(item)}
                   activeOpacity={0.7}
                 >
-                  <View style={styles.menuIcon}>
+                  <View style={[styles.menuIcon, { backgroundColor: colors.menuIconBg }]}>
                     {renderIcon(item.icon, item.iconSet)}
                   </View>
-                  <Text style={styles.menuLabel}>{item.label}</Text>
-                  <Feather name="chevron-right" size={18} color={Colors.textMuted} />
+                  <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>{item.label}</Text>
+                  <Feather name="chevron-right" size={18} color={colors.textMuted} />
                 </TouchableOpacity>
               ))}
             </View>
           </View>
         ))}
 
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Feather name="log-out" size={20} color={Colors.negative} />
+        <TouchableOpacity style={[styles.logoutButton, { backgroundColor: colors.sectionCardBg, borderColor: colors.logoutBorder }]} onPress={handleLogout}>
+          <Feather name="log-out" size={20} color={colors.negative} />
           <Text style={styles.logoutText}>Sair da conta</Text>
         </TouchableOpacity>
 
-        <Text style={styles.version}>Delta Bank v1.0.0</Text>
+        <Text style={[styles.version, { color: colors.textMuted }]}>Delta Bank v1.0.0</Text>
       </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   header: { paddingHorizontal: Spacing.xxl, paddingTop: Spacing.xl, paddingBottom: Spacing.lg },
-  headerTitle: { fontSize: FontSizes.huge, fontWeight: '700', color: Colors.textPrimary },
+  headerTitle: { fontSize: FontSizes.huge, fontWeight: '700' },
   scrollContent: { paddingBottom: Spacing.xxxl },
   section: { marginBottom: Spacing.lg },
   sectionTitle: {
-    fontSize: FontSizes.sm, fontWeight: '700', color: Colors.textMuted,
+    fontSize: FontSizes.sm, fontWeight: '700',
     textTransform: 'uppercase', letterSpacing: 0.5,
     paddingHorizontal: Spacing.xxl, marginBottom: Spacing.sm,
   },
   sectionCard: {
-    backgroundColor: Colors.white, marginHorizontal: Spacing.xxl,
-    borderRadius: BorderRadii.lg, overflow: 'hidden', borderWidth: 1, borderColor: Colors.border,
+    marginHorizontal: Spacing.xxl,
+    borderRadius: BorderRadii.lg, overflow: 'hidden', borderWidth: 1,
   },
   menuItem: {
     flexDirection: 'row', alignItems: 'center', padding: Spacing.lg,
   },
-  menuItemBorder: { borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
   menuIcon: {
     width: 38, height: 38, borderRadius: BorderRadii.sm,
-    backgroundColor: Colors.pixBg, justifyContent: 'center', alignItems: 'center',
+    justifyContent: 'center', alignItems: 'center',
     marginRight: Spacing.lg,
   },
-  menuLabel: { flex: 1, fontSize: FontSizes.lg, fontWeight: '500', color: Colors.textPrimary },
+  menuLabel: { flex: 1, fontSize: FontSizes.lg, fontWeight: '500' },
   logoutButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.md,
-    backgroundColor: Colors.white, marginHorizontal: Spacing.xxl, marginTop: Spacing.xl,
+    marginHorizontal: Spacing.xxl, marginTop: Spacing.xl,
     paddingVertical: Spacing.lg, borderRadius: BorderRadii.lg,
-    borderWidth: 1, borderColor: '#FEE2E2',
+    borderWidth: 1,
   },
-  logoutText: { fontSize: FontSizes.lg, fontWeight: '600', color: Colors.negative },
-  version: { textAlign: 'center', fontSize: FontSizes.sm, color: Colors.textMuted, marginTop: Spacing.xl },
+  logoutText: { fontSize: FontSizes.lg, fontWeight: '600', color: '#EF4444' },
+  version: { textAlign: 'center', fontSize: FontSizes.sm, marginTop: Spacing.xl },
 });

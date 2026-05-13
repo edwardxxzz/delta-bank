@@ -3,11 +3,13 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
 } from 'react-native';
-import { Colors, Spacing, FontSizes, BorderRadii } from '../types';
+import { Spacing, FontSizes, BorderRadii } from '../types';
+import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 export const LoginPage: React.FC = () => {
+  const { colors } = useTheme();
   const { login, register } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [cpf, setCpf] = useState('');
@@ -52,18 +54,18 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.inner}
       >
         {/* Logo */}
         <View style={styles.logoContainer}>
-          <View style={styles.logoCircle}>
-            <View style={styles.logoTriangle} />
+          <View style={[styles.logoCircle, { backgroundColor: colors.primary }]}>
+            <View style={[styles.logoTriangle, { borderBottomColor: colors.accent }]} />
           </View>
-          <Text style={styles.appName}>Delta Bank</Text>
-          <Text style={styles.appSubtitle}>
+          <Text style={[styles.appName, { color: colors.textPrimary }]}>Delta Bank</Text>
+          <Text style={[styles.appSubtitle, { color: colors.textSecondary }]}>
             {isLogin ? 'Faça login para continuar' : 'Crie sua conta'}
           </Text>
         </View>
@@ -71,12 +73,12 @@ export const LoginPage: React.FC = () => {
         {/* Form */}
         <View style={styles.form}>
           {!isLogin && (
-            <View style={styles.inputContainer}>
-              <Ionicons name="person-outline" size={20} color={Colors.textMuted} style={styles.inputIcon} />
+            <View style={[styles.inputContainer, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+              <Ionicons name="person-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: colors.textPrimary }]}
                 placeholder="Nome completo"
-                placeholderTextColor={Colors.textMuted}
+                placeholderTextColor={colors.textMuted}
                 value={nome}
                 onChangeText={setNome}
                 autoCapitalize="words"
@@ -84,12 +86,12 @@ export const LoginPage: React.FC = () => {
             </View>
           )}
 
-          <View style={styles.inputContainer}>
-            <MaterialCommunityIcons name="card-account-details-outline" size={20} color={Colors.textMuted} style={styles.inputIcon} />
+          <View style={[styles.inputContainer, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+            <MaterialCommunityIcons name="card-account-details-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: colors.textPrimary }]}
               placeholder="CPF"
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={colors.textMuted}
               value={cpf}
               onChangeText={(text) => setCpf(formatCPF(text))}
               keyboardType="numeric"
@@ -97,12 +99,12 @@ export const LoginPage: React.FC = () => {
             />
           </View>
 
-          <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed-outline" size={20} color={Colors.textMuted} style={styles.inputIcon} />
+          <View style={[styles.inputContainer, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+            <Ionicons name="lock-closed-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: colors.textPrimary }]}
               placeholder="Senha"
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={colors.textMuted}
               value={senha}
               onChangeText={setSenha}
               secureTextEntry={!showPassword}
@@ -111,18 +113,18 @@ export const LoginPage: React.FC = () => {
               onPress={() => setShowPassword(!showPassword)}
               style={styles.eyeButton}
             >
-              <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color={Colors.textMuted} />
+              <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity
-            style={styles.primaryButton}
+            style={[styles.primaryButton, { backgroundColor: colors.accent }]}
             onPress={handleSubmit}
             disabled={loading}
             activeOpacity={0.8}
           >
             {loading ? (
-              <ActivityIndicator color={Colors.white} />
+              <ActivityIndicator color={colors.white} />
             ) : (
               <Text style={styles.primaryButtonText}>
                 {isLogin ? 'Entrar' : 'Criar conta'}
@@ -133,11 +135,11 @@ export const LoginPage: React.FC = () => {
 
         {/* Toggle */}
         <View style={styles.toggleContainer}>
-          <Text style={styles.toggleText}>
+          <Text style={[styles.toggleText, { color: colors.textSecondary }]}>
             {isLogin ? 'Não tem conta? ' : 'Já tem conta? '}
           </Text>
           <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
-            <Text style={styles.toggleLink}>
+            <Text style={[styles.toggleLink, { color: colors.accent }]}>
               {isLogin ? 'Cadastre-se' : 'Faça login'}
             </Text>
           </TouchableOpacity>
@@ -148,38 +150,38 @@ export const LoginPage: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.white },
+  container: { flex: 1 },
   inner: { flex: 1, justifyContent: 'center', paddingHorizontal: Spacing.xxl },
   logoContainer: { alignItems: 'center', marginBottom: Spacing.huge },
   logoCircle: {
     width: 80, height: 80, borderRadius: 40,
-    backgroundColor: Colors.primary, justifyContent: 'center', alignItems: 'center',
+    justifyContent: 'center', alignItems: 'center',
     marginBottom: Spacing.lg,
   },
   logoTriangle: {
     width: 0, height: 0,
     borderLeftWidth: 18, borderLeftColor: 'transparent',
     borderRightWidth: 18, borderRightColor: 'transparent',
-    borderBottomWidth: 30, borderBottomColor: Colors.accent,
+    borderBottomWidth: 30,
     marginTop: 6,
   },
-  appName: { fontSize: FontSizes.huge, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.xs },
-  appSubtitle: { fontSize: FontSizes.lg, color: Colors.textSecondary },
+  appName: { fontSize: FontSizes.huge, fontWeight: '700', marginBottom: Spacing.xs },
+  appSubtitle: { fontSize: FontSizes.lg },
   form: { gap: Spacing.lg },
   inputContainer: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.inputBg,
-    borderRadius: BorderRadii.lg, borderWidth: 1, borderColor: Colors.border,
+    flexDirection: 'row', alignItems: 'center',
+    borderRadius: BorderRadii.lg, borderWidth: 1,
     paddingHorizontal: Spacing.lg, height: 54,
   },
   inputIcon: { marginRight: Spacing.md },
-  input: { flex: 1, fontSize: FontSizes.lg, color: Colors.textPrimary },
+  input: { flex: 1, fontSize: FontSizes.lg },
   eyeButton: { padding: Spacing.sm },
   primaryButton: {
-    backgroundColor: Colors.accent, borderRadius: BorderRadii.lg, height: 54,
+    borderRadius: BorderRadii.lg, height: 54,
     justifyContent: 'center', alignItems: 'center', marginTop: Spacing.sm,
   },
-  primaryButtonText: { color: Colors.white, fontSize: FontSizes.xxl, fontWeight: '600' },
+  primaryButtonText: { color: '#FFFFFF', fontSize: FontSizes.xxl, fontWeight: '600' },
   toggleContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: Spacing.xxl },
-  toggleText: { fontSize: FontSizes.md, color: Colors.textSecondary },
-  toggleLink: { fontSize: FontSizes.md, color: Colors.accent, fontWeight: '600' },
+  toggleText: { fontSize: FontSizes.md },
+  toggleLink: { fontSize: FontSizes.md, fontWeight: '600' },
 });

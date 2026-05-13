@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
-import { Colors, Spacing, FontSizes, BorderRadii } from '../types';
+import { Spacing, FontSizes, BorderRadii } from '../types';
+import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { centsToBRL, formatBRL } from '../services/apiService';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
@@ -10,6 +11,7 @@ interface ProfilePageProps {
 }
 
 export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation }) => {
+  const { colors } = useTheme();
   const { userData, logout } = useAuth();
 
   const balance = userData ? centsToBRL(userData.saldo_centavos) : 0;
@@ -29,7 +31,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation }) => {
 
   const renderIcon = (icon: string, iconSet: string) => {
     const size = 20;
-    const color = Colors.accent;
+    const color = colors.accent;
     if (iconSet === 'Ionicons') return <Ionicons name={icon as any} size={size} color={color} />;
     return <Feather name={icon as any} size={size} color={color} />;
   };
@@ -45,52 +47,52 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack?.()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
+          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Perfil</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Perfil</Text>
         <View style={{ width: 40 }} />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Avatar */}
-        <View style={styles.profileSection}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
+        <View style={[styles.profileSection, { backgroundColor: colors.cardBg, borderBottomColor: colors.border }]}>
+          <View style={[styles.avatar, { backgroundColor: colors.pixBg, borderColor: colors.accent }]}>
+            <Text style={[styles.avatarText, { color: colors.accent }]}>
               {userData?.nome?.charAt(0)?.toUpperCase() || 'U'}
             </Text>
           </View>
-          <Text style={styles.name}>{userData?.nome || 'Usuário'}</Text>
-          <Text style={styles.cpf}>CPF: {formattedCPF}</Text>
+          <Text style={[styles.name, { color: colors.textPrimary }]}>{userData?.nome || 'Usuário'}</Text>
+          <Text style={[styles.cpf, { color: colors.textSecondary }]}>CPF: {formattedCPF}</Text>
         </View>
 
         {/* Balance Card */}
-        <View style={styles.balanceCard}>
+        <View style={[styles.balanceCard, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
           <View style={styles.balanceRow}>
             <View>
-              <Text style={styles.balanceLabel}>Saldo em conta</Text>
-              <Text style={styles.balanceValue}>R$ {formatBRL(balance)}</Text>
+              <Text style={[styles.balanceLabel, { color: colors.textSecondary }]}>Saldo em conta</Text>
+              <Text style={[styles.balanceValue, { color: colors.textPrimary }]}>R$ {formatBRL(balance)}</Text>
             </View>
-            <View style={styles.balanceIconContainer}>
-              <MaterialCommunityIcons name="wallet-outline" size={24} color={Colors.accent} />
+            <View style={[styles.balanceIconContainer, { backgroundColor: colors.pixBg }]}>
+              <MaterialCommunityIcons name="wallet-outline" size={24} color={colors.accent} />
             </View>
           </View>
-          <View style={styles.balanceDivider} />
+          <View style={[styles.balanceDivider, { backgroundColor: colors.border }]} />
           <View style={styles.limitRow}>
-            <Text style={styles.limitLabel}>Limite diário</Text>
-            <Text style={styles.limitValue}>R$ {formatBRL(limite)}</Text>
+            <Text style={[styles.limitLabel, { color: colors.textSecondary }]}>Limite diário</Text>
+            <Text style={[styles.limitValue, { color: colors.accent }]}>R$ {formatBRL(limite)}</Text>
           </View>
         </View>
 
         {/* Menu */}
-        <View style={styles.menuSection}>
+        <View style={[styles.menuSection, { backgroundColor: colors.sectionCardBg, borderColor: colors.border }]}>
           {menuItems.map((item, idx) => (
             <TouchableOpacity
               key={idx}
-              style={[styles.menuItem, idx < menuItems.length - 1 && styles.menuItemBorder]}
+              style={[styles.menuItem, idx < menuItems.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.menuDivider }]}
               onPress={() => {
                 if (item.label === 'Dados pessoais') {
                   navigation?.navigate?.('Conta');
@@ -99,89 +101,88 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation }) => {
                 }
               }}
             >
-              <View style={styles.menuIcon}>
+              <View style={[styles.menuIcon, { backgroundColor: colors.menuIconBg }]}>
                 {renderIcon(item.icon, item.iconSet)}
               </View>
               <View style={styles.menuInfo}>
-                <Text style={styles.menuLabel}>{item.label}</Text>
-                {item.subtitle && <Text style={styles.menuSubtitle}>{item.subtitle}</Text>}
+                <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>{item.label}</Text>
+                {item.subtitle && <Text style={[styles.menuSubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>}
               </View>
-              <Feather name="chevron-right" size={18} color={Colors.textMuted} />
+              <Feather name="chevron-right" size={18} color={colors.textMuted} />
             </TouchableOpacity>
           ))}
         </View>
 
         {/* Logout */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Feather name="log-out" size={20} color={Colors.negative} />
-          <Text style={styles.logoutText}>Sair da conta</Text>
+        <TouchableOpacity style={[styles.logoutButton, { backgroundColor: colors.cardBg, borderColor: colors.logoutBorder }]} onPress={handleLogout}>
+          <Feather name="log-out" size={20} color={colors.negative} />
+          <Text style={[styles.logoutText, { color: colors.negative }]}>Sair da conta</Text>
         </TouchableOpacity>
 
-        <Text style={styles.version}>Delta Bank v1.0.0</Text>
+        <Text style={[styles.version, { color: colors.textMuted }]}>Delta Bank v1.0.0</Text>
       </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: Spacing.xxl, paddingTop: Spacing.xl, paddingBottom: Spacing.lg,
   },
   backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.textPrimary },
+  headerTitle: { fontSize: FontSizes.xxl, fontWeight: '700' },
   scrollContent: { paddingBottom: Spacing.xxxl },
   profileSection: {
-    alignItems: 'center', backgroundColor: Colors.white,
-    paddingVertical: Spacing.xxl, borderBottomWidth: 1, borderBottomColor: Colors.border,
+    alignItems: 'center',
+    paddingVertical: Spacing.xxl, borderBottomWidth: 1,
   },
   avatar: {
     width: 80, height: 80, borderRadius: 40,
-    backgroundColor: Colors.pixBg, justifyContent: 'center', alignItems: 'center',
-    marginBottom: Spacing.lg, borderWidth: 2, borderColor: Colors.accent,
+    justifyContent: 'center', alignItems: 'center',
+    marginBottom: Spacing.lg, borderWidth: 2,
   },
-  avatarText: { fontSize: 32, fontWeight: '700', color: Colors.accent },
-  name: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.xs },
-  cpf: { fontSize: FontSizes.md, color: Colors.textSecondary },
+  avatarText: { fontSize: 32, fontWeight: '700' },
+  name: { fontSize: FontSizes.xxl, fontWeight: '700', marginBottom: Spacing.xs },
+  cpf: { fontSize: FontSizes.md },
   balanceCard: {
-    backgroundColor: Colors.white, marginHorizontal: Spacing.xxl, marginTop: -Spacing.xl,
+    marginHorizontal: Spacing.xxl, marginTop: -Spacing.xl,
     borderRadius: BorderRadii.xl, padding: Spacing.xxl,
-    borderWidth: 1, borderColor: Colors.border,
+    borderWidth: 1,
     elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08, shadowRadius: 8,
   },
   balanceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  balanceLabel: { fontSize: FontSizes.md, color: Colors.textSecondary, marginBottom: Spacing.xs },
-  balanceValue: { fontSize: FontSizes.giant, fontWeight: '700', color: Colors.textPrimary },
+  balanceLabel: { fontSize: FontSizes.md, marginBottom: Spacing.xs },
+  balanceValue: { fontSize: FontSizes.giant, fontWeight: '700' },
   balanceIconContainer: {
     width: 48, height: 48, borderRadius: 24,
-    backgroundColor: Colors.pixBg, justifyContent: 'center', alignItems: 'center',
+    justifyContent: 'center', alignItems: 'center',
   },
-  balanceDivider: { height: 1, backgroundColor: Colors.border, marginVertical: Spacing.lg },
+  balanceDivider: { height: 1, marginVertical: Spacing.lg },
   limitRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  limitLabel: { fontSize: FontSizes.md, color: Colors.textSecondary },
-  limitValue: { fontSize: FontSizes.md, fontWeight: '600', color: Colors.accent },
+  limitLabel: { fontSize: FontSizes.md },
+  limitValue: { fontSize: FontSizes.md, fontWeight: '600' },
   menuSection: {
-    backgroundColor: Colors.white, marginHorizontal: Spacing.xxl, marginTop: Spacing.xl,
-    borderRadius: BorderRadii.lg, overflow: 'hidden', borderWidth: 1, borderColor: Colors.border,
+    marginHorizontal: Spacing.xxl, marginTop: Spacing.xl,
+    borderRadius: BorderRadii.lg, overflow: 'hidden', borderWidth: 1,
   },
   menuItem: { flexDirection: 'row', alignItems: 'center', padding: Spacing.lg },
-  menuItemBorder: { borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
   menuIcon: {
     width: 38, height: 38, borderRadius: BorderRadii.sm,
-    backgroundColor: Colors.pixBg, justifyContent: 'center', alignItems: 'center',
+    justifyContent: 'center', alignItems: 'center',
     marginRight: Spacing.lg,
   },
   menuInfo: { flex: 1 },
-  menuLabel: { fontSize: FontSizes.lg, fontWeight: '500', color: Colors.textPrimary },
-  menuSubtitle: { fontSize: FontSizes.sm, color: Colors.textSecondary, marginTop: 2 },
+  menuLabel: { fontSize: FontSizes.lg, fontWeight: '500' },
+  menuSubtitle: { fontSize: FontSizes.sm, marginTop: 2 },
   logoutButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.md,
-    backgroundColor: Colors.white, marginHorizontal: Spacing.xxl, marginTop: Spacing.xl,
+    marginHorizontal: Spacing.xxl, marginTop: Spacing.xl,
     paddingVertical: Spacing.lg, borderRadius: BorderRadii.lg,
-    borderWidth: 1, borderColor: '#FEE2E2',
+    borderWidth: 1,
   },
-  logoutText: { fontSize: FontSizes.lg, fontWeight: '600', color: Colors.negative },
-  version: { textAlign: 'center', fontSize: FontSizes.sm, color: Colors.textMuted, marginTop: Spacing.xl },
+  logoutText: { fontSize: FontSizes.lg, fontWeight: '600' },
+  version: { textAlign: 'center', fontSize: FontSizes.sm, marginTop: Spacing.xl },
 });

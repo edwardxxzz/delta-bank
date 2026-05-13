@@ -4,7 +4,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../contexts/AuthContext';
 import { centsToBRL, getExtrato, formatBRL } from '../services/apiService';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
-import { Colors, Spacing, FontSizes, BorderRadii } from '../types';
+import { Spacing, FontSizes, BorderRadii } from '../types';
+import { useTheme } from '../contexts/ThemeContext';
 
 export interface DisplayTransaction {
   id: string;
@@ -21,6 +22,7 @@ interface HomePageProps {
 
 export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
   const { userData, refreshUserData } = useAuth();
+  const { colors, isDark } = useTheme();
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [transactions, setTransactions] = useState<DisplayTransaction[]>([]);
@@ -77,10 +79,10 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
   const firstName = userData?.nome?.split(' ')[0] || 'Usuário';
 
   const quickActions = [
-    { label: 'Pix', icon: 'swap-horizontal-bold', iconSet: 'MaterialCommunityIcons' as const, bgColor: Colors.pixBg, iconColor: Colors.pixIcon, onPress: () => navigation?.navigate?.('Transferir') },
-    { label: 'Pagar', icon: 'qrcode-scan', iconSet: 'MaterialCommunityIcons' as const, bgColor: Colors.pagarBg, iconColor: Colors.pagarIcon, onPress: () => navigation?.navigate?.('Pagar') },
-    { label: 'Transferir', icon: 'arrow-up-right', iconSet: 'MaterialCommunityIcons' as const, bgColor: Colors.transferirBg, iconColor: Colors.transferirIcon, onPress: () => navigation?.navigate?.('Transferir') },
-    { label: 'Receber', icon: 'qrcode', iconSet: 'MaterialCommunityIcons' as const, bgColor: Colors.emprestimoBg, iconColor: Colors.emprestimoIcon, onPress: () => navigation?.navigate?.('Receber') },
+    { label: 'Pix', icon: 'swap-horizontal-bold', iconSet: 'MaterialCommunityIcons' as const, bgColor: colors.pixBg, iconColor: colors.pixIcon, onPress: () => navigation?.navigate?.('Transferir') },
+    { label: 'Pagar', icon: 'qrcode-scan', iconSet: 'MaterialCommunityIcons' as const, bgColor: colors.pagarBg, iconColor: colors.pagarIcon, onPress: () => navigation?.navigate?.('Pagar') },
+    { label: 'Transferir', icon: 'arrow-up-right', iconSet: 'MaterialCommunityIcons' as const, bgColor: colors.transferirBg, iconColor: colors.transferirIcon, onPress: () => navigation?.navigate?.('Transferir') },
+    { label: 'Receber', icon: 'qrcode', iconSet: 'MaterialCommunityIcons' as const, bgColor: colors.emprestimoBg, iconColor: colors.emprestimoIcon, onPress: () => navigation?.navigate?.('Receber') },
   ];
 
   const renderActionIcon = (action: typeof quickActions[0]) => {
@@ -94,44 +96,44 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
   const getTransactionIcon = (type: DisplayTransaction['type']) => {
     switch (type) {
       case 'pix_received':
-        return { name: 'arrow-down-left', color: Colors.positive, bg: Colors.pixBg };
+        return { name: 'arrow-down-left', color: colors.positive, bg: colors.pixBg };
       case 'pix_sent':
-        return { name: 'arrow-up-right', color: Colors.negative, bg: Colors.sacarBg };
+        return { name: 'arrow-up-right', color: colors.negative, bg: colors.sacarBg };
       case 'deposit':
-        return { name: 'cash-plus', color: Colors.depositarIcon, bg: Colors.depositarBg };
+        return { name: 'cash-plus', color: colors.depositarIcon, bg: colors.depositarBg };
       case 'withdraw':
-        return { name: 'cash-minus', color: Colors.sacarIcon, bg: Colors.sacarBg };
+        return { name: 'cash-minus', color: colors.sacarIcon, bg: colors.sacarBg };
     }
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.accent} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
       >
-        {/* Header - matching dashboard reference */}
+        {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.greeting}>Olá {firstName}</Text>
-          <TouchableOpacity style={styles.profileButton} onPress={() => navigation?.navigate?.('Profile')}>
-            <Ionicons name="person" size={22} color={Colors.primary} />
-            <View style={styles.onlineDot} />
+          <Text style={[styles.greeting, { color: colors.textPrimary }]}>Olá {firstName}</Text>
+          <TouchableOpacity style={[styles.profileButton, { backgroundColor: colors.surfaceLight }]} onPress={() => navigation?.navigate?.('Profile')}>
+            <Ionicons name="person" size={22} color={colors.primary} />
+            <View style={[styles.onlineDot, { backgroundColor: colors.accent }]} />
           </TouchableOpacity>
         </View>
 
         {/* Balance Card */}
         <LinearGradient
-          colors={[Colors.cardGradientStart, Colors.cardGradientEnd]}
+          colors={[colors.cardGradientStart, colors.cardGradientEnd]}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={styles.balanceCard}
         >
-          {/* Triangle decoration */}
+          {/* Triangle decoration - RIGHT side */}
           <View style={styles.cardTriangleDecor} />
 
           {/* Bank logo row */}
           <View style={styles.cardLogoRow}>
-            <View style={styles.cardLogoTriangle} />
+            <View style={[styles.cardLogoTriangle, { borderBottomColor: colors.accent }]} />
             <Text style={styles.cardBankName}>DELTA BANK</Text>
           </View>
 
@@ -145,16 +147,17 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
             {balanceVisible ? `R$ ${formatBRL(balance)}` : 'R$ ••••••'}
           </Text>
           <View style={styles.monthlyRow}>
-            <MaterialCommunityIcons name="autorenew" size={16} color={Colors.accent} />
-            <Text style={styles.monthlyText}>+ R$ 320,40 este mês</Text>
+            <MaterialCommunityIcons name="autorenew" size={16} color={colors.accent} />
+            <Text style={[styles.monthlyText, { color: colors.accent }]}>+ R$ 320,40 este mês</Text>
             <TouchableOpacity hitSlop={8}>
               <Ionicons name="information-circle-outline" size={16} color="rgba(255,255,255,0.5)" />
             </TouchableOpacity>
           </View>
+          {/* Smaller "Ver Extrato" button */}
           <TouchableOpacity style={styles.statementButton} onPress={() => navigation?.navigate?.('Extrato')}>
-            <Feather name="file-text" size={14} color="rgba(255,255,255,0.9)" />
+            <Feather name="file-text" size={12} color="rgba(255,255,255,0.9)" />
             <Text style={styles.statementText}>Ver extrato</Text>
-            <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.7)" />
+            <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.7)" />
           </TouchableOpacity>
         </LinearGradient>
 
@@ -165,7 +168,7 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
               <View style={[styles.iconContainer, { backgroundColor: action.bgColor }]}>
                 {renderActionIcon(action)}
               </View>
-              <Text style={styles.actionLabel}>{action.label}</Text>
+              <Text style={[styles.actionLabel, { color: colors.textSecondary }]}>{action.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -173,16 +176,16 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
         {/* Transactions */}
         <View style={styles.transactionsSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Últimas atividades</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Últimas atividades</Text>
             <TouchableOpacity onPress={() => navigation?.navigate?.('Extrato')}>
-              <Text style={styles.viewAllText}>Ver todas</Text>
+              <Text style={[styles.viewAllText, { color: colors.accent }]}>Ver todas</Text>
             </TouchableOpacity>
           </View>
 
           {extratoError && (
-            <View style={styles.errorBanner}>
-              <Ionicons name="alert-circle-outline" size={16} color={Colors.warning} />
-              <Text style={styles.errorBannerText}>Extrato temporariamente indisponível</Text>
+            <View style={[styles.errorBanner, { backgroundColor: colors.errorBannerBg }]}>
+              <Ionicons name="alert-circle-outline" size={16} color={colors.warning} />
+              <Text style={[styles.errorBannerText, { color: colors.warning }]}>Extrato temporariamente indisponível</Text>
             </View>
           )}
 
@@ -191,27 +194,27 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
               const iconCfg = getTransactionIcon(tx.type);
               const isPositive = tx.amount >= 0;
               return (
-                <View key={tx.id} style={styles.transactionItem}>
+                <View key={tx.id} style={[styles.transactionItem, { borderBottomColor: colors.border }]}>
                   <View style={[styles.txIconCircle, { backgroundColor: iconCfg.bg }]}>
                     <MaterialCommunityIcons name={iconCfg.name as any} size={20} color={iconCfg.color} />
                   </View>
                   <View style={styles.txInfo}>
-                    <Text style={styles.txTitle}>{tx.title}</Text>
-                    <Text style={styles.txSubtitle}>{tx.subtitle}</Text>
+                    <Text style={[styles.txTitle, { color: colors.textPrimary }]}>{tx.title}</Text>
+                    <Text style={[styles.txSubtitle, { color: colors.textSecondary }]}>{tx.subtitle}</Text>
                   </View>
                   <View style={styles.txRight}>
-                    <Text style={[styles.txAmount, { color: isPositive ? Colors.positive : Colors.negative }]}>
+                    <Text style={[styles.txAmount, { color: isPositive ? colors.positive : colors.negative }]}>
                       {isPositive ? '+' : '-'} R$ {formatBRL(Math.abs(tx.amount))}
                     </Text>
-                    <Text style={styles.txDate}>{tx.date}</Text>
+                    <Text style={[styles.txDate, { color: colors.textMuted }]}>{tx.date}</Text>
                   </View>
                 </View>
               );
             })
           ) : !extratoError ? (
             <View style={styles.emptyState}>
-              <MaterialCommunityIcons name="bank-off-outline" size={44} color={Colors.textMuted} />
-              <Text style={styles.emptyText}>Nenhuma atividade recente</Text>
+              <MaterialCommunityIcons name="bank-off-outline" size={44} color={colors.textMuted} />
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Nenhuma atividade recente</Text>
             </View>
           ) : null}
         </View>
@@ -221,23 +224,22 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   scrollContent: { paddingBottom: 100 },
-  // Header
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: Spacing.xxl, paddingTop: Spacing.lg, paddingBottom: Spacing.md,
   },
-  greeting: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.textPrimary },
+  greeting: { fontSize: FontSizes.xxl, fontWeight: '700' },
   profileButton: {
     width: 44, height: 44, borderRadius: 22,
-    backgroundColor: Colors.surfaceLight, justifyContent: 'center', alignItems: 'center',
+    justifyContent: 'center', alignItems: 'center',
     position: 'relative',
   },
   onlineDot: {
     position: 'absolute', top: 2, right: 2,
     width: 10, height: 10, borderRadius: 5,
-    backgroundColor: Colors.accent, borderWidth: 2, borderColor: Colors.white,
+    borderWidth: 2, borderColor: '#FFFFFF',
   },
   // Balance Card
   balanceCard: {
@@ -246,12 +248,13 @@ const styles = StyleSheet.create({
     elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15, shadowRadius: 8,
   },
+  // Triangle on RIGHT side
   cardTriangleDecor: {
-    position: 'absolute', top: -15, left: -15,
+    position: 'absolute', top: -15, right: -15,
     width: 0, height: 0,
     borderLeftWidth: 50, borderLeftColor: 'transparent',
     borderRightWidth: 50, borderRightColor: 'transparent',
-    borderBottomWidth: 80, borderBottomColor: Colors.accent,
+    borderBottomWidth: 80, borderBottomColor: '#10B981',
     opacity: 0.15,
   },
   cardLogoRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.lg },
@@ -259,27 +262,31 @@ const styles = StyleSheet.create({
     width: 0, height: 0,
     borderLeftWidth: 8, borderLeftColor: 'transparent',
     borderRightWidth: 8, borderRightColor: 'transparent',
-    borderBottomWidth: 14, borderBottomColor: Colors.accent,
+    borderBottomWidth: 14,
   },
-  cardBankName: { fontSize: FontSizes.md, fontWeight: '700', color: Colors.white, letterSpacing: 1 },
+  cardBankName: { fontSize: FontSizes.md, fontWeight: '700', color: '#FFFFFF', letterSpacing: 1 },
   balanceHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm,
   },
-  balanceLabel: { color: Colors.textWhite, fontSize: FontSizes.md, opacity: 0.9 },
+  balanceLabel: { color: '#FFFFFF', fontSize: FontSizes.md, opacity: 0.9 },
   balanceAmount: {
-    color: Colors.textWhite, fontSize: FontSizes.balance, fontWeight: '700',
+    color: '#FFFFFF', fontSize: FontSizes.balance, fontWeight: '700',
     marginBottom: Spacing.md, letterSpacing: -0.5,
   },
   monthlyRow: {
-    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.xl,
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.lg,
   },
-  monthlyText: { color: Colors.accent, fontSize: FontSizes.md, fontWeight: '500' },
+  monthlyText: { fontSize: FontSizes.md, fontWeight: '500' },
+  // Smaller statement button
   statementButton: {
-    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
-    backgroundColor: 'rgba(255,255,255,0.1)', paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg, borderRadius: BorderRadii.md,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: BorderRadii.sm,
+    alignSelf: 'flex-start',
   },
-  statementText: { color: Colors.textWhite, fontSize: FontSizes.md, fontWeight: '500' },
+  statementText: { color: '#FFFFFF', fontSize: FontSizes.sm, fontWeight: '500' },
   // Quick Actions
   quickActionsContainer: {
     flexDirection: 'row', justifyContent: 'space-between',
@@ -290,37 +297,37 @@ const styles = StyleSheet.create({
     width: 56, height: 56, borderRadius: BorderRadii.md,
     justifyContent: 'center', alignItems: 'center',
   },
-  actionLabel: { fontSize: FontSizes.sm, color: Colors.textSecondary, fontWeight: '500' },
+  actionLabel: { fontSize: FontSizes.sm, fontWeight: '500' },
   // Transactions
   transactionsSection: { paddingHorizontal: Spacing.xxl, paddingVertical: Spacing.lg },
   sectionHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     marginBottom: Spacing.lg,
   },
-  sectionTitle: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.textPrimary },
-  viewAllText: { fontSize: FontSizes.md, color: Colors.accent, fontWeight: '600' },
+  sectionTitle: { fontSize: FontSizes.xxl, fontWeight: '700' },
+  viewAllText: { fontSize: FontSizes.md, fontWeight: '600' },
   transactionItem: {
     flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.md,
-    borderBottomWidth: 1, borderBottomColor: Colors.border,
+    borderBottomWidth: 1,
   },
   txIconCircle: {
     width: 42, height: 42, borderRadius: 21,
     justifyContent: 'center', alignItems: 'center', marginRight: Spacing.lg,
   },
   txInfo: { flex: 1 },
-  txTitle: { fontSize: FontSizes.md, fontWeight: '600', color: Colors.textPrimary, marginBottom: 2 },
-  txSubtitle: { fontSize: FontSizes.sm, color: Colors.textSecondary },
+  txTitle: { fontSize: FontSizes.md, fontWeight: '600', marginBottom: 2 },
+  txSubtitle: { fontSize: FontSizes.sm },
   txRight: { alignItems: 'flex-end' },
   txAmount: { fontSize: FontSizes.md, fontWeight: '700', marginBottom: 2 },
-  txDate: { fontSize: FontSizes.xs, color: Colors.textMuted },
+  txDate: { fontSize: FontSizes.xs },
   // Error
   errorBanner: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
-    backgroundColor: '#FFF7ED', borderRadius: BorderRadii.md,
+    borderRadius: BorderRadii.md,
     padding: Spacing.md, marginBottom: Spacing.md,
   },
-  errorBannerText: { fontSize: FontSizes.sm, color: Colors.warning },
+  errorBannerText: { fontSize: FontSizes.sm },
   // Empty
   emptyState: { alignItems: 'center', paddingVertical: Spacing.xxxl },
-  emptyText: { fontSize: FontSizes.lg, color: Colors.textSecondary, marginTop: Spacing.lg },
+  emptyText: { fontSize: FontSizes.lg, marginTop: Spacing.lg },
 });

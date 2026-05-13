@@ -3,7 +3,8 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   Alert, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
-import { Colors, Spacing, FontSizes, BorderRadii } from '../types';
+import { Spacing, FontSizes, BorderRadii } from '../types';
+import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { makePix, brlToCents, centsToBRL, formatBRL } from '../services/apiService';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
@@ -17,6 +18,7 @@ type KeyType = 'cpf' | 'cnpj' | 'email' | 'telefone' | 'aleatoria';
 type Step = 'select' | 'form' | 'confirm';
 
 export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, route }) => {
+  const { colors } = useTheme();
   const { userData, refreshUserData } = useAuth();
   const [step, setStep] = useState<Step>('select');
   const [keyType, setKeyType] = useState<KeyType>('cpf');
@@ -103,7 +105,7 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
         {step !== 'select' ? (
@@ -111,20 +113,20 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
             if (step === 'form') setStep('select');
             else if (step === 'confirm') setStep('form');
           }}>
-            <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
+            <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
         ) : (
           <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack?.()}>
-            <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
+            <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
         )}
-        <Text style={styles.headerTitle}>Enviar Pix</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Enviar Pix</Text>
         <View style={{ width: 40 }} />
       </View>
 
       {/* Progress bar */}
-      <View style={styles.progressBar}>
-        <View style={[styles.progressFill, { width: `${getStepProgress() * 100}%` }]} />
+      <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
+        <View style={[styles.progressFill, { width: `${getStepProgress() * 100}%`, backgroundColor: colors.accent }]} />
       </View>
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.content}>
@@ -133,16 +135,20 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
           {/* Step 1: Select key type */}
           {step === 'select' && (
             <>
-              <Text style={styles.sectionTitle}>Selecione o tipo de chave</Text>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Selecione o tipo de chave</Text>
               <View style={styles.keyTypesRow}>
                 {keyTypes.map((kt) => (
                   <TouchableOpacity
                     key={kt.key}
-                    style={[styles.keyTypeBtn, keyType === kt.key && styles.keyTypeBtnActive]}
+                    style={[
+                      styles.keyTypeBtn,
+                      { backgroundColor: colors.cardBg, borderColor: colors.border },
+                      keyType === kt.key && { backgroundColor: colors.accent, borderColor: colors.accent },
+                    ]}
                     onPress={() => setKeyType(kt.key)}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.keyTypeText, keyType === kt.key && styles.keyTypeTextActive]}>
+                    <Text style={[styles.keyTypeText, { color: colors.textSecondary }, keyType === kt.key && styles.keyTypeTextActive]}>
                       {kt.label}
                     </Text>
                   </TouchableOpacity>
@@ -150,13 +156,13 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Chave Pix</Text>
-                <View style={styles.inputContainer}>
-                  <MaterialCommunityIcons name="key-variant" size={18} color={Colors.textMuted} style={styles.inputIcon} />
+                <Text style={[styles.label, { color: colors.textPrimary }]}>Chave Pix</Text>
+                <View style={[styles.inputContainer, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
+                  <MaterialCommunityIcons name="key-variant" size={18} color={colors.textMuted} style={styles.inputIcon} />
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: colors.textPrimary }]}
                     placeholder={getPlaceholder()}
-                    placeholderTextColor={Colors.textMuted}
+                    placeholderTextColor={colors.textMuted}
                     value={chavePix}
                     onChangeText={setChavePix}
                     autoCapitalize="none"
@@ -166,22 +172,22 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Nome do destinatário (opcional)</Text>
-                <View style={styles.inputContainer}>
-                  <Ionicons name="person-outline" size={18} color={Colors.textMuted} style={styles.inputIcon} />
+                <Text style={[styles.label, { color: colors.textPrimary }]}>Nome do destinatário (opcional)</Text>
+                <View style={[styles.inputContainer, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
+                  <Ionicons name="person-outline" size={18} color={colors.textMuted} style={styles.inputIcon} />
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: colors.textPrimary }]}
                     placeholder="Nome"
-                    placeholderTextColor={Colors.textMuted}
+                    placeholderTextColor={colors.textMuted}
                     value={nomeDest}
                     onChangeText={setNomeDest}
                   />
                 </View>
               </View>
 
-              <TouchableOpacity style={styles.continueBtn} onPress={handleContinue} activeOpacity={0.8}>
+              <TouchableOpacity style={[styles.continueBtn, { backgroundColor: colors.accent, shadowColor: colors.accent }]} onPress={handleContinue} activeOpacity={0.8}>
                 <Text style={styles.continueText}>Continuar</Text>
-                <Ionicons name="arrow-forward" size={20} color={Colors.white} />
+                <Ionicons name="arrow-forward" size={20} color={colors.white} />
               </TouchableOpacity>
             </>
           )}
@@ -190,28 +196,28 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
           {step === 'form' && (
             <>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Destinatário</Text>
-                <View style={styles.inputContainer}>
-                  <Ionicons name="person-outline" size={18} color={Colors.textMuted} style={styles.inputIcon} />
+                <Text style={[styles.label, { color: colors.textPrimary }]}>Destinatário</Text>
+                <View style={[styles.inputContainer, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
+                  <Ionicons name="person-outline" size={18} color={colors.textMuted} style={styles.inputIcon} />
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: colors.textPrimary }]}
                     placeholder="Nome do destinatário"
-                    placeholderTextColor={Colors.textMuted}
+                    placeholderTextColor={colors.textMuted}
                     value={nomeDest}
                     onChangeText={setNomeDest}
                   />
                 </View>
-                <Text style={styles.inputHelper}>{chavePix}</Text>
+                <Text style={[styles.inputHelper, { color: colors.textMuted }]}>{chavePix}</Text>
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Valor</Text>
-                <View style={styles.inputContainer}>
-                  <Text style={styles.currencyPrefix}>R$</Text>
+                <Text style={[styles.label, { color: colors.textPrimary }]}>Valor</Text>
+                <View style={[styles.inputContainer, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
+                  <Text style={[styles.currencyPrefix, { color: colors.accent }]}>R$</Text>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: colors.textPrimary }]}
                     placeholder="0,00"
-                    placeholderTextColor={Colors.textMuted}
+                    placeholderTextColor={colors.textMuted}
                     value={valor}
                     onChangeText={setValor}
                     keyboardType="numeric"
@@ -220,21 +226,21 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Mensagem (opcional)</Text>
-                <View style={styles.inputContainer}>
+                <Text style={[styles.label, { color: colors.textPrimary }]}>Mensagem (opcional)</Text>
+                <View style={[styles.inputContainer, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: colors.textPrimary }]}
                     placeholder="Adicione uma mensagem"
-                    placeholderTextColor={Colors.textMuted}
+                    placeholderTextColor={colors.textMuted}
                     value={mensagem}
                     onChangeText={setMensagem}
                   />
                 </View>
               </View>
 
-              <TouchableOpacity style={styles.continueBtn} onPress={handleContinueToConfirm} activeOpacity={0.8}>
+              <TouchableOpacity style={[styles.continueBtn, { backgroundColor: colors.accent, shadowColor: colors.accent }]} onPress={handleContinueToConfirm} activeOpacity={0.8}>
                 <Text style={styles.continueText}>Continuar</Text>
-                <Ionicons name="arrow-forward" size={20} color={Colors.white} />
+                <Ionicons name="arrow-forward" size={20} color={colors.white} />
               </TouchableOpacity>
             </>
           )}
@@ -242,31 +248,31 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
           {/* Step 3: Confirm */}
           {step === 'confirm' && (
             <>
-              <Text style={styles.confirmTitle}>Confirme os dados</Text>
+              <Text style={[styles.confirmTitle, { color: colors.textPrimary }]}>Confirme os dados</Text>
 
-              <View style={styles.confirmCard}>
+              <View style={[styles.confirmCard, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
                 <View style={styles.confirmRow}>
-                  <Text style={styles.confirmLabel}>Para</Text>
-                  <Text style={styles.confirmValue}>{nomeDest || chavePix}</Text>
+                  <Text style={[styles.confirmLabel, { color: colors.textSecondary }]}>Para</Text>
+                  <Text style={[styles.confirmValue, { color: colors.textPrimary }]}>{nomeDest || chavePix}</Text>
                 </View>
-                <View style={styles.confirmDivider} />
+                <View style={[styles.confirmDivider, { backgroundColor: colors.border }]} />
                 <View style={styles.confirmRow}>
-                  <Text style={styles.confirmLabel}>Chave</Text>
-                  <Text style={styles.confirmValue}>{chavePix}</Text>
+                  <Text style={[styles.confirmLabel, { color: colors.textSecondary }]}>Chave</Text>
+                  <Text style={[styles.confirmValue, { color: colors.textPrimary }]}>{chavePix}</Text>
                 </View>
-                <View style={styles.confirmDivider} />
+                <View style={[styles.confirmDivider, { backgroundColor: colors.border }]} />
                 <View style={styles.confirmRow}>
-                  <Text style={styles.confirmLabel}>Valor</Text>
-                  <Text style={styles.confirmValue}>
+                  <Text style={[styles.confirmLabel, { color: colors.textSecondary }]}>Valor</Text>
+                  <Text style={[styles.confirmValue, { color: colors.textPrimary }]}>
                     R$ {parseFloat(valor.replace(',', '.')).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </Text>
                 </View>
                 {mensagem ? (
                   <>
-                    <View style={styles.confirmDivider} />
+                    <View style={[styles.confirmDivider, { backgroundColor: colors.border }]} />
                     <View style={styles.confirmRow}>
-                      <Text style={styles.confirmLabel}>Mensagem</Text>
-                      <Text style={styles.confirmValue}>{mensagem}</Text>
+                      <Text style={[styles.confirmLabel, { color: colors.textSecondary }]}>Mensagem</Text>
+                      <Text style={[styles.confirmValue, { color: colors.textPrimary }]}>{mensagem}</Text>
                     </View>
                   </>
                 ) : null}
@@ -274,34 +280,34 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
 
               {/* Password */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Sua senha</Text>
-                <View style={styles.inputContainer}>
-                  <Ionicons name="lock-closed-outline" size={18} color={Colors.textMuted} style={styles.inputIcon} />
+                <Text style={[styles.label, { color: colors.textPrimary }]}>Sua senha</Text>
+                <View style={[styles.inputContainer, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
+                  <Ionicons name="lock-closed-outline" size={18} color={colors.textMuted} style={styles.inputIcon} />
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: colors.textPrimary }]}
                     placeholder="Digite sua senha"
-                    placeholderTextColor={Colors.textMuted}
+                    placeholderTextColor={colors.textMuted}
                     value={senha}
                     onChangeText={setSenha}
                     secureTextEntry={!showPassword}
                   />
                   <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
-                    <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color={Colors.textMuted} />
+                    <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color={colors.textMuted} />
                   </TouchableOpacity>
                 </View>
               </View>
 
               <TouchableOpacity
-                style={[styles.confirmBtn, loading && styles.confirmBtnDisabled]}
+                style={[styles.confirmBtn, { backgroundColor: colors.accent, shadowColor: colors.accent }, loading && styles.confirmBtnDisabled]}
                 onPress={handleConfirmPix}
                 disabled={loading}
                 activeOpacity={0.8}
               >
                 {loading ? (
-                  <ActivityIndicator color={Colors.white} />
+                  <ActivityIndicator color={colors.white} />
                 ) : (
                   <>
-                    <MaterialCommunityIcons name="send" size={22} color={Colors.white} />
+                    <MaterialCommunityIcons name="send" size={22} color={colors.white} />
                     <Text style={styles.confirmBtnText}>Confirmar Pix</Text>
                   </>
                 )}
@@ -315,70 +321,69 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: Spacing.xxl, paddingTop: Spacing.xl, paddingBottom: Spacing.md,
   },
   backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.textPrimary },
+  headerTitle: { fontSize: FontSizes.xxl, fontWeight: '700' },
   progressBar: {
-    height: 3, backgroundColor: Colors.border, marginHorizontal: Spacing.xxl,
+    height: 3, marginHorizontal: Spacing.xxl,
     borderRadius: 2, marginBottom: Spacing.lg, overflow: 'hidden',
   },
-  progressFill: { height: '100%', backgroundColor: Colors.accent, borderRadius: 2 },
+  progressFill: { height: '100%', borderRadius: 2 },
   content: { flex: 1 },
   scrollContent: { paddingHorizontal: Spacing.xxl, paddingBottom: 40 },
-  sectionTitle: { fontSize: FontSizes.lg, fontWeight: '600', color: Colors.textPrimary, marginBottom: Spacing.lg },
+  sectionTitle: { fontSize: FontSizes.lg, fontWeight: '600', marginBottom: Spacing.lg },
   keyTypesRow: {
     flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginBottom: Spacing.xl,
   },
   keyTypeBtn: {
     paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md,
-    borderRadius: BorderRadii.lg, backgroundColor: Colors.white,
-    borderWidth: 1, borderColor: Colors.border,
+    borderRadius: BorderRadii.lg,
+    borderWidth: 1,
   },
-  keyTypeBtnActive: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  keyTypeText: { fontSize: FontSizes.md, color: Colors.textSecondary, fontWeight: '500' },
-  keyTypeTextActive: { color: Colors.white, fontWeight: '600' },
+  keyTypeTextActive: { color: '#FFFFFF', fontWeight: '600' },
+  keyTypeText: { fontSize: FontSizes.md, fontWeight: '500' },
   inputGroup: { marginBottom: Spacing.lg },
-  label: { fontSize: FontSizes.md, fontWeight: '600', color: Colors.textPrimary, marginBottom: Spacing.sm },
-  inputHelper: { fontSize: FontSizes.sm, color: Colors.textMuted, marginTop: Spacing.xs },
+  label: { fontSize: FontSizes.md, fontWeight: '600', marginBottom: Spacing.sm },
+  inputHelper: { fontSize: FontSizes.sm, marginTop: Spacing.xs },
   inputContainer: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.white,
-    borderRadius: BorderRadii.lg, borderWidth: 1, borderColor: Colors.border,
+    flexDirection: 'row', alignItems: 'center',
+    borderRadius: BorderRadii.lg, borderWidth: 1,
     paddingHorizontal: Spacing.lg, height: 54,
   },
   inputIcon: { marginRight: Spacing.md },
-  currencyPrefix: { marginRight: Spacing.md, fontSize: 16, fontWeight: '700', color: Colors.accent },
-  input: { flex: 1, fontSize: FontSizes.lg, color: Colors.textPrimary },
+  currencyPrefix: { marginRight: Spacing.md, fontSize: 16, fontWeight: '700' },
+  input: { flex: 1, fontSize: FontSizes.lg },
   eyeBtn: { padding: Spacing.sm },
   continueBtn: {
-    flexDirection: 'row', backgroundColor: Colors.accent, borderRadius: BorderRadii.lg,
+    flexDirection: 'row', borderRadius: BorderRadii.lg,
     height: 56, justifyContent: 'center', alignItems: 'center', gap: Spacing.md,
-    marginTop: Spacing.xl, elevation: 3, shadowColor: Colors.accent,
+    marginTop: Spacing.xl, elevation: 3,
     shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8,
   },
-  continueText: { color: Colors.white, fontSize: FontSizes.xxl, fontWeight: '700' },
+  continueText: { color: '#FFFFFF', fontSize: FontSizes.xxl, fontWeight: '700' },
   // Confirm step
-  confirmTitle: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.xl },
+  confirmTitle: { fontSize: FontSizes.xxl, fontWeight: '700', marginBottom: Spacing.xl },
   confirmCard: {
-    backgroundColor: Colors.white, borderRadius: BorderRadii.lg,
-    padding: Spacing.xl, marginBottom: Spacing.xl, borderWidth: 1, borderColor: Colors.border,
+    borderRadius: BorderRadii.lg,
+    padding: Spacing.xl, marginBottom: Spacing.xl, borderWidth: 1,
   },
   confirmRow: {
     flexDirection: 'row', justifyContent: 'space-between',
     paddingVertical: Spacing.md,
   },
-  confirmLabel: { fontSize: FontSizes.md, color: Colors.textSecondary },
-  confirmValue: { fontSize: FontSizes.md, fontWeight: '600', color: Colors.textPrimary },
-  confirmDivider: { height: 1, backgroundColor: Colors.border },
+  confirmLabel: { fontSize: FontSizes.md },
+  confirmValue: { fontSize: FontSizes.md, fontWeight: '600' },
+  confirmDivider: { height: 1 },
   confirmBtn: {
-    flexDirection: 'row', backgroundColor: Colors.accent, borderRadius: BorderRadii.lg,
+    flexDirection: 'row', borderRadius: BorderRadii.lg,
     height: 56, justifyContent: 'center', alignItems: 'center', gap: Spacing.md,
-    elevation: 3, shadowColor: Colors.accent,
+    elevation: 3,
     shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8,
   },
   confirmBtnDisabled: { opacity: 0.6 },
-  confirmBtnText: { color: Colors.white, fontSize: FontSizes.xxl, fontWeight: '700' },
+  confirmBtnText: { color: '#FFFFFF', fontSize: FontSizes.xxl, fontWeight: '700' },
 });

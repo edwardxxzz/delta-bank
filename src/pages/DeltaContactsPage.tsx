@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
-import { Colors, Spacing, FontSizes, BorderRadii } from '../types';
+import { Spacing, FontSizes, BorderRadii } from '../types';
+import { useTheme } from '../contexts/ThemeContext';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 interface Contact {
@@ -24,6 +25,7 @@ interface DeltaContactsPageProps {
 }
 
 export const DeltaContactsPage: React.FC<DeltaContactsPageProps> = ({ navigation }) => {
+  const { colors } = useTheme();
   const [searchText, setSearchText] = useState('');
 
   const favorites = mockContacts.filter(c => c.isFavorite);
@@ -40,14 +42,14 @@ export const DeltaContactsPage: React.FC<DeltaContactsPageProps> = ({ navigation
   ];
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.closeButton} onPress={() => navigation?.goBack?.()}>
-          <Ionicons name="close" size={24} color={Colors.textPrimary} />
+          <Ionicons name="close" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.newContactBtn} activeOpacity={0.7}>
-          <Ionicons name="add" size={18} color={Colors.white} />
+        <TouchableOpacity style={[styles.newContactBtn, { backgroundColor: colors.accent }]} activeOpacity={0.7}>
+          <Ionicons name="add" size={18} color={colors.white} />
           <Text style={styles.newContactText}>Novo contato</Text>
         </TouchableOpacity>
       </View>
@@ -59,18 +61,18 @@ export const DeltaContactsPage: React.FC<DeltaContactsPageProps> = ({ navigation
             <View style={[styles.actionIcon, { backgroundColor: action.bg }]}>
               <MaterialCommunityIcons name={action.icon as any} size={22} color={action.color} />
             </View>
-            <Text style={styles.actionLabel}>{action.label}</Text>
+            <Text style={[styles.actionLabel, { color: colors.textSecondary }]}>{action.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
       {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={18} color={Colors.textMuted} style={styles.searchIcon} />
+      <View style={[styles.searchContainer, { backgroundColor: colors.surfaceLight }]}>
+        <Ionicons name="search" size={18} color={colors.textMuted} style={styles.searchIcon} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: colors.textPrimary }]}
           placeholder="Buscar contato..."
-          placeholderTextColor={Colors.textMuted}
+          placeholderTextColor={colors.textMuted}
           value={searchText}
           onChangeText={setSearchText}
         />
@@ -81,8 +83,8 @@ export const DeltaContactsPage: React.FC<DeltaContactsPageProps> = ({ navigation
         {favorites.length > 0 && !searchText && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="star" size={14} color={Colors.textMuted} />
-              <Text style={styles.sectionTitle}>FAVORITOS</Text>
+              <Ionicons name="star" size={14} color={colors.textMuted} />
+              <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>FAVORITOS</Text>
             </View>
             <View style={styles.favoritesRow}>
               {favorites.map((contact) => (
@@ -90,7 +92,7 @@ export const DeltaContactsPage: React.FC<DeltaContactsPageProps> = ({ navigation
                   <View style={[styles.favoriteAvatar, { backgroundColor: contact.color }]}>
                     <Text style={styles.favoriteInitial}>{contact.initial}</Text>
                   </View>
-                  <Text style={styles.favoriteName}>{contact.name.split(' ')[0]}</Text>
+                  <Text style={[styles.favoriteName, { color: colors.textSecondary }]}>{contact.name.split(' ')[0]}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -100,19 +102,19 @@ export const DeltaContactsPage: React.FC<DeltaContactsPageProps> = ({ navigation
         {/* Contacts PIX */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <MaterialCommunityIcons name="swap-horizontal-bold" size={14} color={Colors.textMuted} />
-            <Text style={styles.sectionTitle}>CONTATOS PIX</Text>
+            <MaterialCommunityIcons name="swap-horizontal-bold" size={14} color={colors.textMuted} />
+            <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>CONTATOS PIX</Text>
           </View>
           {allContacts.map((contact) => (
-            <TouchableOpacity key={contact.id} style={styles.contactItem} activeOpacity={0.7}>
+            <TouchableOpacity key={contact.id} style={[styles.contactItem, { borderBottomColor: colors.menuDivider }]} activeOpacity={0.7}>
               <View style={[styles.contactAvatar, { backgroundColor: contact.color }]}>
                 <Text style={styles.contactInitial}>{contact.initial}</Text>
               </View>
               <View style={styles.contactInfo}>
-                <Text style={styles.contactName}>{contact.name}</Text>
-                <Text style={styles.contactDetail}>{contact.detail}</Text>
+                <Text style={[styles.contactName, { color: colors.textPrimary }]}>{contact.name}</Text>
+                <Text style={[styles.contactDetail, { color: colors.textSecondary }]}>{contact.detail}</Text>
               </View>
-              <Feather name="chevron-right" size={18} color={Colors.textMuted} />
+              <Feather name="chevron-right" size={18} color={colors.textMuted} />
             </TouchableOpacity>
           ))}
         </View>
@@ -122,7 +124,7 @@ export const DeltaContactsPage: React.FC<DeltaContactsPageProps> = ({ navigation
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: Spacing.xxl, paddingTop: Spacing.xl, paddingBottom: Spacing.lg,
@@ -130,10 +132,10 @@ const styles = StyleSheet.create({
   closeButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
   newContactBtn: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.xs,
-    backgroundColor: Colors.accent, borderRadius: BorderRadii.md,
+    borderRadius: BorderRadii.md,
     paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm,
   },
-  newContactText: { color: Colors.white, fontSize: FontSizes.md, fontWeight: '600' },
+  newContactText: { color: '#FFFFFF', fontSize: FontSizes.md, fontWeight: '600' },
   actionsRow: {
     flexDirection: 'row', justifyContent: 'space-between',
     paddingHorizontal: Spacing.xxl, marginBottom: Spacing.lg,
@@ -143,15 +145,15 @@ const styles = StyleSheet.create({
     width: 56, height: 56, borderRadius: BorderRadii.md,
     justifyContent: 'center', alignItems: 'center',
   },
-  actionLabel: { fontSize: FontSizes.sm, color: Colors.textSecondary, fontWeight: '500' },
+  actionLabel: { fontSize: FontSizes.sm, fontWeight: '500' },
   searchContainer: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: Colors.surfaceLight, borderRadius: BorderRadii.lg,
+    borderRadius: BorderRadii.lg,
     marginHorizontal: Spacing.xxl, marginBottom: Spacing.lg,
     paddingHorizontal: Spacing.lg, height: 46,
   },
   searchIcon: { marginRight: Spacing.md },
-  searchInput: { flex: 1, fontSize: FontSizes.md, color: Colors.textPrimary },
+  searchInput: { flex: 1, fontSize: FontSizes.md },
   scrollContent: { paddingBottom: Spacing.xxxl },
   section: { marginBottom: Spacing.lg },
   sectionHeader: {
@@ -159,7 +161,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xxl, marginBottom: Spacing.md,
   },
   sectionTitle: {
-    fontSize: FontSizes.sm, fontWeight: '700', color: Colors.textMuted,
+    fontSize: FontSizes.sm, fontWeight: '700',
     letterSpacing: 0.5,
   },
   favoritesRow: {
@@ -170,20 +172,20 @@ const styles = StyleSheet.create({
     width: 52, height: 52, borderRadius: 26,
     justifyContent: 'center', alignItems: 'center',
   },
-  favoriteInitial: { fontSize: FontSizes.xxl, fontWeight: '700', color: Colors.white },
-  favoriteName: { fontSize: FontSizes.sm, color: Colors.textSecondary },
+  favoriteInitial: { fontSize: FontSizes.xxl, fontWeight: '700', color: '#FFFFFF' },
+  favoriteName: { fontSize: FontSizes.sm },
   contactItem: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: Spacing.xxl, paddingVertical: Spacing.lg,
-    borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
+    borderBottomWidth: 1,
   },
   contactAvatar: {
     width: 44, height: 44, borderRadius: 22,
     justifyContent: 'center', alignItems: 'center',
     marginRight: Spacing.lg,
   },
-  contactInitial: { fontSize: FontSizes.lg, fontWeight: '700', color: Colors.white },
+  contactInitial: { fontSize: FontSizes.lg, fontWeight: '700', color: '#FFFFFF' },
   contactInfo: { flex: 1 },
-  contactName: { fontSize: FontSizes.lg, fontWeight: '600', color: Colors.textPrimary, marginBottom: 2 },
-  contactDetail: { fontSize: FontSizes.sm, color: Colors.textSecondary },
+  contactName: { fontSize: FontSizes.lg, fontWeight: '600', marginBottom: 2 },
+  contactDetail: { fontSize: FontSizes.sm },
 });
