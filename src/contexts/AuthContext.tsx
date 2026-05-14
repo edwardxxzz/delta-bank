@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!cpf || cpf.length < 11) {
       throw new Error('CPF inválido. Deve conter 11 dígitos.');
     }
-    if (!senha || senha.length < 4) {
+    if (!senha || senha.length < 6) {
       throw new Error('Senha deve ter pelo menos 4 caracteres.');
     }
 
@@ -129,7 +129,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw new Error('Senha deve ter pelo menos 4 caracteres.');
     }
 
-    const res = await createAccount(nome.trim(), cpf, senha, 0);
+    const res = await createAccount(nome.trim(), cpf, senha, 10);
 
     if (!res.sucesso) {
       // Provide clear error messages from backend

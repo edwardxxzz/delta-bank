@@ -72,7 +72,7 @@ export const LoginPage: React.FC = () => {
       setError('Preencha o campo senha.');
       return;
     }
-    if (senha.length < 4) {
+    if (senha.length < 6) {
       setError('Senha deve ter pelo menos 4 caracteres.');
       return;
     }
