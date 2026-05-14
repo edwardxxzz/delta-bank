@@ -19,7 +19,7 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
       items: [
         { icon: 'qrcode', iconSet: 'MaterialCommunityIcons' as const, label: 'Gerar QR Code', navigate: 'QRCode' },
         { icon: 'qrcode-scan', iconSet: 'MaterialCommunityIcons' as const, label: 'Ler QR Code', navigate: 'Pagar' },
-        { icon: 'key-variant', iconSet: 'MaterialCommunityIcons' as const, label: 'Minhas chaves Pix' },
+        { icon: 'key-variant', iconSet: 'MaterialCommunityIcons' as const, label: 'Minhas chaves Pix', navigate: 'ChavesPix' },
       ],
     },
     {

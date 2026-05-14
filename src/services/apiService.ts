@@ -154,6 +154,30 @@ export const sacar = async (
   });
 };
 
-export const getChavesPix = async (cpf: string): Promise<ApiResponse<any>> => {
-  return safeFetch<any>(`${BASE_URL}/api/chaves-pix/${cpf}`);
+export interface ChavePix {
+  id: number;
+  tipo: string;
+  valor: string;
+  cpf_conta: string;
+  criada_em: string;
+}
+
+export const getChavesPix = async (cpf: string): Promise<ApiResponse<ChavePix[]>> => {
+  return safeFetch<ChavePix[]>(`${BASE_URL}/api/chaves-pix/${cpf}`);
+};
+
+export const registerChavePix = async (
+  cpf: string,
+  tipo: string,
+  valor: string
+): Promise<ApiResponse<ChavePix>> => {
+  return safeFetch<ChavePix>(`${BASE_URL}/api/chaves-pix`, {
+    method: 'POST',
+    body: JSON.stringify({ cpf, tipo, valor }),
+  });
+};
+
+// Validate if a CPF/account exists in Delta Bank (used for Pix key validation)
+export const validatePixKey = async (cpf: string): Promise<ApiResponse<SaldoData>> => {
+  return safeFetch<SaldoData>(`${BASE_URL}/api/saldo/${cpf}`);
 };

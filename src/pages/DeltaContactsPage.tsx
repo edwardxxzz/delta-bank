@@ -1,24 +1,23 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, RefreshControl, ActivityIndicator } from 'react-native';
 import { Spacing, FontSizes, BorderRadii } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import { useAuth } from '../contexts/AuthContext';
+import { getChavesPix, ChavePix, validatePixKey } from '../services/apiService';
 
 interface Contact {
   id: string;
   name: string;
   initial: string;
   color: string;
-  detail: string;
+  chaveTipo: string;
+  chaveValor: string;
+  cpf: string;
   isFavorite?: boolean;
 }
 
-const mockContacts: Contact[] = [
-  { id: '1', name: 'Marina Souza', initial: 'M', color: '#F97316', detail: '11999887766 - Inter', isFavorite: true },
-  { id: '2', name: 'Carlos Oliveira', initial: 'C', color: '#8B5CF6', detail: 'carlos@email.com - Nubank', isFavorite: true },
-  { id: '3', name: 'Pedro Lima', initial: 'P', color: '#3B82F6', detail: '123.456.789-00 - Bradesco' },
-  { id: '4', name: 'Agência Criativa', initial: 'A', color: '#10B981', detail: '12.345.678/0001-99 - Itaú' },
-];
+const avatarColors = ['#F97316', '#8B5CF6', '#3B82F6', '#10B981', '#EC4899', '#6366F1', '#EF4444', '#14B8A6'];
 
 interface DeltaContactsPageProps {
   navigation?: any;
@@ -26,12 +25,94 @@ interface DeltaContactsPageProps {
 
 export const DeltaContactsPage: React.FC<DeltaContactsPageProps> = ({ navigation }) => {
   const { colors } = useTheme();
+  const { userData } = useAuth();
   const [searchText, setSearchText] = useState('');
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [searchResult, setSearchResult] = useState<Contact | null>(null);
+  const [searching, setSearching] = useState(false);
 
-  const favorites = mockContacts.filter(c => c.isFavorite);
-  const allContacts = mockContacts.filter(c =>
+  const loadContacts = useCallback(async () => {
+    // For now, we don't have a contacts endpoint on the backend
+    // Contacts are derived from Pix transactions
+    // We'll start with empty and allow adding by searching CPF
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    loadContacts();
+  }, [loadContacts]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadContacts();
+    setRefreshing(false);
+  };
+
+  const handleSearchContact = async () => {
+    const query = searchText.trim().replace(/\D/g, '');
+    if (query.length !== 11) {
+      Alert.alert('CPF inválido', 'Digite um CPF válido com 11 dígitos para buscar.');
+      return;
+    }
+    if (query === userData?.cpf) {
+      Alert.alert('Erro', 'Você não pode adicionar a si mesmo como contato.');
+      return;
+    }
+
+    setSearching(true);
+    setSearchResult(null);
+    try {
+      const res = await validatePixKey(query);
+      if (res.sucesso && res.dados?.Conta) {
+        const conta = res.dados.Conta;
+        const newContact: Contact = {
+          id: conta.cpf,
+          name: conta.nome,
+          initial: conta.nome.charAt(0).toUpperCase(),
+          color: avatarColors[Math.floor(Math.random() * avatarColors.length)],
+          chaveTipo: 'CPF',
+          chaveValor: conta.cpf,
+          cpf: conta.cpf,
+        };
+        setSearchResult(newContact);
+      } else {
+        Alert.alert('Não encontrado', 'CPF não encontrado no Delta Bank.');
+      }
+    } catch {
+      Alert.alert('Erro', 'Erro ao buscar contato. Tente novamente.');
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleAddContact = (contact: Contact) => {
+    // Check if already exists
+    if (contacts.some(c => c.cpf === contact.cpf)) {
+      Alert.alert('Contato já existe', 'Este contato já está na sua lista.');
+      return;
+    }
+    setContacts(prev => [...prev, { ...contact, isFavorite: false }]);
+    setSearchResult(null);
+    setSearchText('');
+  };
+
+  const handleContactPress = (contact: Contact) => {
+    // Navigate to Transferir with the contact's key pre-filled
+    navigation?.navigate('Transferir', { chaveDestino: contact.chaveValor });
+  };
+
+  const toggleFavorite = (contactId: string) => {
+    setContacts(prev => prev.map(c =>
+      c.id === contactId ? { ...c, isFavorite: !c.isFavorite } : c
+    ));
+  };
+
+  const favorites = contacts.filter(c => c.isFavorite);
+  const filteredContacts = contacts.filter(c =>
     c.name.toLowerCase().includes(searchText.toLowerCase()) ||
-    c.detail.toLowerCase().includes(searchText.toLowerCase())
+    c.chaveValor.includes(searchText)
   );
 
   const quickActions = [
@@ -48,10 +129,8 @@ export const DeltaContactsPage: React.FC<DeltaContactsPageProps> = ({ navigation
         <TouchableOpacity style={styles.closeButton} onPress={() => navigation?.goBack?.()}>
           <Ionicons name="close" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.newContactBtn, { backgroundColor: colors.accent }]} activeOpacity={0.7}>
-          <Ionicons name="add" size={18} color={colors.white} />
-          <Text style={styles.newContactText}>Novo contato</Text>
-        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Contatos Delta</Text>
+        <View style={{ width: 40 }} />
       </View>
 
       {/* Quick Actions */}
@@ -67,18 +146,58 @@ export const DeltaContactsPage: React.FC<DeltaContactsPageProps> = ({ navigation
       </View>
 
       {/* Search Bar */}
-      <View style={[styles.searchContainer, { backgroundColor: colors.surfaceLight }]}>
-        <Ionicons name="search" size={18} color={colors.textMuted} style={styles.searchIcon} />
-        <TextInput
-          style={[styles.searchInput, { color: colors.textPrimary }]}
-          placeholder="Buscar contato..."
-          placeholderTextColor={colors.textMuted}
-          value={searchText}
-          onChangeText={setSearchText}
-        />
+      <View style={styles.searchRow}>
+        <View style={[styles.searchContainer, { backgroundColor: colors.surfaceLight }]}>
+          <Ionicons name="search" size={18} color={colors.textMuted} style={styles.searchIcon} />
+          <TextInput
+            style={[styles.searchInput, { color: colors.textPrimary }]}
+            placeholder="Buscar por CPF..."
+            placeholderTextColor={colors.textMuted}
+            value={searchText}
+            onChangeText={setSearchText}
+            keyboardType="numeric"
+            maxLength={14}
+          />
+        </View>
+        <TouchableOpacity
+          style={[styles.searchBtn, { backgroundColor: colors.accent }]}
+          onPress={handleSearchContact}
+          disabled={searching}
+          activeOpacity={0.7}
+        >
+          {searching ? (
+            <ActivityIndicator color={colors.white} size="small" />
+          ) : (
+            <Ionicons name="search" size={20} color={colors.white} />
+          )}
+        </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      {/* Search Result */}
+      {searchResult && (
+        <View style={[styles.searchResultCard, { backgroundColor: colors.pixBg, borderColor: colors.accent + '30' }]}>
+          <View style={[styles.contactAvatar, { backgroundColor: searchResult.color }]}>
+            <Text style={styles.contactInitial}>{searchResult.initial}</Text>
+          </View>
+          <View style={styles.contactInfo}>
+            <Text style={[styles.contactName, { color: colors.textPrimary }]}>{searchResult.name}</Text>
+            <Text style={[styles.contactDetail, { color: colors.textSecondary }]}>CPF: {searchResult.chaveValor.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}</Text>
+            <View style={styles.verifiedRow}>
+              <Ionicons name="checkmark-circle" size={14} color={colors.accent} />
+              <Text style={[styles.verifiedText, { color: colors.accent }]}>Conta verificada no Delta Bank</Text>
+            </View>
+          </View>
+          <TouchableOpacity style={[styles.addBtn, { backgroundColor: colors.accent }]} onPress={() => handleAddContact(searchResult)} activeOpacity={0.7}>
+            <Ionicons name="add" size={22} color={colors.white} />
+          </TouchableOpacity>
+        </View>
+      )}
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
+      >
         {/* Favorites */}
         {favorites.length > 0 && !searchText && (
           <View style={styles.section}>
@@ -88,7 +207,7 @@ export const DeltaContactsPage: React.FC<DeltaContactsPageProps> = ({ navigation
             </View>
             <View style={styles.favoritesRow}>
               {favorites.map((contact) => (
-                <TouchableOpacity key={contact.id} style={styles.favoriteItem} activeOpacity={0.7}>
+                <TouchableOpacity key={contact.id} style={styles.favoriteItem} onPress={() => handleContactPress(contact)} activeOpacity={0.7}>
                   <View style={[styles.favoriteAvatar, { backgroundColor: contact.color }]}>
                     <Text style={styles.favoriteInitial}>{contact.initial}</Text>
                   </View>
@@ -105,18 +224,30 @@ export const DeltaContactsPage: React.FC<DeltaContactsPageProps> = ({ navigation
             <MaterialCommunityIcons name="swap-horizontal-bold" size={14} color={colors.textMuted} />
             <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>CONTATOS PIX</Text>
           </View>
-          {allContacts.map((contact) => (
-            <TouchableOpacity key={contact.id} style={[styles.contactItem, { borderBottomColor: colors.menuDivider }]} activeOpacity={0.7}>
-              <View style={[styles.contactAvatar, { backgroundColor: contact.color }]}>
-                <Text style={styles.contactInitial}>{contact.initial}</Text>
-              </View>
-              <View style={styles.contactInfo}>
-                <Text style={[styles.contactName, { color: colors.textPrimary }]}>{contact.name}</Text>
-                <Text style={[styles.contactDetail, { color: colors.textSecondary }]}>{contact.detail}</Text>
-              </View>
-              <Feather name="chevron-right" size={18} color={colors.textMuted} />
-            </TouchableOpacity>
-          ))}
+          {filteredContacts.length > 0 ? (
+            filteredContacts.map((contact) => (
+              <TouchableOpacity key={contact.id} style={[styles.contactItem, { borderBottomColor: colors.menuDivider }]} onPress={() => handleContactPress(contact)} activeOpacity={0.7}>
+                <View style={[styles.contactAvatar, { backgroundColor: contact.color }]}>
+                  <Text style={styles.contactInitial}>{contact.initial}</Text>
+                </View>
+                <View style={styles.contactInfo}>
+                  <Text style={[styles.contactName, { color: colors.textPrimary }]}>{contact.name}</Text>
+                  <Text style={[styles.contactDetail, { color: colors.textSecondary }]}>{contact.chaveTipo}: {contact.chaveValor.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}</Text>
+                </View>
+                <TouchableOpacity onPress={() => toggleFavorite(contact.id)} hitSlop={8} style={styles.favBtn}>
+                  <Ionicons name={contact.isFavorite ? 'star' : 'star-outline'} size={18} color={contact.isFavorite ? '#F97316' : colors.textMuted} />
+                </TouchableOpacity>
+                <Feather name="chevron-right" size={18} color={colors.textMuted} />
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.emptyContacts}>
+              <MaterialCommunityIcons name="account-search-outline" size={36} color={colors.textMuted} />
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+                Busque por CPF para adicionar contatos
+              </Text>
+            </View>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -130,12 +261,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xxl, paddingTop: Spacing.xl, paddingBottom: Spacing.lg,
   },
   closeButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
-  newContactBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: Spacing.xs,
-    borderRadius: BorderRadii.md,
-    paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm,
-  },
-  newContactText: { color: '#FFFFFF', fontSize: FontSizes.md, fontWeight: '600' },
+  headerTitle: { fontSize: FontSizes.xxl, fontWeight: '700', flex: 1, textAlign: 'center' },
   actionsRow: {
     flexDirection: 'row', justifyContent: 'space-between',
     paddingHorizontal: Spacing.xxl, marginBottom: Spacing.lg,
@@ -146,14 +272,35 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   actionLabel: { fontSize: FontSizes.sm, fontWeight: '500' },
+  searchRow: {
+    flexDirection: 'row', gap: Spacing.sm,
+    paddingHorizontal: Spacing.xxl, marginBottom: Spacing.lg,
+  },
   searchContainer: {
+    flex: 1,
     flexDirection: 'row', alignItems: 'center',
     borderRadius: BorderRadii.lg,
-    marginHorizontal: Spacing.xxl, marginBottom: Spacing.lg,
     paddingHorizontal: Spacing.lg, height: 46,
   },
   searchIcon: { marginRight: Spacing.md },
   searchInput: { flex: 1, fontSize: FontSizes.md },
+  searchBtn: {
+    width: 46, height: 46,
+    borderRadius: BorderRadii.lg,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  searchResultCard: {
+    flexDirection: 'row', alignItems: 'center',
+    marginHorizontal: Spacing.xxl, marginBottom: Spacing.lg,
+    padding: Spacing.lg, borderRadius: BorderRadii.lg,
+    borderWidth: 1,
+  },
+  verifiedRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginTop: 2 },
+  verifiedText: { fontSize: FontSizes.xs, fontWeight: '500' },
+  addBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    justifyContent: 'center', alignItems: 'center',
+  },
   scrollContent: { paddingBottom: Spacing.xxxl },
   section: { marginBottom: Spacing.lg },
   sectionHeader: {
@@ -188,4 +335,10 @@ const styles = StyleSheet.create({
   contactInfo: { flex: 1 },
   contactName: { fontSize: FontSizes.lg, fontWeight: '600', marginBottom: 2 },
   contactDetail: { fontSize: FontSizes.sm },
+  favBtn: { padding: Spacing.xs, marginRight: Spacing.xs },
+  emptyContacts: {
+    alignItems: 'center', paddingVertical: Spacing.huge,
+    paddingHorizontal: Spacing.xxl,
+  },
+  emptyText: { fontSize: FontSizes.md, textAlign: 'center', marginTop: Spacing.md, lineHeight: 22 },
 });

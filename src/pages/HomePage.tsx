@@ -116,7 +116,7 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
         {/* Header */}
         <View style={styles.header}>
           <Text style={[styles.greeting, { color: colors.textPrimary }]}>Olá {firstName}</Text>
-          <TouchableOpacity style={[styles.profileButton, { backgroundColor: colors.surfaceLight }]} onPress={() => navigation?.navigate?.('Profile')}>
+          <TouchableOpacity style={[styles.profileButton, { backgroundColor: colors.surfaceLight }]} onPress={() => navigation?.navigate?.('Profile', { scrollToLogout: true })}>
             <Ionicons name="person" size={22} color={colors.primary} />
             <View style={[styles.onlineDot, { backgroundColor: colors.accent }]} />
           </TouchableOpacity>

@@ -6,7 +6,7 @@ import {
 import { Spacing, FontSizes, BorderRadii } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { makePix, brlToCents, centsToBRL, formatBRL } from '../services/apiService';
+import { makePix, brlToCents, centsToBRL, formatBRL, validatePixKey } from '../services/apiService';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 interface TransferirPageProps {
@@ -29,6 +29,8 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
   const [senha, setSenha] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [validating, setValidating] = useState(false);
+  const [validatedDest, setValidatedDest] = useState<{ nome: string; cpf: string } | null>(null);
 
   const balance = userData ? centsToBRL(userData.saldo_centavos) : 0;
 
@@ -50,18 +52,67 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
     }
   };
 
-  const handleContinue = () => {
-    if (!chavePix) {
+  // Validate the Pix key against Delta Bank database
+  const validateKey = async (): Promise<string | null> => {
+    if (!chavePix.trim()) {
       Alert.alert('Erro', 'Digite a chave Pix');
-      return;
+      return null;
     }
-    setStep('form');
+
+    // For CPF type, validate directly
+    if (keyType === 'cpf') {
+      const cleanCpf = chavePix.replace(/\D/g, '');
+      if (cleanCpf.length !== 11) {
+        Alert.alert('Erro', 'CPF deve conter 11 dígitos');
+        return null;
+      }
+      if (cleanCpf === userData?.cpf) {
+        Alert.alert('Erro', 'Você não pode enviar Pix para si mesmo');
+        return null;
+      }
+
+      setValidating(true);
+      try {
+        const res = await validatePixKey(cleanCpf);
+        if (res.sucesso && res.dados?.Conta) {
+          const destName = res.dados.Conta.nome;
+          const destCpf = res.dados.Conta.cpf;
+          setNomeDest(destName);
+          setValidatedDest({ nome: destName, cpf: destCpf });
+          return destCpf;
+        } else {
+          Alert.alert('Chave não encontrada', 'Este CPF não possui conta no Delta Bank.');
+          return null;
+        }
+      } catch {
+        Alert.alert('Erro', 'Erro ao validar chave. Tente novamente.');
+        return null;
+      } finally {
+        setValidating(false);
+      }
+    }
+
+    // For other key types, we can't validate via CPF lookup yet
+    // but we still proceed with the key value
+    setValidatedDest(null);
+    return chavePix.trim();
+  };
+
+  const handleContinue = async () => {
+    const destinoCpf = await validateKey();
+    if (destinoCpf) {
+      setStep('form');
+    }
   };
 
   const handleContinueToConfirm = () => {
     const valorBRL = parseFloat(valor.replace(',', '.'));
     if (!valorBRL || valorBRL <= 0) {
       Alert.alert('Erro', 'Informe um valor válido');
+      return;
+    }
+    if (valorBRL > balance) {
+      Alert.alert('Saldo insuficiente', 'Você não tem saldo suficiente para esta transferência.');
       return;
     }
     setStep('confirm');
@@ -80,8 +131,9 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
     try {
       const valorBRL = parseFloat(valor.replace(',', '.'));
       const valorCentavos = brlToCents(valorBRL);
-      // For CPF key type, use the key as destination CPF
-      const cpfDestino = keyType === 'cpf' ? chavePix.replace(/\D/g, '') : chavePix;
+      // For CPF key type, use the validated destination CPF
+      // For other types, use the key value as-is (backend needs CPF)
+      const cpfDestino = validatedDest?.cpf || (keyType === 'cpf' ? chavePix.replace(/\D/g, '') : chavePix);
       const res = await makePix(userData.cpf, cpfDestino, valorCentavos, senha);
       if (res.sucesso) {
         Alert.alert('Sucesso', `Pix de R$ ${valorBRL.toFixed(2)} enviado com sucesso!`, [
@@ -132,7 +184,7 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.content}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
-          {/* Step 1: Select key type */}
+          {/* Step 1: Select key type + validate */}
           {step === 'select' && (
             <>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Selecione o tipo de chave</Text>
@@ -145,7 +197,7 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
                       { backgroundColor: colors.cardBg, borderColor: colors.border },
                       keyType === kt.key && { backgroundColor: colors.accent, borderColor: colors.accent },
                     ]}
-                    onPress={() => setKeyType(kt.key)}
+                    onPress={() => { setKeyType(kt.key); setValidatedDest(null); setNomeDest(''); }}
                     activeOpacity={0.7}
                   >
                     <Text style={[styles.keyTypeText, { color: colors.textSecondary }, keyType === kt.key && styles.keyTypeTextActive]}>
@@ -164,30 +216,38 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
                     placeholder={getPlaceholder()}
                     placeholderTextColor={colors.textMuted}
                     value={chavePix}
-                    onChangeText={setChavePix}
+                    onChangeText={(v) => { setChavePix(v); setValidatedDest(null); }}
                     autoCapitalize="none"
                     keyboardType={keyType === 'cpf' || keyType === 'cnpj' || keyType === 'telefone' ? 'numeric' : 'default'}
                   />
                 </View>
               </View>
 
-              <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.textPrimary }]}>Nome do destinatário (opcional)</Text>
-                <View style={[styles.inputContainer, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
-                  <Ionicons name="person-outline" size={18} color={colors.textMuted} style={styles.inputIcon} />
-                  <TextInput
-                    style={[styles.input, { color: colors.textPrimary }]}
-                    placeholder="Nome"
-                    placeholderTextColor={colors.textMuted}
-                    value={nomeDest}
-                    onChangeText={setNomeDest}
-                  />
+              {/* Validated destination info */}
+              {validatedDest && (
+                <View style={[styles.validatedCard, { backgroundColor: colors.pixBg, borderColor: colors.accent + '30' }]}>
+                  <Ionicons name="checkmark-circle" size={22} color={colors.accent} />
+                  <View style={styles.validatedInfo}>
+                    <Text style={[styles.validatedName, { color: colors.accent }]}>{validatedDest.nome}</Text>
+                    <Text style={[styles.validatedDetail, { color: colors.textSecondary }]}>Conta verificada no Delta Bank</Text>
+                  </View>
                 </View>
-              </View>
+              )}
 
-              <TouchableOpacity style={[styles.continueBtn, { backgroundColor: colors.accent, shadowColor: colors.accent }]} onPress={handleContinue} activeOpacity={0.8}>
-                <Text style={styles.continueText}>Continuar</Text>
-                <Ionicons name="arrow-forward" size={20} color={colors.white} />
+              <TouchableOpacity
+                style={[styles.continueBtn, { backgroundColor: colors.accent, shadowColor: colors.accent }, validating && styles.continueBtnDisabled]}
+                onPress={handleContinue}
+                disabled={validating}
+                activeOpacity={0.8}
+              >
+                {validating ? (
+                  <ActivityIndicator color={colors.white} />
+                ) : (
+                  <>
+                    <Text style={styles.continueText}>Validar e continuar</Text>
+                    <Ionicons name="arrow-forward" size={20} color={colors.white} />
+                  </>
+                )}
               </TouchableOpacity>
             </>
           )}
@@ -197,17 +257,20 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
             <>
               <View style={styles.inputGroup}>
                 <Text style={[styles.label, { color: colors.textPrimary }]}>Destinatário</Text>
-                <View style={[styles.inputContainer, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
-                  <Ionicons name="person-outline" size={18} color={colors.textMuted} style={styles.inputIcon} />
-                  <TextInput
-                    style={[styles.input, { color: colors.textPrimary }]}
-                    placeholder="Nome do destinatário"
-                    placeholderTextColor={colors.textMuted}
-                    value={nomeDest}
-                    onChangeText={setNomeDest}
-                  />
+                <View style={[styles.destCard, { backgroundColor: colors.pixBg, borderColor: colors.accent + '30' }]}>
+                  <View style={[styles.destAvatar, { backgroundColor: colors.accent }]}>
+                    <Text style={styles.destAvatarText}>{(nomeDest || chavePix).charAt(0).toUpperCase()}</Text>
+                  </View>
+                  <View style={styles.destInfo}>
+                    <Text style={[styles.destName, { color: colors.textPrimary }]}>{nomeDest || 'Destinatário'}</Text>
+                    <Text style={[styles.destKey, { color: colors.textSecondary }]}>{chavePix}</Text>
+                  </View>
+                  {validatedDest && (
+                    <View style={[styles.verifiedBadge, { backgroundColor: colors.accent }]}>
+                      <Ionicons name="checkmark" size={12} color={colors.white} />
+                    </View>
+                  )}
                 </View>
-                <Text style={[styles.inputHelper, { color: colors.textMuted }]}>{chavePix}</Text>
               </View>
 
               <View style={styles.inputGroup}>
@@ -223,6 +286,7 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
                     keyboardType="numeric"
                   />
                 </View>
+                <Text style={[styles.balanceHint, { color: colors.textMuted }]}>Saldo disponível: R$ {formatBRL(balance)}</Text>
               </View>
 
               <View style={styles.inputGroup}>
@@ -262,6 +326,11 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
                 </View>
                 <View style={[styles.confirmDivider, { backgroundColor: colors.border }]} />
                 <View style={styles.confirmRow}>
+                  <Text style={[styles.confirmLabel, { color: colors.textSecondary }]}>Tipo</Text>
+                  <Text style={[styles.confirmValue, { color: colors.textPrimary }]}>{keyType.toUpperCase()}</Text>
+                </View>
+                <View style={[styles.confirmDivider, { backgroundColor: colors.border }]} />
+                <View style={styles.confirmRow}>
                   <Text style={[styles.confirmLabel, { color: colors.textSecondary }]}>Valor</Text>
                   <Text style={[styles.confirmValue, { color: colors.textPrimary }]}>
                     R$ {parseFloat(valor.replace(',', '.')).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -276,6 +345,18 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
                     </View>
                   </>
                 ) : null}
+                {validatedDest && (
+                  <>
+                    <View style={[styles.confirmDivider, { backgroundColor: colors.border }]} />
+                    <View style={styles.confirmRow}>
+                      <Text style={[styles.confirmLabel, { color: colors.textSecondary }]}>Verificação</Text>
+                      <View style={styles.verifiedRow}>
+                        <Ionicons name="checkmark-circle" size={16} color={colors.accent} />
+                        <Text style={[styles.verifiedText, { color: colors.accent }]}>Destinatário validado</Text>
+                      </View>
+                    </View>
+                  </>
+                )}
               </View>
 
               {/* Password */}
@@ -348,7 +429,6 @@ const styles = StyleSheet.create({
   keyTypeText: { fontSize: FontSizes.md, fontWeight: '500' },
   inputGroup: { marginBottom: Spacing.lg },
   label: { fontSize: FontSizes.md, fontWeight: '600', marginBottom: Spacing.sm },
-  inputHelper: { fontSize: FontSizes.sm, marginTop: Spacing.xs },
   inputContainer: {
     flexDirection: 'row', alignItems: 'center',
     borderRadius: BorderRadii.lg, borderWidth: 1,
@@ -358,13 +438,43 @@ const styles = StyleSheet.create({
   currencyPrefix: { marginRight: Spacing.md, fontSize: 16, fontWeight: '700' },
   input: { flex: 1, fontSize: FontSizes.lg },
   eyeBtn: { padding: Spacing.sm },
+  balanceHint: { fontSize: FontSizes.sm, marginTop: Spacing.xs },
+  // Validated card
+  validatedCard: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.md,
+    padding: Spacing.lg, borderRadius: BorderRadii.lg,
+    borderWidth: 1, marginBottom: Spacing.lg,
+  },
+  validatedInfo: { flex: 1 },
+  validatedName: { fontSize: FontSizes.lg, fontWeight: '700' },
+  validatedDetail: { fontSize: FontSizes.sm },
+  // Continue button
   continueBtn: {
     flexDirection: 'row', borderRadius: BorderRadii.lg,
     height: 56, justifyContent: 'center', alignItems: 'center', gap: Spacing.md,
     marginTop: Spacing.xl, elevation: 3,
     shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8,
   },
+  continueBtnDisabled: { opacity: 0.6 },
   continueText: { color: '#FFFFFF', fontSize: FontSizes.xxl, fontWeight: '700' },
+  // Destination card (step 2)
+  destCard: {
+    flexDirection: 'row', alignItems: 'center',
+    padding: Spacing.lg, borderRadius: BorderRadii.lg, borderWidth: 1,
+  },
+  destAvatar: {
+    width: 40, height: 40, borderRadius: 20,
+    justifyContent: 'center', alignItems: 'center',
+    marginRight: Spacing.lg,
+  },
+  destAvatarText: { color: '#FFFFFF', fontSize: FontSizes.lg, fontWeight: '700' },
+  destInfo: { flex: 1 },
+  destName: { fontSize: FontSizes.lg, fontWeight: '600', marginBottom: 2 },
+  destKey: { fontSize: FontSizes.sm },
+  verifiedBadge: {
+    width: 22, height: 22, borderRadius: 11,
+    justifyContent: 'center', alignItems: 'center',
+  },
   // Confirm step
   confirmTitle: { fontSize: FontSizes.xxl, fontWeight: '700', marginBottom: Spacing.xl },
   confirmCard: {
@@ -373,11 +483,13 @@ const styles = StyleSheet.create({
   },
   confirmRow: {
     flexDirection: 'row', justifyContent: 'space-between',
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.md, alignItems: 'center',
   },
   confirmLabel: { fontSize: FontSizes.md },
-  confirmValue: { fontSize: FontSizes.md, fontWeight: '600' },
+  confirmValue: { fontSize: FontSizes.md, fontWeight: '600', flex: 1, textAlign: 'right' },
   confirmDivider: { height: 1 },
+  verifiedRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
+  verifiedText: { fontSize: FontSizes.md, fontWeight: '600' },
   confirmBtn: {
     flexDirection: 'row', borderRadius: BorderRadii.lg,
     height: 56, justifyContent: 'center', alignItems: 'center', gap: Spacing.md,

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import { Spacing, FontSizes, BorderRadii } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
@@ -8,11 +8,29 @@ import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 interface ProfilePageProps {
   navigation?: any;
+  route?: any;
 }
 
-export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation }) => {
+export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation, route }) => {
   const { colors } = useTheme();
   const { userData, logout } = useAuth();
+  const scrollViewRef = useRef<ScrollView>(null);
+  const logoutButtonRef = useRef<View>(null);
+
+  // If navigated with scrollToEnd param, scroll to logout on mount
+  React.useEffect(() => {
+    if (route?.params?.scrollToLogout) {
+      setTimeout(() => {
+        logoutButtonRef.current?.measureLayout(
+          scrollViewRef.current as any,
+          (x, y) => {
+            scrollViewRef.current?.scrollTo({ y: y - 100, animated: true });
+          },
+          () => {}
+        );
+      }, 300);
+    }
+  }, [route?.params?.scrollToLogout]);
 
   const balance = userData ? centsToBRL(userData.saldo_centavos) : 0;
   const limite = userData ? centsToBRL(userData?.limite_diario || 0) : 0;
@@ -57,7 +75,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation }) => {
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Avatar */}
         <View style={[styles.profileSection, { backgroundColor: colors.cardBg, borderBottomColor: colors.border }]}>
           <View style={[styles.avatar, { backgroundColor: colors.pixBg, borderColor: colors.accent }]}>
@@ -113,11 +131,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation }) => {
           ))}
         </View>
 
-        {/* Logout */}
-        <TouchableOpacity style={[styles.logoutButton, { backgroundColor: colors.cardBg, borderColor: colors.logoutBorder }]} onPress={handleLogout}>
-          <Feather name="log-out" size={20} color={colors.negative} />
-          <Text style={[styles.logoutText, { color: colors.negative }]}>Sair da conta</Text>
-        </TouchableOpacity>
+        {/* Logout - with ref for scroll */}
+        <View ref={logoutButtonRef} collapsable={false}>
+          <TouchableOpacity style={[styles.logoutButton, { backgroundColor: colors.cardBg, borderColor: colors.logoutBorder }]} onPress={handleLogout}>
+            <Feather name="log-out" size={20} color={colors.negative} />
+            <Text style={[styles.logoutText, { color: colors.negative }]}>Sair da conta</Text>
+          </TouchableOpacity>
+        </View>
 
         <Text style={[styles.version, { color: colors.textMuted }]}>Delta Bank v1.0.0</Text>
       </ScrollView>
