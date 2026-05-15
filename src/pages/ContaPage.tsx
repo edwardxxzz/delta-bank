@@ -14,10 +14,6 @@ export const ContaPage: React.FC<ContaPageProps> = ({ navigation }) => {
   const { colors } = useTheme();
   const { userData } = useAuth();
 
-  const formattedCPF = userData?.cpf
-    ? userData.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
-    : '---';
-
    const [chaves, setChaves] = useState<ChavePix[]>([]);
 
   const loadChaves = useCallback(async () => {
