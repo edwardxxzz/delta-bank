@@ -129,7 +129,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw new Error('Senha deve ter pelo menos 4 caracteres.');
     }
 
-    const res = await createAccount(nome.trim(), cpf, senha, 10);
+    const res = await createAccount(nome.trim(), cpf, senha, 0);
 
     if (!res.sucesso) {
       // Provide clear error messages from backend
