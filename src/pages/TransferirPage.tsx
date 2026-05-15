@@ -17,6 +17,32 @@ interface TransferirPageProps {
 type KeyType = 'cpf' | 'email' | 'telefone' | 'aleatoria';
 type Step = 'select' | 'form' | 'confirm';
 
+// Mask sensitive key: show only last 2 digits for CPF, partial for others
+const maskKey = (key: string, tipo: string): string => {
+  if (!key) return '';
+  const digits = key.replace(/\D/g, '');
+  if (tipo === 'CPF' && digits.length >= 11) {
+    return `***.***.***-${digits.slice(-2)}`;
+  }
+  if (tipo === 'TELEFONE') {
+    const clean = key.replace(/\D/g, '');
+    if (clean.length >= 10) return `(**) *****-${clean.slice(-2)}`;
+  }
+  if (tipo === 'EMAIL') {
+    const atIdx = key.indexOf('@');
+    if (atIdx > 0) {
+      const first = key.charAt(0);
+      const domain = key.slice(atIdx + 1);
+      const dotIdx = domain.lastIndexOf('.');
+      const ext = dotIdx >= 0 ? domain.slice(dotIdx) : '';
+      return `${first}***@***${ext}`;
+    }
+  }
+  if (key.length > 8) return key.slice(0, 4) + '*'.repeat(key.length - 8) + key.slice(-4);
+  if (key.length > 2) return '*'.repeat(key.length - 2) + key.slice(-2);
+  return key;
+};
+
 export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, route }) => {
   const { colors } = useTheme();
   const { userData, refreshUserData } = useAuth();
@@ -31,6 +57,8 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
   const [loading, setLoading] = useState(false);
   const [validating, setValidating] = useState(false);
   const [validatedDest, setValidatedDest] = useState<{ nome: string; cpf: string } | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [showError, setShowError] = useState(false);
 
   const balance = userData ? centsToBRL(userData.saldo_centavos) : 0;
 
@@ -108,6 +136,8 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
     // mas essa consulta não tem endpoint público exposto ainda.
     // Por enquanto passamos a chave como cpf_destino — o backend retornará erro caso
     // não seja um CPF válido, e o usuário verá a mensagem de erro normalmente.
+    // Nota: para chaves não-CPF, não conseguimos validar previamente se a conta existe,
+    // mas o erro será detectado ao confirmar o Pix.
     setValidatedDest(null);
     setNomeDest('');
     return raw;
@@ -137,17 +167,25 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
     setStep('confirm');
   };
 
+  const showErrorMsg = (title: string, msg: string) => {
+    setErrorMessage(msg);
+    setShowError(true);
+    // Auto-hide after 5 seconds
+    setTimeout(() => setShowError(false), 5000);
+  };
+
   const handleConfirmPix = async () => {
     if (!senha) {
-      Alert.alert('Erro', 'Digite sua senha para confirmar.');
+      showErrorMsg('Atenção', 'Digite sua senha para confirmar a transação.');
       return;
     }
     if (!userData?.cpf) {
-      Alert.alert('Erro', 'Sessão inválida. Faça login novamente.');
+      showErrorMsg('Erro', 'Sessão inválida. Faça login novamente.');
       return;
     }
 
     setLoading(true);
+    setShowError(false);
     try {
       // FIX: backend espera "valor" em R$ float (ex: 50.00), não em centavos.
       // Antes estava passando brlToCents(valorBRL) = 5000 quando deveria ser 50.00
@@ -171,10 +209,45 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
           tipoChave: keyType.toUpperCase(),
         });
       } else {
-        Alert.alert('Erro no Pix', res.mensagem || 'Falha ao enviar Pix. Tente novamente.');
+        // Identify specific error types for better user feedback
+        const msg = (res.mensagem || '').toLowerCase();
+
+        if (msg.includes('senha') || msg.includes('password') || msg.includes('incorreta') || msg.includes('invalida')) {
+          showErrorMsg(
+            'Senha incorreta',
+            'A senha digitada está incorreta. Verifique e tente novamente.'
+          );
+        } else if (
+          msg.includes('não encontrada') || msg.includes('not found') ||
+          msg.includes('não existe') || msg.includes('inexistente') ||
+          msg.includes('destinatário') || msg.includes('invalido')
+        ) {
+          showErrorMsg(
+            'Chave Pix não encontrada',
+            'A chave Pix informada não corresponde a nenhuma conta no Delta Bank. Verifique a chave e tente novamente.'
+          );
+        } else if (msg.includes('saldo') || msg.includes('insuficiente')) {
+          showErrorMsg(
+            'Saldo insuficiente',
+            'Você não possui saldo suficiente para realizar esta transferência.'
+          );
+        } else if (msg.includes('limite') || msg.includes('diário') || msg.includes('diario')) {
+          showErrorMsg(
+            'Limite diário atingido',
+            'Você atingiu o limite diário de transferências. Tente novamente amanhã.'
+          );
+        } else {
+          showErrorMsg(
+            'Erro no Pix',
+            res.mensagem || 'Falha ao enviar Pix. Tente novamente.'
+          );
+        }
       }
     } catch (error: any) {
-      Alert.alert('Erro', error.message || 'Erro de conexão. Verifique sua internet.');
+      showErrorMsg(
+        'Erro de conexão',
+        error.message || 'Não foi possível conectar ao servidor. Verifique sua internet.'
+      );
     } finally {
       setLoading(false);
     }
@@ -375,7 +448,7 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
                       {nomeDest || 'Destinatário'}
                     </Text>
                     <Text style={[styles.destKey, { color: colors.textSecondary }]}>
-                      {chavePix}
+                      {maskKey(chavePix, keyType.toUpperCase())}
                     </Text>
                   </View>
                   {validatedDest && (
@@ -449,7 +522,7 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
                 <View style={styles.confirmRow}>
                   <Text style={[styles.confirmLabel, { color: colors.textSecondary }]}>Chave</Text>
                   <Text style={[styles.confirmValue, { color: colors.textPrimary }]}>
-                    {chavePix}
+                    {maskKey(chavePix, keyType.toUpperCase())}
                   </Text>
                 </View>
 
@@ -491,6 +564,17 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
                   </>
                 )}
               </View>
+
+              {/* Error Banner */}
+              {showError && errorMessage && (
+                <View style={[styles.errorBanner, { backgroundColor: colors.errorBg, borderColor: colors.errorBorder }]}>
+                  <Ionicons name="alert-circle" size={20} color={colors.errorBorder} />
+                  <Text style={[styles.errorText, { color: colors.errorBorder }]}>{errorMessage}</Text>
+                  <TouchableOpacity onPress={() => setShowError(false)} style={styles.errorCloseBtn}>
+                    <Ionicons name="close" size={18} color={colors.errorBorder} />
+                  </TouchableOpacity>
+                </View>
+              )}
 
               {/* Senha */}
               <View style={styles.inputGroup}>
@@ -648,4 +732,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3, shadowRadius: 8,
   },
   confirmBtnText: { color: '#FFFFFF', fontSize: FontSizes.xxl, fontWeight: '700' },
+  errorBanner: {
+    flexDirection: 'row', alignItems: 'center',
+    padding: Spacing.lg, borderRadius: BorderRadii.lg,
+    borderWidth: 1, marginBottom: Spacing.lg, gap: Spacing.sm,
+  },
+  errorText: { flex: 1, fontSize: FontSizes.md, fontWeight: '500', lineHeight: 20 },
+  errorCloseBtn: { padding: Spacing.xs },
 });

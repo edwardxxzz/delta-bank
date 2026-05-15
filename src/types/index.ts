@@ -69,6 +69,8 @@ export interface ThemeColors {
   bottomNavBg: string;
   bottomNavBorder: string;
   errorBannerBg: string;
+  errorBg: string;
+  errorBorder: string;
   logoutBorder: string;
   menuDivider: string;
 }
@@ -138,6 +140,8 @@ export const LightColors: ThemeColors = {
   bottomNavBg: '#FFFFFF',
   bottomNavBorder: '#CBD5E0',
   errorBannerBg: '#FFF7ED',
+  errorBg: '#FEF2F2',
+  errorBorder: '#EF4444',
   logoutBorder: '#FEE2E2',
   menuDivider: '#E2E8F0',
 };
@@ -207,6 +211,8 @@ export const DarkColors: ThemeColors = {
   bottomNavBg: '#0A1628',
   bottomNavBorder: '#1E2D4A',
   errorBannerBg: '#2A1F0D',
+  errorBg: '#3A1515',
+  errorBorder: '#FF5252',
   logoutBorder: '#3A1515',
   menuDivider: '#1E2D4A',
 };
