@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import React, { useRef, useCallback } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, findNodeHandle, UIManager } from 'react-native';
 import { Spacing, FontSizes, BorderRadii } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -15,20 +15,18 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation, route }) =
   const { colors } = useTheme();
   const { userData, logout } = useAuth();
   const scrollViewRef = useRef<ScrollView>(null);
-  const logoutButtonRef = useRef<View>(null);
+  const logoutY = useRef<number>(0);
 
-  // If navigated with scrollToEnd param, scroll to logout on mount
+  // Scroll to logout when navigated with scrollToLogout param
   React.useEffect(() => {
     if (route?.params?.scrollToLogout) {
-      setTimeout(() => {
-        logoutButtonRef.current?.measureLayout(
-          scrollViewRef.current as any,
-          (x, y) => {
-            scrollViewRef.current?.scrollTo({ y: y - 100, animated: true });
-          },
-          () => {}
-        );
-      }, 300);
+      // Give the scrollview time to layout, then scroll to logout position
+      const timer = setTimeout(() => {
+        if (logoutY.current > 0) {
+          scrollViewRef.current?.scrollTo({ y: logoutY.current - 120, animated: true });
+        }
+      }, 500);
+      return () => clearTimeout(timer);
     }
   }, [route?.params?.scrollToLogout]);
 
@@ -39,12 +37,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation, route }) =
     : '---';
 
   const menuItems = [
-    { icon: 'person-outline', iconSet: 'Ionicons' as const, label: 'Dados pessoais', subtitle: 'Nome, email, telefone' },
-    { icon: 'shield-check-outline', iconSet: 'Ionicons' as const, label: 'Segurança', subtitle: 'Senha, 2FA, biometria' },
-    { icon: 'key-outline', iconSet: 'Ionicons' as const, label: 'Alterar senha', subtitle: 'Mudar senha de acesso' },
-    { icon: 'notifications-outline', iconSet: 'Ionicons' as const, label: 'Notificações', subtitle: 'Alertas e Push' },
-    { icon: 'phone-portrait-outline', iconSet: 'Ionicons' as const, label: 'Aparência', subtitle: 'Tema e idioma' },
-    { icon: 'help-circle-outline', iconSet: 'Ionicons' as const, label: 'Central de ajuda', subtitle: 'Dúvidas e suporte' },
+    { icon: 'person-outline', iconSet: 'Ionicons' as const, label: 'Dados pessoais', subtitle: 'Nome, email, telefone', navigate: 'Conta' },
+    { icon: 'shield-check-outline', iconSet: 'Ionicons' as const, label: 'Segurança', subtitle: 'Senha, 2FA, biometria', navigate: 'Config' },
+    { icon: 'key-outline', iconSet: 'Ionicons' as const, label: 'Alterar senha', subtitle: 'Mudar senha de acesso', navigate: 'Config' },
+    { icon: 'notifications-outline', iconSet: 'Ionicons' as const, label: 'Notificações', subtitle: 'Alertas e Push', navigate: 'Config' },
+    { icon: 'phone-portrait-outline', iconSet: 'Ionicons' as const, label: 'Aparência', subtitle: 'Tema e idioma', navigate: 'Config' },
+    { icon: 'help-circle-outline', iconSet: 'Ionicons' as const, label: 'Central de ajuda', subtitle: 'Dúvidas e suporte', navigate: 'Config' },
   ];
 
   const renderIcon = (icon: string, iconSet: string) => {
@@ -64,6 +62,11 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation, route }) =
     );
   };
 
+  const handleNavigate = (navigate: string | undefined) => {
+    if (!navigate) return;
+    navigation?.navigate?.(navigate);
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
@@ -75,7 +78,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation, route }) =
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        ref={scrollViewRef}
+        showsVerticalScrollIndicator={true}
+        contentContainerStyle={styles.scrollContent}
+        scrollEventThrottle={16}
+      >
         {/* Avatar */}
         <View style={[styles.profileSection, { backgroundColor: colors.cardBg, borderBottomColor: colors.border }]}>
           <View style={[styles.avatar, { backgroundColor: colors.pixBg, borderColor: colors.accent }]}>
@@ -111,13 +119,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation, route }) =
             <TouchableOpacity
               key={idx}
               style={[styles.menuItem, idx < menuItems.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.menuDivider }]}
-              onPress={() => {
-                if (item.label === 'Dados pessoais') {
-                  navigation?.navigate?.('Conta');
-                } else if (item.label === 'Notificações' || item.label === 'Aparência' || item.label === 'Central de ajuda') {
-                  navigation?.navigate?.('Config');
-                }
-              }}
+              onPress={() => handleNavigate(item.navigate)}
+              activeOpacity={0.7}
             >
               <View style={[styles.menuIcon, { backgroundColor: colors.menuIconBg }]}>
                 {renderIcon(item.icon, item.iconSet)}
@@ -131,8 +134,11 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation, route }) =
           ))}
         </View>
 
-        {/* Logout - with ref for scroll */}
-        <View ref={logoutButtonRef} collapsable={false}>
+        {/* Logout - measure Y position using onLayout */}
+        <View
+          onLayout={(e) => { logoutY.current = e.nativeEvent.layout.y; }}
+          collapsable={false}
+        >
           <TouchableOpacity style={[styles.logoutButton, { backgroundColor: colors.cardBg, borderColor: colors.logoutBorder }]} onPress={handleLogout}>
             <Feather name="log-out" size={20} color={colors.negative} />
             <Text style={[styles.logoutText, { color: colors.negative }]}>Sair da conta</Text>

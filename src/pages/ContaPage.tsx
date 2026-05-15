@@ -51,7 +51,7 @@ export const ContaPage: React.FC<ContaPageProps> = ({ navigation }) => {
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent} nestedScrollEnabled={true}>
         {/* Profile Card */}
         <View style={[styles.profileCard, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
           <View style={[styles.profileAvatar, { backgroundColor: colors.accent }]}>
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { fontSize: FontSizes.xxl, fontWeight: '700' },
   headerSubtitle: { fontSize: FontSizes.sm, marginTop: 2 },
-  scrollContent: { paddingBottom: Spacing.xxxl },
+  scrollContent: { paddingHorizontal: Spacing.xxl, paddingBottom: Spacing.xxxl + 40 },
   profileCard: {
     flexDirection: 'row', alignItems: 'center',
     marginHorizontal: Spacing.xxl, borderRadius: BorderRadii.xl,

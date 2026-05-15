@@ -17,6 +17,7 @@ import { QRCodePage } from '../pages/QRCodePage';
 import { TransferirPage } from '../pages/TransferirPage';
 import { DeltaContactsPage } from '../pages/DeltaContactsPage';
 import { ChavesPixPage } from '../pages/ChavesPixPage';
+import { PixEnviadoPage } from '../pages/PixEnviadoPage';
 import { ContaPage } from '../pages/ContaPage';
 import { ConfigPage } from '../pages/ConfigPage';
 import { BottomNav } from '../components/BottomNav';
@@ -65,6 +66,7 @@ const AppStack: React.FC = () => {
       <Stack.Screen name="Transferir" component={TransferirPage} />
       <Stack.Screen name="DeltaContacts" component={DeltaContactsPage} />
       <Stack.Screen name="ChavesPix" component={ChavesPixPage} />
+      <Stack.Screen name="PixEnviado" component={PixEnviadoPage} />
       <Stack.Screen name="Conta" component={ContaPage} />
       <Stack.Screen name="Config" component={ConfigPage} />
     </Stack.Navigator>

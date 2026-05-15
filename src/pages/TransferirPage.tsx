@@ -160,12 +160,16 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
       const res = await makePix(userData.cpf, cpfDestino, valorBRL, senha);
 
       if (res.sucesso) {
-        Alert.alert(
-          'Pix enviado!',
-          `R$ ${formatBRL(valorBRL)} enviado com sucesso para ${nomeDest || cpfDestino}.`,
-          [{ text: 'OK', onPress: () => navigation?.goBack?.() }]
-        );
         await refreshUserData();
+        // Navigate to success screen instead of Alert
+        navigation?.replace('PixEnviado', {
+          nomeDest: nomeDest || cpfDestino,
+          chavePix,
+          valor: parseFloat(valor.replace(',', '.')).toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+          }),
+          tipoChave: keyType.toUpperCase(),
+        });
       } else {
         Alert.alert('Erro no Pix', res.mensagem || 'Falha ao enviar Pix. Tente novamente.');
       }

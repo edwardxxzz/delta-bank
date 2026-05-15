@@ -102,7 +102,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ navigation }) => {
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent} nestedScrollEnabled={true}>
         {/* Profile Card */}
         <LinearGradient
           colors={[colors.cardGradientStart, colors.cardGradientEnd]}
