@@ -17,7 +17,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ navigation }) => {
   const [notificacoes, setNotificacoes] = useState(true);
 
   const firstName = userData?.nome?.charAt(0)?.toUpperCase() || 'U';
-  const email = 'roberto.edward@gmail.com'; // Mock since backend doesn't provide email
+
 
   const accountItems = [
     { icon: 'person-outline', iconSet: 'Ionicons' as const, label: 'Dados da conta', navigate: 'Conta' },
@@ -114,7 +114,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ navigation }) => {
           </View>
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{userData?.nome || 'Usuário'}</Text>
-            <Text style={styles.profileEmail}>{email}</Text>
+            
           </View>
         </LinearGradient>
 

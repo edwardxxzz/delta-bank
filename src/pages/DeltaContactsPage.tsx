@@ -4,7 +4,7 @@ import { Spacing, FontSizes, BorderRadii } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
-import { getChavesPix, ChavePix, validatePixKey } from '../services/apiService';
+import { getChavesPix, validatePixKey } from '../services/apiService';
 
 interface Contact {
   id: string;

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import { Spacing, FontSizes, BorderRadii } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
+import { getChavesPix, ChavePix } from '../services/apiService';
 
 interface ContaPageProps {
   navigation?: any;
@@ -17,8 +18,25 @@ export const ContaPage: React.FC<ContaPageProps> = ({ navigation }) => {
     ? userData.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
     : '---';
 
+   const [chaves, setChaves] = useState<ChavePix[]>([]);
+
+  const loadChaves = useCallback(async () => {
+    if (!userData?.cpf) return;
+    try {
+      const res = await getChavesPix(userData.cpf);
+      setChaves(res.sucesso && res.dados ? res.dados : []);
+    } catch {
+      setChaves([]);
+    }
+  }, [userData?.cpf]);
+
+  useEffect(() => {
+    loadChaves();
+  }, [loadChaves]);
+
   const firstName = userData?.nome?.charAt(0)?.toUpperCase() || 'U';
-  const email = 'roberto01fonsec@gmail.com'; // Mock since backend doesn't provide email
+  const pixEmailKey = chaves.find((c: ChavePix) => c.tipo === 'EMAIL')?.valor || 'Não cadastrada';
+
 
   const accountInfo = [
     { icon: 'person-outline', iconSet: 'Ionicons' as const, label: 'Nome completo', value: userData?.nome || '---', editable: false },
@@ -26,7 +44,7 @@ export const ContaPage: React.FC<ContaPageProps> = ({ navigation }) => {
     { icon: 'business-outline', iconSet: 'Ionicons' as const, label: 'Banco', value: 'Delta Bank (000)', editable: false },
     { icon: 'hash', iconSet: 'Feather' as const, label: 'Agência', value: '0001', editable: false },
     { icon: 'hash', iconSet: 'Feather' as const, label: 'Conta', value: '88028-5', editable: false },
-    { icon: 'link-variant', iconSet: 'MaterialCommunityIcons' as const, label: 'Chave Pix (e-mail)', value: email, editable: false },
+    { icon: 'link-variant', iconSet: 'MaterialCommunityIcons' as const, label: 'Chave Pix (e-mail)', value: pixEmailKey, editable: false },
   ];
 
   const renderIcon = (icon: string, iconSet: string) => {
@@ -60,7 +78,7 @@ export const ContaPage: React.FC<ContaPageProps> = ({ navigation }) => {
           <View style={styles.profileInfo}>
             <Text style={[styles.profileName, { color: colors.textPrimary }]}>{userData?.nome || 'Usuário'}</Text>
             <View style={styles.profileRow}>
-              <Text style={[styles.profileEmail, { color: colors.textSecondary }]}>{email}</Text>
+              <Text style={[styles.profileEmail, { color: colors.textSecondary }]}>{pixEmailKey}</Text>
               <View style={[styles.accountBadge, { backgroundColor: colors.pixBg }]}>
                 <Text style={[styles.accountBadgeText, { color: colors.accent }]}>Conta Corrente</Text>
               </View>
