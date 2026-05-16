@@ -14,7 +14,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.deltabank.app"
+      "bundleIdentifier": "com.deltabank.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -30,11 +33,12 @@
     },
     "extra": {
       "eas": {
-        "projectId": "your-project-id"
+        "projectId": "63ea0484-0673-4a41-8eef-6da8d54a5327"
       }
     },
     "plugins": [
       "expo-font"
-    ]
+    ],
+    "owner": "delta-bank-app"
   }
 }
