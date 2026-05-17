@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 import { APP_VERSION } from '../utils';
 import { useAuth } from '../contexts/AuthContext';
+import { useBiometric } from '../contexts/BiometricContext';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -15,18 +16,32 @@ interface ConfigPageProps {
 export const ConfigPage: React.FC<ConfigPageProps> = ({ navigation }) => {
   const { userData, logout } = useAuth();
   const { colors, isDark, toggleTheme } = useTheme();
+  const { biometricEnabled, setBiometricEnabled, hasHardware, isEnrolled } = useBiometric();
   const insets = useSafeAreaInsets();
-  const [biometria, setBiometria] = useState(false);
   const [ocultarSaldo, setOcultarSaldo] = useState(false);
   const [notificacoes, setNotificacoes] = useState(true);
 
   const firstName = userData?.nome?.charAt(0)?.toUpperCase() || 'U';
 
+  const handleBiometricToggle = async (value: boolean) => {
+    if (value) {
+      // Check if device supports biometrics
+      if (!hasHardware) {
+        Alert.alert('Não disponível', 'Seu dispositivo não suporta autenticação biométrica.');
+        return;
+      }
+      if (!isEnrolled) {
+        Alert.alert('Não configurado', 'Nenhuma biometria está cadastrada no dispositivo. Configure na tela de bloqueio do celular.');
+        return;
+      }
+    }
+    await setBiometricEnabled(value);
+  };
 
   const accountItems = [
     { icon: 'person-outline', iconSet: 'Ionicons' as const, label: 'Dados da conta', navigate: 'Conta' },
     { icon: 'shield-check-outline', iconSet: 'Ionicons' as const, label: 'Segurança' },
-    { icon: 'fingerprint', iconSet: 'MaterialCommunityIcons' as const, label: 'Biometria', toggle: true, value: biometria, onToggle: setBiometria },
+    { icon: 'fingerprint', iconSet: 'MaterialCommunityIcons' as const, label: 'Biometria', toggle: true, value: biometricEnabled, onToggle: handleBiometricToggle },
   ];
 
   const privacyItems = [
@@ -70,19 +85,32 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ navigation }) => {
           <View key={idx}>
             <TouchableOpacity
               style={styles.menuItem}
-              onPress={() => item.navigate ? navigation?.navigate?.(item.navigate) : item.toggle ? item.onToggle() : {}}
+              onPress={() => item.navigate ? navigation?.navigate?.(item.navigate) : item.toggle ? item.onToggle(!item.value) : {}}
               activeOpacity={item.toggle ? 1 : 0.7}
             >
               <View style={[styles.menuIcon, { backgroundColor: colors.menuIconBg }]}>
                 {renderIcon(item.icon, item.iconSet)}
               </View>
-              <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>{item.label}</Text>
+              <View style={styles.menuLabelContainer}>
+                <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>{item.label}</Text>
+                {item.label === 'Biometria' && !hasHardware && (
+                  <Text style={[styles.menuLabelHint, { color: colors.textMuted }]}>
+                    Dispositivo não compatível
+                  </Text>
+                )}
+                {item.label === 'Biometria' && hasHardware && !isEnrolled && (
+                  <Text style={[styles.menuLabelHint, { color: colors.textMuted }]}>
+                    Cadastre biometria no celular
+                  </Text>
+                )}
+              </View>
               {item.toggle ? (
                 <Switch
                   value={item.value}
                   onValueChange={item.onToggle}
                   trackColor={{ false: colors.switchTrackFalse, true: colors.accent }}
                   thumbColor={colors.white}
+                  disabled={item.label === 'Biometria' && (!hasHardware || !isEnrolled)}
                 />
               ) : (
                 <Feather name="chevron-right" size={18} color={colors.textMuted} />
@@ -118,7 +146,6 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ navigation }) => {
           </View>
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{userData?.nome || 'Usuário'}</Text>
-            
           </View>
         </LinearGradient>
 
@@ -161,7 +188,6 @@ const styles = StyleSheet.create({
   profileInitial: { fontSize: FontSizes.xxl, fontWeight: '700', color: '#FFFFFF' },
   profileInfo: { flex: 1 },
   profileName: { fontSize: FontSizes.xxl, fontWeight: '700', color: '#FFFFFF', marginBottom: 2 },
-  profileEmail: { fontSize: FontSizes.sm, color: 'rgba(255,255,255,0.7)' },
   // Sections
   section: { marginBottom: Spacing.lg },
   sectionTitle: {
@@ -182,7 +208,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
     marginRight: Spacing.lg,
   },
-  menuLabel: { flex: 1, fontSize: FontSizes.lg, fontWeight: '500' },
+  menuLabelContainer: { flex: 1 },
+  menuLabel: { fontSize: FontSizes.lg, fontWeight: '500' },
+  menuLabelHint: { fontSize: FontSizes.xs, marginTop: 2 },
   // Logout
   logoutButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.md,

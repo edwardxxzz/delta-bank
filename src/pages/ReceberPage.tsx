@@ -19,7 +19,7 @@ export const ReceberPage: React.FC<ReceberPageProps> = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
 
   const formattedCPF = userData?.cpf
-    ? userData.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+    ? userData.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '***.***.***-$4')
     : '---';
 
   const loadChaves = useCallback(async () => {

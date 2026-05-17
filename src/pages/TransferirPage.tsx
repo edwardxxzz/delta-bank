@@ -9,6 +9,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { makePix, centsToBRL, formatBRL, validatePixKey } from '../services/apiService';
 import { maskSensitiveKey } from '../utils';
+import { useBiometric } from '../contexts/BiometricContext';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface TransferirPageProps {
@@ -25,6 +26,7 @@ const maskKey = maskSensitiveKey;
 export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, route }) => {
   const { colors } = useTheme();
   const { userData, refreshUserData } = useAuth();
+  const { biometricEnabled, hasHardware, isEnrolled, authenticate } = useBiometric();
   const insets = useSafeAreaInsets();
 
   const [step, setStep] = useState<Step>('select');
@@ -154,8 +156,9 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
     setTimeout(() => setShowError(false), 5000);
   };
 
-  const handleConfirmPix = async () => {
-    if (!senha) {
+  const handleConfirmPix = async (senhaInput?: string) => {
+    const senhaToUse = senhaInput ?? senha;
+    if (!senhaToUse) {
       showErrorMsg('Atenção', 'Digite sua senha para confirmar a transação.');
       return;
     }
@@ -175,7 +178,7 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
         validatedDest?.cpf ??
         (keyType === 'cpf' ? chavePix.replace(/\D/g, '') : chavePix.trim());
 
-      const res = await makePix(userData.cpf, cpfDestino, valorBRL, senha);
+      const res = await makePix(userData.cpf, cpfDestino, valorBRL, senhaToUse);
 
       if (res.sucesso) {
         await refreshUserData();
@@ -232,6 +235,17 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
       setLoading(false);
     }
   };
+
+  const handleBiometricConfirm = async () => {
+    if (!canUseBiometric) return;
+    const success = await authenticate('Confirme o envio do Pix com biometria');
+    if (success) {
+      await handleConfirmPix(senha);
+    }
+  };
+
+  // Whether biometric should be offered
+  const canUseBiometric = biometricEnabled && hasHardware && isEnrolled;
 
   const getStepProgress = () => {
     if (step === 'select') return 0.33;
@@ -598,7 +612,7 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
                   { backgroundColor: colors.accent, shadowColor: colors.accent },
                   loading && styles.btnDisabled,
                 ]}
-                onPress={handleConfirmPix}
+                onPress={() => handleConfirmPix()}
                 disabled={loading}
                 activeOpacity={0.8}
               >
@@ -611,6 +625,31 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
                   </>
                 )}
               </TouchableOpacity>
+
+              {/* Biometric option */}
+              {canUseBiometric && (
+                <TouchableOpacity
+                  style={[
+                    styles.biometricBtn,
+                    { backgroundColor: colors.pixBg, borderColor: colors.accent + '30' },
+                    loading && styles.btnDisabled,
+                  ]}
+                  onPress={handleBiometricConfirm}
+                  disabled={loading || !senha}
+                  activeOpacity={0.8}
+                >
+                  {loading ? (
+                    <ActivityIndicator color={colors.accent} />
+                  ) : (
+                    <>
+                      <MaterialCommunityIcons name="fingerprint" size={22} color={colors.accent} />
+                      <Text style={[styles.biometricBtnText, { color: colors.accent }]}>
+                        Confirmar com biometria
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
             </>
           )}
         </ScrollView>
@@ -712,6 +751,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3, shadowRadius: 8,
   },
   confirmBtnText: { color: '#FFFFFF', fontSize: FontSizes.xxl, fontWeight: '700' },
+  biometricBtn: {
+    flexDirection: 'row', borderRadius: BorderRadii.lg,
+    height: 56, justifyContent: 'center', alignItems: 'center', gap: Spacing.md,
+    marginTop: Spacing.md, borderWidth: 1,
+  },
+  biometricBtnText: { fontSize: FontSizes.lg, fontWeight: '700' },
   errorBanner: {
     flexDirection: 'row', alignItems: 'center',
     padding: Spacing.lg, borderRadius: BorderRadii.lg,

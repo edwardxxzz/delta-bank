@@ -424,7 +424,7 @@ export const ChavesPixPage: React.FC<ChavesPixPageProps> = ({ navigation }) => {
                       color={colors.accent}
                     />
                     <Text style={[styles.infoCardText, { color: colors.accent }]}>
-                      Seu CPF ({userData?.cpf}) será usado como chave Pix.
+                      Seu CPF (***.***.***-{userData?.cpf?.slice(-2)}) será usado como chave Pix.
                     </Text>
                   </View>
                 )}

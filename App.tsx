@@ -4,6 +4,7 @@ import { StyleSheet } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
+import { BiometricProvider } from './src/contexts/BiometricContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
 
 function AppContent() {
@@ -23,7 +24,9 @@ export default function App() {
     <SafeAreaProvider>
       <ThemeProvider>
         <AuthProvider>
-          <AppContent />
+          <BiometricProvider>
+            <AppContent />
+          </BiometricProvider>
         </AuthProvider>
       </ThemeProvider>
     </SafeAreaProvider>

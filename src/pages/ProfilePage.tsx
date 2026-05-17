@@ -36,7 +36,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation, route }) =
   const balance = userData ? centsToBRL(userData.saldo_centavos) : 0;
   const limite = userData ? centsToBRL(userData?.limite_diario || 0) : 0;
   const formattedCPF = userData?.cpf
-    ? userData.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+    ? userData.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '***.***.***-$4')
     : '---';
 
   const menuItems = [

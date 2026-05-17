@@ -9,10 +9,11 @@ interface ActionMenuProps {
   onClose: () => void;
   onPagar: () => void;
   onTransferir: () => void;
+  onDepositar: () => void;
   onReceber: () => void;
 }
 
-export const ActionMenu: React.FC<ActionMenuProps> = ({ visible, onClose, onPagar, onTransferir, onReceber }) => {
+export const ActionMenu: React.FC<ActionMenuProps> = ({ visible, onClose, onPagar, onTransferir, onDepositar, onReceber }) => {
   const { colors } = useTheme();
 
   return (
@@ -28,6 +29,19 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({ visible, onClose, onPaga
 
               <Text style={[styles.menuTitle, { color: colors.textPrimary }]}>Ações rápidas</Text>
 
+              <TouchableOpacity style={styles.menuItem} onPress={onTransferir} activeOpacity={0.7}>
+                <View style={[styles.menuIcon, { backgroundColor: colors.transferirBg }]}>
+                  <MaterialCommunityIcons name="swap-horizontal-bold" size={22} color={colors.transferirIcon} />
+                </View>
+                <View style={styles.menuInfo}>
+                  <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>Pix</Text>
+                  <Text style={[styles.menuSub, { color: colors.textSecondary }]}>Envie Pix para alguém</Text>
+                </View>
+                <Feather name="chevron-right" size={18} color={colors.textMuted} />
+              </TouchableOpacity>
+
+              <View style={[styles.divider, { backgroundColor: colors.menuDivider }]} />
+
               <TouchableOpacity style={styles.menuItem} onPress={onPagar} activeOpacity={0.7}>
                 <View style={[styles.menuIcon, { backgroundColor: colors.pagarBg }]}>
                   <MaterialCommunityIcons name="qrcode-scan" size={22} color={colors.pagarIcon} />
@@ -41,13 +55,13 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({ visible, onClose, onPaga
 
               <View style={[styles.divider, { backgroundColor: colors.menuDivider }]} />
 
-              <TouchableOpacity style={styles.menuItem} onPress={onTransferir} activeOpacity={0.7}>
-                <View style={[styles.menuIcon, { backgroundColor: colors.transferirBg }]}>
-                  <MaterialCommunityIcons name="swap-horizontal-bold" size={22} color={colors.transferirIcon} />
+              <TouchableOpacity style={styles.menuItem} onPress={onDepositar} activeOpacity={0.7}>
+                <View style={[styles.menuIcon, { backgroundColor: colors.depositarBg }]}>
+                  <MaterialCommunityIcons name="cash-plus" size={22} color={colors.depositarIcon} />
                 </View>
                 <View style={styles.menuInfo}>
-                  <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>Transferir</Text>
-                  <Text style={[styles.menuSub, { color: colors.textSecondary }]}>Envie Pix para alguém</Text>
+                  <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>Depositar</Text>
+                  <Text style={[styles.menuSub, { color: colors.textSecondary }]}>Adicione dinheiro à conta</Text>
                 </View>
                 <Feather name="chevron-right" size={18} color={colors.textMuted} />
               </TouchableOpacity>

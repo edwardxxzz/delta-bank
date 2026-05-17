@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { sacar, formatBRL, centsToBRL } from '../services/apiService';
+import { useBiometric } from '../contexts/BiometricContext';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface SacarPageProps {
@@ -17,6 +18,7 @@ interface SacarPageProps {
 export const SacarPage: React.FC<SacarPageProps> = ({ navigation }) => {
   const { colors } = useTheme();
   const { userData, refreshUserData } = useAuth();
+  const { biometricEnabled, hasHardware, isEnrolled, authenticate } = useBiometric();
   const insets = useSafeAreaInsets();
   const [valor, setValor] = useState('');
   const [senha, setSenha] = useState('');
@@ -102,6 +104,16 @@ export const SacarPage: React.FC<SacarPageProps> = ({ navigation }) => {
   };
 
   const quickAmounts = [50, 100, 200, 500];
+
+  const canUseBiometric = biometricEnabled && hasHardware && isEnrolled;
+
+  const handleBiometricSacar = async () => {
+    if (!canUseBiometric) return;
+    const success = await authenticate('Confirme o saque com biometria');
+    if (success) {
+      await handleSacar();
+    }
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -213,6 +225,27 @@ export const SacarPage: React.FC<SacarPageProps> = ({ navigation }) => {
               </>
             )}
           </TouchableOpacity>
+
+          {/* Biometric option */}
+          {canUseBiometric && (
+            <TouchableOpacity
+              style={[styles.biometricBtn, { backgroundColor: colors.pixBg, borderColor: colors.accent + '30' }]}
+              onPress={handleBiometricSacar}
+              disabled={loading || !senha}
+              activeOpacity={0.8}
+            >
+              {loading ? (
+                <ActivityIndicator color={colors.accent} />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="fingerprint" size={22} color={colors.accent} />
+                  <Text style={[styles.biometricBtnText, { color: colors.accent }]}>
+                    Confirmar com biometria
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -289,4 +322,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3, shadowRadius: 8,
   },
   sendText: { color: '#FFFFFF', fontSize: FontSizes.xxl, fontWeight: '700' },
+  biometricBtn: {
+    flexDirection: 'row', borderRadius: BorderRadii.lg,
+    height: 56, justifyContent: 'center', alignItems: 'center', gap: Spacing.md,
+    marginTop: Spacing.md, borderWidth: 1,
+  },
+  biometricBtnText: { fontSize: FontSizes.lg, fontWeight: '700' },
 });

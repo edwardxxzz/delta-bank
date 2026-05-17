@@ -35,10 +35,13 @@ export const ContaPage: React.FC<ContaPageProps> = ({ navigation }) => {
   const firstName = userData?.nome?.charAt(0)?.toUpperCase() || 'U';
   const pixEmailKey = chaves.find((c: ChavePix) => c.tipo === 'EMAIL')?.valor || 'Não cadastrada';
 
+  const maskedCPF = userData?.cpf
+    ? '***.***.***-' + userData.cpf.slice(-2)
+    : '---';
 
   const accountInfo = [
     { icon: 'person-outline', iconSet: 'Ionicons' as const, label: 'Nome completo', value: userData?.nome || '---', editable: false },
-    { icon: 'card-account-details-outline', iconSet: 'MaterialCommunityIcons' as const, label: 'CPF', value: '•••••••••••', editable: false },
+    { icon: 'card-account-details-outline', iconSet: 'MaterialCommunityIcons' as const, label: 'CPF', value: maskedCPF, editable: false },
     { icon: 'business-outline', iconSet: 'Ionicons' as const, label: 'Banco', value: 'Delta Bank (000)', editable: false },
     { icon: 'hash', iconSet: 'Feather' as const, label: 'Agência', value: '0001', editable: false },
     { icon: 'hash', iconSet: 'Feather' as const, label: 'Conta', value: '88028-5', editable: false },

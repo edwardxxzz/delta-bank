@@ -37,7 +37,13 @@
       }
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow $(PRODUCT_NAME) to use Face ID for secure authentication."
+        }
+      ]
     ],
     "owner": "delta-bank-app"
   }

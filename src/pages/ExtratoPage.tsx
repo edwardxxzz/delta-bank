@@ -4,7 +4,7 @@ import {
   TouchableOpacity, ActivityIndicator, TextInput,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
-import { centsToBRL, getExtrato, formatBRL } from '../services/apiService';
+import { centsToBRL, getExtrato, formatBRL, PixTransaction } from '../services/apiService';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { Spacing, FontSizes, BorderRadii } from '../types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,6 +20,8 @@ export interface DisplayTransaction {
   rawDate: Date;
 }
 
+type FilterKey = 'todos' | 'pix' | 'deposito' | 'saque';
+
 interface ExtratoPageProps {
   navigation?: any;
 }
@@ -32,43 +34,76 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
   const [transactions, setTransactions] = useState<DisplayTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filter, setFilter] = useState<'todos' | 'pix' | 'cartao' | 'transferencias'>('todos');
+  const [filter, setFilter] = useState<FilterKey>('todos');
   const [searchText, setSearchText] = useState('');
 
+  // Same parsing logic as HomePage — handles backend format correctly
   const loadTransactions = useCallback(async () => {
-    if (userData?.cpf) {
-      try {
-        setError('');
-        const res = await getExtrato(userData.cpf);
-        if (res.sucesso && res.dados && Array.isArray(res.dados)) {
-          const mapped: DisplayTransaction[] = res.dados.map((t: any, idx: number) => ({
-            id: String(idx + 1),
-            type: t.tipo === 'pix_enviado' ? 'pix_sent' as const
-              : t.tipo === 'pix_recebido' ? 'pix_received' as const
-              : t.tipo === 'deposito' ? 'deposit' as const
-              : 'withdraw' as const,
-            title: t.tipo === 'pix_enviado' ? 'Pix enviado'
-              : t.tipo === 'pix_recebido' ? 'Pix recebido'
-              : t.tipo === 'deposito' ? 'Depósito'
+    if (!userData?.cpf) return;
+    try {
+      setError('');
+      const res = await getExtrato(userData.cpf);
+
+      if (res.sucesso && res.dados) {
+        // Backend returns { transacoes: [...], saldo_atual: number } inside "dados"
+        const lista: PixTransaction[] = Array.isArray(res.dados)
+          ? res.dados
+          : (res.dados.transacoes ?? []);
+
+        const mapped: DisplayTransaction[] = lista.map((t, idx) => {
+          // Backend returns tipo as 'TRANSACAO_PIX' | 'DEPOSITO' | 'SAQUE'
+          // Pix sent/received is determined by cpf_remetente vs user's cpf
+          const isPixSent =
+            t.tipo === 'TRANSACAO_PIX' && t.cpf_remetente === userData.cpf;
+          const isPixReceived =
+            t.tipo === 'TRANSACAO_PIX' && t.cpf_destinatario === userData.cpf;
+          const isDeposit = t.tipo === 'DEPOSITO';
+
+          const type: DisplayTransaction['type'] = isPixSent
+            ? 'pix_sent'
+            : isPixReceived
+            ? 'pix_received'
+            : isDeposit
+            ? 'deposit'
+            : 'withdraw';
+
+          const amountBRL = centsToBRL(t.valor_centavos);
+
+          return {
+            id: String(t.id ?? idx + 1),
+            type,
+            title: isPixSent
+              ? 'Pix enviado'
+              : isPixReceived
+              ? 'Pix recebido'
+              : isDeposit
+              ? 'Depósito'
               : 'Saque',
-            subtitle: t.nome_destinatario || t.nome_remetente || 'Delta Bank',
-            amount: t.tipo === 'pix_enviado' || t.tipo === 'saque'
-              ? -centsToBRL(t.valor_centavos)
-              : centsToBRL(t.valor_centavos),
+            subtitle: isPixSent
+              ? t.nome_destinatario || 'Delta Bank'
+              : isPixReceived
+              ? t.nome_remetente || 'Delta Bank'
+              : 'Delta Bank',
+            amount: type === 'pix_sent' || type === 'withdraw' ? -amountBRL : amountBRL,
             date: new Date(t.data_hora).toLocaleString('pt-BR', {
-              day: '2-digit', month: 'short',
+              day: '2-digit',
+              month: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
             }),
             rawDate: new Date(t.data_hora),
-          }));
-          setTransactions(mapped);
-        } else {
-          setError(res.mensagem || 'Erro ao carregar extrato');
-        }
-      } catch (e) {
-        setError('Erro de conexão ao buscar extrato');
+          };
+        });
+
+        setTransactions(mapped);
+      } else {
+        setError(res.mensagem || 'Erro ao carregar extrato');
       }
+    } catch (e) {
+      setError('Erro de conexão ao buscar extrato');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [userData]);
 
   useEffect(() => {
@@ -95,11 +130,12 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
     }
   };
 
+  // Filter transactions by type and search text
   const filteredTransactions = transactions.filter((tx) => {
     // Filter by type
     if (filter === 'pix') return tx.type === 'pix_sent' || tx.type === 'pix_received';
-    if (filter === 'cartao') return tx.type === 'deposit';
-    if (filter === 'transferencias') return tx.type === 'pix_sent' || tx.type === 'pix_received';
+    if (filter === 'deposito') return tx.type === 'deposit';
+    if (filter === 'saque') return tx.type === 'withdraw';
     return true;
   }).filter((tx) => {
     // Filter by search text
@@ -126,11 +162,11 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
 
   const balance = userData ? centsToBRL(userData.saldo_centavos) : 0;
 
-  const filters: { key: typeof filter; label: string }[] = [
+  const filters: { key: FilterKey; label: string }[] = [
     { key: 'todos', label: 'Todos' },
     { key: 'pix', label: 'Pix' },
-    { key: 'cartao', label: 'Cartão' },
-    { key: 'transferencias', label: 'Transferências' },
+    { key: 'deposito', label: 'Depósito' },
+    { key: 'saque', label: 'Saque' },
   ];
 
   return (
@@ -146,6 +182,12 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
+      {/* Balance Summary */}
+      <View style={[styles.balanceSummary, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
+        <Text style={[styles.balanceLabel, { color: colors.textSecondary }]}>Saldo atual</Text>
+        <Text style={[styles.balanceValue, { color: colors.textPrimary }]}>R$ {formatBRL(balance)}</Text>
+      </View>
+
       {/* Search Bar */}
       <View style={[styles.searchContainer, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
         <Ionicons name="search" size={18} color={colors.textMuted} style={styles.searchIcon} />
@@ -156,6 +198,11 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
           value={searchText}
           onChangeText={setSearchText}
         />
+        {searchText ? (
+          <TouchableOpacity onPress={() => setSearchText('')} hitSlop={8}>
+            <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+          </TouchableOpacity>
+        ) : null}
       </View>
 
       {/* Filter Tabs */}
@@ -176,6 +223,20 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
           </TouchableOpacity>
         ))}
       </ScrollView>
+
+      {/* Active filter info */}
+      {(filter !== 'todos' || searchText) && (
+        <View style={styles.activeFilterRow}>
+          <Text style={[styles.activeFilterText, { color: colors.textMuted }]}>
+            {filteredTransactions.length} resultado{filteredTransactions.length !== 1 ? 's' : ''}
+            {filter !== 'todos' && ` • ${filters.find(f => f.key === filter)?.label}`}
+            {searchText && ` • "${searchText}"`}
+          </Text>
+          <TouchableOpacity onPress={() => { setFilter('todos'); setSearchText(''); }}>
+            <Text style={[styles.clearFilterText, { color: colors.accent }]}>Limpar</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Content */}
       {loading ? (
@@ -237,6 +298,12 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
         <View style={styles.centerContent}>
           <MaterialCommunityIcons name="bank-off-outline" size={56} color={colors.textMuted} />
           <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>Nenhuma transação</Text>
+          <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
+            {filter !== 'todos' || searchText
+              ? 'Nenhum resultado encontrado. Tente outros filtros.'
+              : 'Suas transações aparecerão aqui.'
+            }
+          </Text>
         </View>
       )}
     </View>
@@ -252,6 +319,14 @@ const styles = StyleSheet.create({
   backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { fontSize: FontSizes.xxl, fontWeight: '700' },
   downloadBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
+  balanceSummary: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    marginHorizontal: Spacing.xxl, marginBottom: Spacing.lg,
+    paddingVertical: Spacing.lg, paddingHorizontal: Spacing.xl,
+    borderRadius: BorderRadii.lg, borderWidth: 1,
+  },
+  balanceLabel: { fontSize: FontSizes.md },
+  balanceValue: { fontSize: FontSizes.xxl, fontWeight: '700' },
   searchContainer: {
     flexDirection: 'row', alignItems: 'center',
     borderRadius: BorderRadii.lg,
@@ -261,7 +336,7 @@ const styles = StyleSheet.create({
   },
   searchIcon: { marginRight: Spacing.md },
   searchInput: { flex: 1, fontSize: FontSizes.md },
-  filtersRow: { flexDirection: 'row', paddingHorizontal: Spacing.xxl, marginBottom: Spacing.lg, maxHeight: 44 },
+  filtersRow: { flexDirection: 'row', paddingHorizontal: Spacing.xxl, marginBottom: Spacing.md, maxHeight: 44 },
   filterBtn: {
     paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderRadius: BorderRadii.full,
     borderWidth: 1,
@@ -269,6 +344,12 @@ const styles = StyleSheet.create({
   },
   filterTextActive: { color: '#FFFFFF', fontWeight: '600' },
   filterText: { fontSize: FontSizes.sm, fontWeight: '500' },
+  activeFilterRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: Spacing.xxl, marginBottom: Spacing.sm,
+  },
+  activeFilterText: { fontSize: FontSizes.sm },
+  clearFilterText: { fontSize: FontSizes.sm, fontWeight: '600' },
   centerContent: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: Spacing.xxl },
   loadingText: { marginTop: Spacing.lg },
   errorCard: {
@@ -306,4 +387,5 @@ const styles = StyleSheet.create({
   txAmount: { fontSize: FontSizes.md, fontWeight: '700', marginBottom: 2 },
   txDate: { fontSize: FontSizes.xs },
   emptyTitle: { fontSize: FontSizes.xxl, fontWeight: '600', marginTop: Spacing.lg },
+  emptySubtitle: { fontSize: FontSizes.md, textAlign: 'center', marginTop: Spacing.sm, lineHeight: 20, paddingHorizontal: Spacing.xl },
 });
