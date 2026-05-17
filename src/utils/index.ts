@@ -5,7 +5,7 @@
  * Used across Pix confirmation, deposit, and withdrawal screens.
  *
  * - CPF: ***.***.***-XX (last 2 digits visible)
- * - CNPJ: ***.***.***/****-XX (last 2 digits visible)
+ * - CNPJ: ***.***.***\/****-XX (last 2 digits visible)
  * - Telefone: (**) *****-XX (last 2 digits visible)
  * - Email: f***@***.com (first letter + domain extension)
  * - Chave aleatória: abcd****wxyz (first 4 + last 4)

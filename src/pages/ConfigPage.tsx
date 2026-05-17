@@ -5,6 +5,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 import { APP_VERSION } from '../utils';
 import { useAuth } from '../contexts/AuthContext';
+import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface ConfigPageProps {
   navigation?: any;
@@ -135,8 +137,6 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ navigation }) => {
     </View>
   );
 };
-
-import { LinearGradient } from 'expo-linear-gradient';
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
