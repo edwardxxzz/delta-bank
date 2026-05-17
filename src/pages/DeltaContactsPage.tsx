@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, RefreshControl, ActivityIndicator } from 'react-native';
 import { Spacing, FontSizes, BorderRadii } from '../types';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
@@ -26,6 +27,7 @@ interface DeltaContactsPageProps {
 export const DeltaContactsPage: React.FC<DeltaContactsPageProps> = ({ navigation }) => {
   const { colors } = useTheme();
   const { userData } = useAuth();
+  const insets = useSafeAreaInsets();
   const [searchText, setSearchText] = useState('');
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
@@ -125,7 +127,7 @@ export const DeltaContactsPage: React.FC<DeltaContactsPageProps> = ({ navigation
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.xl }]}>
         <TouchableOpacity style={styles.closeButton} onPress={() => navigation?.goBack?.()}>
           <Ionicons name="close" size={24} color={colors.textPrimary} />
         </TouchableOpacity>

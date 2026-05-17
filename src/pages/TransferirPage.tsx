@@ -4,9 +4,11 @@ import {
   Alert, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
 import { Spacing, FontSizes, BorderRadii } from '../types';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { makePix, centsToBRL, formatBRL, validatePixKey } from '../services/apiService';
+import { maskSensitiveKey } from '../utils';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface TransferirPageProps {
@@ -17,35 +19,13 @@ interface TransferirPageProps {
 type KeyType = 'cpf' | 'email' | 'telefone' | 'aleatoria';
 type Step = 'select' | 'form' | 'confirm';
 
-// Mask sensitive key: show only last 2 digits for CPF, partial for others
-const maskKey = (key: string, tipo: string): string => {
-  if (!key) return '';
-  const digits = key.replace(/\D/g, '');
-  if (tipo === 'CPF' && digits.length >= 11) {
-    return `***.***.***-${digits.slice(-2)}`;
-  }
-  if (tipo === 'TELEFONE') {
-    const clean = key.replace(/\D/g, '');
-    if (clean.length >= 10) return `(**) *****-${clean.slice(-2)}`;
-  }
-  if (tipo === 'EMAIL') {
-    const atIdx = key.indexOf('@');
-    if (atIdx > 0) {
-      const first = key.charAt(0);
-      const domain = key.slice(atIdx + 1);
-      const dotIdx = domain.lastIndexOf('.');
-      const ext = dotIdx >= 0 ? domain.slice(dotIdx) : '';
-      return `${first}***@***${ext}`;
-    }
-  }
-  if (key.length > 8) return key.slice(0, 4) + '*'.repeat(key.length - 8) + key.slice(-4);
-  if (key.length > 2) return '*'.repeat(key.length - 2) + key.slice(-2);
-  return key;
-};
+// Alias for readability in this page
+const maskKey = maskSensitiveKey;
 
 export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, route }) => {
   const { colors } = useTheme();
   const { userData, refreshUserData } = useAuth();
+  const insets = useSafeAreaInsets();
 
   const [step, setStep] = useState<Step>('select');
   const [keyType, setKeyType] = useState<KeyType>('cpf');
@@ -268,7 +248,7 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.xl }]}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>

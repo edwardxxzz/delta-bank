@@ -1,74 +1,19 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Spacing, FontSizes, BorderRadii } from '../types';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { maskSensitiveKey } from '../utils';
 
 interface PixEnviadoPageProps {
   navigation?: any;
   route?: any;
 }
 
-// Mascara CPF/CNPJ: mostra apenas os últimos 2 dígitos, resto vira asterisco
-// Ex: 123.456.789-00 → ***.***.***-00
-// Para chaves não-CPF, mascarar parcialmente (mostrar primeiros 2 e últimos 2)
-const maskSensitiveKey = (key: string, tipo: string): string => {
-  if (!key) return '';
-
-  // Remove formatação para pegar dígitos
-  const digits = key.replace(/\D/g, '');
-
-  if (tipo === 'CPF' && digits.length >= 11) {
-    // CPF: ***.***.***-XX
-    const lastTwo = digits.slice(-2);
-    return `***.***.***-${lastTwo}`;
-  }
-
-  if (tipo === 'CNPJ' && digits.length >= 14) {
-    const lastTwo = digits.slice(-2);
-    return `***.***.***/****-${lastTwo}`;
-  }
-
-  if (tipo === 'TELEFONE') {
-    // Telefone: **-*****-**XX
-    const clean = key.replace(/\D/g, '');
-    if (clean.length >= 10) {
-      const lastTwo = clean.slice(-2);
-      return `(**) *****-${lastTwo}`;
-    }
-    // Fallback: mascarar parcial
-    if (key.length > 4) {
-      return key.slice(0, 2) + '*'.repeat(key.length - 4) + key.slice(-2);
-    }
-  }
-
-  if (tipo === 'EMAIL') {
-    // Email: mostrar primeira letra + ***@***.com
-    const atIdx = key.indexOf('@');
-    if (atIdx > 0) {
-      const first = key.charAt(0);
-      const domain = key.slice(atIdx + 1);
-      const dotIdx = domain.lastIndexOf('.');
-      const ext = dotIdx >= 0 ? domain.slice(dotIdx) : '';
-      return `${first}***@***${ext}`;
-    }
-  }
-
-  // Chave aleatória ou outros: mostrar primeiros 4 e últimos 4, resto asterisco
-  if (key.length > 8) {
-    return key.slice(0, 4) + '*'.repeat(key.length - 8) + key.slice(-4);
-  }
-
-  // Se for curta demais, mascarar parcialmente
-  if (key.length > 2) {
-    return '*'.repeat(key.length - 2) + key.slice(-2);
-  }
-
-  return key;
-};
-
 export const PixEnviadoPage: React.FC<PixEnviadoPageProps> = ({ navigation, route }) => {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const {
     nomeDest = 'Destinatário',
     chavePix = '',
@@ -82,7 +27,7 @@ export const PixEnviadoPage: React.FC<PixEnviadoPageProps> = ({ navigation, rout
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Success animation area */}
-      <View style={styles.successArea}>
+      <View style={[styles.successArea, { paddingTop: insets.top + Spacing.huge + Spacing.xl }]}>
         <View style={[styles.successCircle, { backgroundColor: colors.accent + '20' }]}>
           <View style={[styles.successInnerCircle, { backgroundColor: colors.accent }]}>
             <Ionicons name="checkmark" size={48} color={colors.white} />

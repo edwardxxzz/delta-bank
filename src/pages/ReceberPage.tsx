@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, RefreshControl } from 'react-native';
 import { Spacing, FontSizes, BorderRadii } from '../types';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,6 +14,7 @@ interface ReceberPageProps {
 export const ReceberPage: React.FC<ReceberPageProps> = ({ navigation }) => {
   const { colors } = useTheme();
   const { userData } = useAuth();
+  const insets = useSafeAreaInsets();
   const [chaves, setChaves] = useState<ChavePix[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -65,7 +67,7 @@ export const ReceberPage: React.FC<ReceberPageProps> = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.xl }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack?.()}>
           <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>

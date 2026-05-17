@@ -2,6 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomePage } from '../pages/HomePage';
 import { CardsPage } from '../pages/CardsPage';
 import { InvestPage } from '../pages/InvestPage';

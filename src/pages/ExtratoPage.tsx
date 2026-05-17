@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { centsToBRL, getExtrato, formatBRL } from '../services/apiService';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { Spacing, FontSizes, BorderRadii } from '../types';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 
 export interface DisplayTransaction {
@@ -26,6 +27,7 @@ interface ExtratoPageProps {
 export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
   const { colors } = useTheme();
   const { userData, refreshUserData } = useAuth();
+  const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [transactions, setTransactions] = useState<DisplayTransaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -134,7 +136,7 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.xl }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack?.()}>
           <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>

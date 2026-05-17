@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Spacing, FontSizes } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
@@ -27,6 +28,7 @@ const sideTabs: SideTab[] = [
 
 export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabPress, onCentralPress }) => {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const renderIcon = (tab: SideTab, isActive: boolean) => {
     const size = 22;
@@ -38,7 +40,14 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabPress, onC
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bottomNavBg, borderTopColor: colors.bottomNavBorder }]}>
+    <View style={[
+      styles.container,
+      {
+        backgroundColor: colors.bottomNavBg,
+        borderTopColor: colors.bottomNavBorder,
+        paddingBottom: Math.max(insets.bottom, Spacing.md),
+      },
+    ]}>
       {/* Início */}
       <TouchableOpacity style={styles.tabItem} onPress={() => onTabPress('home')} activeOpacity={0.7}>
         {renderIcon(sideTabs[0], activeTab === 'home')}
@@ -89,7 +98,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingBottom: Spacing.xl,
   },
   tabItem: {
     alignItems: 'center',

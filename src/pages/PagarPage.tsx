@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { CameraView, CameraType, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
 import { Spacing, FontSizes, BorderRadii } from '../types';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { makePix, brlToCents, centsToBRL, formatBRL } from '../services/apiService';
@@ -19,6 +20,7 @@ interface PagarPageProps {
 export const PagarPage: React.FC<PagarPageProps> = ({ navigation }) => {
   const { colors, isDark } = useTheme();
   const { userData } = useAuth();
+  const insets = useSafeAreaInsets();
   const [chavePix, setChavePix] = useState('');
   const [loading, setLoading] = useState(false);
   const [showManualInput, setShowManualInput] = useState(false);
@@ -142,7 +144,7 @@ export const PagarPage: React.FC<PagarPageProps> = ({ navigation }) => {
           {/* Bottom overlay */}
           <View style={styles.overlayBottom}>
             {/* Back button */}
-            <TouchableOpacity style={styles.overlayBackBtn} onPress={() => navigation?.goBack?.()}>
+            <TouchableOpacity style={[styles.overlayBackBtn, { top: insets.top + Spacing.md }]} onPress={() => navigation?.goBack?.()}>
               <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
             </TouchableOpacity>
 

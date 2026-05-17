@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Switch, Alert } from 'react-native';
 import { Spacing, FontSizes, BorderRadii } from '../types';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
-import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import { APP_VERSION } from '../utils';
 import { useAuth } from '../contexts/AuthContext';
 
 interface ConfigPageProps {
@@ -12,6 +13,7 @@ interface ConfigPageProps {
 export const ConfigPage: React.FC<ConfigPageProps> = ({ navigation }) => {
   const { userData, logout } = useAuth();
   const { colors, isDark, toggleTheme } = useTheme();
+  const insets = useSafeAreaInsets();
   const [biometria, setBiometria] = useState(false);
   const [ocultarSaldo, setOcultarSaldo] = useState(false);
   const [notificacoes, setNotificacoes] = useState(true);
@@ -94,7 +96,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.xl }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack?.()}>
           <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
@@ -128,7 +130,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ navigation }) => {
           <Text style={styles.logoutText}>Sair da conta</Text>
         </TouchableOpacity>
 
-        <Text style={[styles.version, { color: colors.textMuted }]}>Delta Bank v1.0.0</Text>
+        <Text style={[styles.version, { color: colors.textMuted }]}>{APP_VERSION}</Text>
       </ScrollView>
     </View>
   );

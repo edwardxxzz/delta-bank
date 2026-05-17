@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { LocalUserData, loginAPI, getSaldo, createAccount } from '../services/apiService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -17,7 +17,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   isLoggedIn: false,
   userData: null,
-  loading: true,
+  loading: false,
   login: async () => {},
   register: async () => {},
   logout: () => {},
@@ -29,25 +29,8 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState<LocalUserData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const stored = await AsyncStorage.getItem(SESSION_KEY);
-        if (stored) {
-          const session: LocalUserData = JSON.parse(stored);
-          setUserData(session);
-          setIsLoggedIn(true);
-          await refreshWithCpf(session.cpf);
-        }
-      } catch (e) {
-        console.error('Session restore error:', e);
-      }
-      setLoading(false);
-    };
-    checkSession();
-  }, []);
+  // loading starts as false — no session restore, user must always log in
+  const [loading, setLoading] = useState(false);
 
   const refreshWithCpf = async (cpf: string) => {
     try {
@@ -74,11 +57,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const login = async (cpf: string, senha: string) => {
-    // Validate input
     if (!cpf || cpf.length < 11) {
       throw new Error('CPF inválido. Deve conter 11 dígitos.');
     }
-    if (!senha || senha.length < 6) {
+    if (!senha || senha.length < 4) {
       throw new Error('Senha deve ter pelo menos 4 caracteres.');
     }
 
@@ -99,7 +81,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoggedIn(true);
       await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(user));
     } else {
-      // Login succeeded but no data - try fetching balance separately
       const saldoRes = await getSaldo(cpf);
       if (saldoRes.sucesso && saldoRes.dados) {
         const user: LocalUserData = {
@@ -118,7 +99,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const register = async (nome: string, cpf: string, senha: string) => {
-    // Validate input
     if (!nome || nome.trim().length < 2) {
       throw new Error('Nome deve ter pelo menos 2 caracteres.');
     }
@@ -132,7 +112,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const res = await createAccount(nome.trim(), cpf, senha, 0);
 
     if (!res.sucesso) {
-      // Provide clear error messages from backend
       const msg = res.mensagem || 'Erro ao criar conta';
       if (msg.includes('CPF já cadastrado') || msg.includes('já existe')) {
         throw new Error('Este CPF já está cadastrado. Tente fazer login.');
@@ -143,13 +122,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw new Error(msg);
     }
 
-    // Registration succeeded - now login automatically
+    // Registration succeeded — redirect to login instead of auto-login
+    // This ensures the user always goes through the login flow for security
     try {
       await login(cpf, senha);
     } catch (loginError: any) {
-      // If auto-login fails after registration, still show success
       console.warn('Auto-login falhou após registro:', loginError.message);
-      throw new Error('Conta criada com sucesso! Faça login manualmente.');
+      throw new Error('Conta criada com sucesso! Faça login para continuar.');
     }
   };
 

@@ -3,6 +3,7 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, Platform, Alert, ActivityIndicator, ScrollView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Spacing, FontSizes, BorderRadii } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -32,6 +33,7 @@ const validateCPF = (cpf: string): boolean => {
 export const LoginPage: React.FC = () => {
   const { colors } = useTheme();
   const { login, register } = useAuth();
+  const insets = useSafeAreaInsets();
   const [isLogin, setIsLogin] = useState(true);
   const [cpf, setCpf] = useState('');
   const [senha, setSenha] = useState('');
@@ -107,7 +109,7 @@ export const LoginPage: React.FC = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.inner}
       >
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top }]}>
           {/* Logo */}
           <View style={styles.logoContainer}>
             <View style={[styles.logoCircle, { backgroundColor: colors.primary }]}>
@@ -176,22 +178,6 @@ export const LoginPage: React.FC = () => {
                 <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color={colors.textMuted} />
               </TouchableOpacity>
             </View>
-
-            {/* Test account hint */}
-            {isLogin && (
-              <TouchableOpacity
-                style={[styles.testAccountHint, { backgroundColor: colors.pixBg, borderColor: colors.border }]}
-                onPress={() => {
-                  setCpf('987.654.321-00');
-                  setSenha('delta123');
-                  setError('');
-                }}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="information-circle-outline" size={16} color={colors.accent} />
-                <Text style={[styles.testAccountText, { color: colors.accent }]}>Usar conta de teste</Text>
-              </TouchableOpacity>
-            )}
 
             <TouchableOpacity
               style={[styles.primaryButton, { backgroundColor: colors.accent }]}
@@ -267,13 +253,6 @@ const styles = StyleSheet.create({
   inputIcon: { marginRight: Spacing.md },
   input: { flex: 1, fontSize: FontSizes.lg },
   eyeButton: { padding: Spacing.sm },
-  testAccountHint: {
-    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
-    borderRadius: BorderRadii.md,
-    paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm,
-    borderWidth: 1, alignSelf: 'flex-start',
-  },
-  testAccountText: { fontSize: FontSizes.sm, fontWeight: '500' },
   primaryButton: {
     borderRadius: BorderRadii.lg, height: 54,
     justifyContent: 'center', alignItems: 'center', marginTop: Spacing.sm,

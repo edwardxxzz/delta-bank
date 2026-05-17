@@ -1,9 +1,11 @@
 import React, { useRef, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, findNodeHandle, UIManager } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Spacing, FontSizes, BorderRadii } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { centsToBRL, formatBRL } from '../services/apiService';
+import { APP_VERSION } from '../utils';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 interface ProfilePageProps {
@@ -14,6 +16,7 @@ interface ProfilePageProps {
 export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation, route }) => {
   const { colors } = useTheme();
   const { userData, logout } = useAuth();
+  const insets = useSafeAreaInsets();
   const scrollViewRef = useRef<ScrollView>(null);
   const logoutY = useRef<number>(0);
 
@@ -69,8 +72,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation, route }) =
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.xl }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack?.()}>
           <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
@@ -145,7 +147,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation, route }) =
           </TouchableOpacity>
         </View>
 
-        <Text style={[styles.version, { color: colors.textMuted }]}>Delta Bank v1.0.0</Text>
+        <Text style={[styles.version, { color: colors.textMuted }]}>{APP_VERSION}</Text>
       </ScrollView>
     </View>
   );

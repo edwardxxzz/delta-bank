@@ -1,13 +1,16 @@
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Spacing, FontSizes, BorderRadii } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+import { APP_VERSION } from '../utils';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
   const { userData, logout } = useAuth();
   const { colors, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const formattedCPF = userData?.cpf
     ? userData.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
@@ -26,6 +29,8 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
       title: 'MINHA CONTA',
       items: [
         { icon: 'person-outline', iconSet: 'Ionicons' as const, label: 'Dados da conta', navigate: 'Conta' },
+        { icon: 'cash-plus', iconSet: 'MaterialCommunityIcons' as const, label: 'Depositar', navigate: 'Depositar' },
+        { icon: 'cash-minus', iconSet: 'MaterialCommunityIcons' as const, label: 'Sacar', navigate: 'Sacar' },
         { icon: 'file-text-outline', iconSet: 'MaterialCommunityIcons' as const, label: 'Extrato completo', navigate: 'Extrato' },
         { icon: 'trending-up', iconSet: 'Feather' as const, label: 'Investimentos', navigate: 'invest' },
         { icon: 'card-outline', iconSet: 'Ionicons' as const, label: 'Cartões', navigate: 'cards' },
@@ -77,8 +82,7 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.xl }]}>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Mais serviços</Text>
       </View>
 
@@ -110,7 +114,7 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
           <Text style={styles.logoutText}>Sair da conta</Text>
         </TouchableOpacity>
 
-        <Text style={[styles.version, { color: colors.textMuted }]}>Delta Bank v1.0.0</Text>
+        <Text style={[styles.version, { color: colors.textMuted }]}>{APP_VERSION}</Text>
       </ScrollView>
     </View>
   );

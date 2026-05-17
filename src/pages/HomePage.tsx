@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, RefreshControl, TouchableOpacity, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { centsToBRL, getExtrato, formatBRL, PixTransaction } from '../services/apiService';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
@@ -23,6 +24,7 @@ interface HomePageProps {
 export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
   const { userData, refreshUserData } = useAuth();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [transactions, setTransactions] = useState<DisplayTransaction[]>([]);
@@ -183,7 +185,7 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
         }
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + Spacing.lg }]}>
           <Text style={[styles.greeting, { color: colors.textPrimary }]}>Olá {firstName}</Text>
           <TouchableOpacity
             style={[styles.profileButton, { backgroundColor: colors.surfaceLight }]}

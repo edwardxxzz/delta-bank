@@ -4,9 +4,11 @@ import {
   Alert, ActivityIndicator, RefreshControl,
 } from 'react-native';
 import { Spacing, FontSizes, BorderRadii } from '../types';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { getChavesPix, registerChavePix, deleteChavePix, ChavePix } from '../services/apiService';
+import { APP_VERSION } from '../utils';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 interface ChavesPixPageProps {
@@ -69,6 +71,7 @@ const generateUUID = (): string => {
 export const ChavesPixPage: React.FC<ChavesPixPageProps> = ({ navigation }) => {
   const { colors } = useTheme();
   const { userData } = useAuth();
+  const insets = useSafeAreaInsets();
   const [chaves, setChaves] = useState<ChavePix[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -205,7 +208,7 @@ export const ChavesPixPage: React.FC<ChavesPixPageProps> = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.xl }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack?.()}>
           <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
@@ -489,7 +492,7 @@ export const ChavesPixPage: React.FC<ChavesPixPageProps> = ({ navigation }) => {
           </View>
         )}
 
-        <Text style={[styles.version, { color: colors.textMuted }]}>Delta Bank v1.0.0</Text>
+        <Text style={[styles.version, { color: colors.textMuted }]}>{APP_VERSION}</Text>
       </ScrollView>
     </View>
   );
