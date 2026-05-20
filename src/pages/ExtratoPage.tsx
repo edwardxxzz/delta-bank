@@ -9,6 +9,7 @@ import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { Spacing, FontSizes, BorderRadii } from '../types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
+import { useVisibility } from '../contexts/VisibilityContext';
 
 export interface DisplayTransaction {
   id: string;
@@ -29,6 +30,7 @@ interface ExtratoPageProps {
 export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
   const { colors } = useTheme();
   const { userData, refreshUserData } = useAuth();
+  const { balanceVisible } = useVisibility();
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [transactions, setTransactions] = useState<DisplayTransaction[]>([]);
@@ -185,7 +187,9 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
       {/* Balance Summary */}
       <View style={[styles.balanceSummary, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
         <Text style={[styles.balanceLabel, { color: colors.textSecondary }]}>Saldo atual</Text>
-        <Text style={[styles.balanceValue, { color: colors.textPrimary }]}>R$ {formatBRL(balance)}</Text>
+        <Text style={[styles.balanceValue, { color: colors.textPrimary }]}>
+          {balanceVisible ? `R$ ${formatBRL(balance)}` : 'R$ ••••••'}
+        </Text>
       </View>
 
       {/* Search Bar */}
@@ -284,7 +288,9 @@ export const ExtratoPage: React.FC<ExtratoPageProps> = ({ navigation }) => {
                     </View>
                     <View style={styles.txRight}>
                       <Text style={[styles.txAmount, { color: isPositive ? colors.positive : colors.negative }]}>
-                        {isPositive ? '+' : '-'} R$ {formatBRL(Math.abs(tx.amount))}
+                        {balanceVisible
+                          ? `${isPositive ? '+' : '-'} R$ ${formatBRL(Math.abs(tx.amount))}`
+                          : 'R$ ••••'}
                       </Text>
                       <Text style={[styles.txDate, { color: colors.textMuted }]}>{tx.date}</Text>
                     </View>

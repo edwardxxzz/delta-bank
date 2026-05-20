@@ -7,6 +7,7 @@ import { centsToBRL, getExtrato, formatBRL, PixTransaction } from '../services/a
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { Spacing, FontSizes, BorderRadii } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
+import { useVisibility } from '../contexts/VisibilityContext';
 
 export interface DisplayTransaction {
   id: string;
@@ -24,8 +25,8 @@ interface HomePageProps {
 export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
   const { userData, refreshUserData } = useAuth();
   const { colors } = useTheme();
+  const { balanceVisible, toggleBalanceVisible } = useVisibility();
   const insets = useSafeAreaInsets();
-  const [balanceVisible, setBalanceVisible] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [transactions, setTransactions] = useState<DisplayTransaction[]>([]);
   const [extratoError, setExtratoError] = useState(false);
@@ -37,15 +38,11 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
       const res = await getExtrato(userData.cpf);
 
       if (res.sucesso && res.dados) {
-        // FIX: backend retorna { transacoes: [...], saldo_atual: number } dentro de "dados"
-        // (antes o código fazia Array.isArray(res.dados) que sempre era false)
         const lista: PixTransaction[] = Array.isArray(res.dados)
           ? res.dados
           : (res.dados.transacoes ?? []);
 
         const mapped: DisplayTransaction[] = lista.map((t, idx) => {
-          // FIX: backend retorna tipo como 'TRANSACAO_PIX' | 'DEPOSITO' | 'SAQUE'
-          // Pix enviado/recebido é determinado pelo cpf_remetente vs cpf do usuário
           const isPixSent =
             t.tipo === 'TRANSACAO_PIX' && t.cpf_remetente === userData.cpf;
           const isPixReceived =
@@ -77,7 +74,6 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
               : isPixReceived
               ? t.nome_remetente || 'Delta Bank'
               : 'Delta Bank',
-            // Saída: valor negativo; entrada: valor positivo
             amount: type === 'pix_sent' || type === 'withdraw' ? -amountBRL : amountBRL,
             date: new Date(t.data_hora).toLocaleString('pt-BR', {
               day: '2-digit',
@@ -149,7 +145,7 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
   ];
 
   const renderActionIcon = (action: (typeof quickActions)[0]) => {
-    const size = 24;
+    const size = 22;
     if (action.iconSet === 'MaterialCommunityIcons') {
       return (
         <MaterialCommunityIcons name={action.icon as any} size={size} color={action.iconColor} />
@@ -212,7 +208,7 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
 
           <View style={styles.balanceHeader}>
             <Text style={styles.balanceLabel}>Saldo em conta</Text>
-            <TouchableOpacity onPress={() => setBalanceVisible(!balanceVisible)} hitSlop={8}>
+            <TouchableOpacity onPress={toggleBalanceVisible} hitSlop={8}>
               <Ionicons
                 name={balanceVisible ? 'eye' : 'eye-off'}
                 size={20}
@@ -319,7 +315,9 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
                           { color: isPositive ? colors.positive : colors.negative },
                         ]}
                       >
-                        {isPositive ? '+' : '-'} R$ {formatBRL(Math.abs(tx.amount))}
+                        {balanceVisible
+                          ? `${isPositive ? '+' : '-'} R$ ${formatBRL(Math.abs(tx.amount))}`
+                          : 'R$ ••••'}
                       </Text>
                       <Text style={[styles.txDate, { color: colors.textMuted }]}>{tx.date}</Text>
                     </View>
@@ -369,7 +367,7 @@ const styles = StyleSheet.create({
     width: 0, height: 0,
     borderLeftWidth: 50, borderLeftColor: 'transparent',
     borderRightWidth: 50, borderRightColor: 'transparent',
-    borderBottomWidth: 80, borderBottomColor: '#10B981',
+    borderBottomWidth: 80, borderBottomColor: '#00A878',
     opacity: 0.15,
   },
   cardLogoRow: {
@@ -408,7 +406,7 @@ const styles = StyleSheet.create({
   },
   actionItem: { alignItems: 'center', gap: Spacing.sm },
   iconContainer: {
-    width: 56, height: 56, borderRadius: BorderRadii.md,
+    width: 46, height: 46, borderRadius: BorderRadii.md,
     justifyContent: 'center', alignItems: 'center',
   },
   actionLabel: { fontSize: FontSizes.sm, fontWeight: '500' },

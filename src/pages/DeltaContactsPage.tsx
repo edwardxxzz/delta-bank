@@ -18,7 +18,7 @@ interface Contact {
   isFavorite?: boolean;
 }
 
-const avatarColors = ['#F97316', '#8B5CF6', '#3B82F6', '#10B981', '#EC4899', '#6366F1', '#EF4444', '#14B8A6'];
+const avatarColors = ['#EF6C00', '#7E57C2', '#3B82F6', '#00A878', '#C2185B', '#5C6BC0', '#E53935', '#14B8A6'];
 
 interface DeltaContactsPageProps {
   navigation?: any;
@@ -119,9 +119,9 @@ export const DeltaContactsPage: React.FC<DeltaContactsPageProps> = ({ navigation
 
   const quickActions = [
     { label: 'Transferir', icon: 'send', color: '#3B82F6', bg: '#DBEAFE', onPress: () => navigation?.navigate?.('Transferir') },
-    { label: 'Receber', icon: 'arrow-down', color: '#10B981', bg: '#D1FAE5', onPress: () => navigation?.navigate?.('Receber') },
+    { label: 'Receber', icon: 'arrow-down', color: '#00A878', bg: '#E0F5EF', onPress: () => navigation?.navigate?.('Receber') },
     { label: 'Cobrar', icon: 'credit-card', color: '#14B8A6', bg: '#CCFBF1', onPress: () => navigation?.navigate?.('QRCode') },
-    { label: 'Pagar QR', icon: 'qrcode', color: '#8B5CF6', bg: '#EDE9FE', onPress: () => navigation?.navigate?.('Pagar') },
+    { label: 'Pagar QR', icon: 'qrcode', color: '#7E57C2', bg: '#EDE7F6', onPress: () => navigation?.navigate?.('Pagar') },
   ];
 
   return (
@@ -237,7 +237,7 @@ export const DeltaContactsPage: React.FC<DeltaContactsPageProps> = ({ navigation
                   <Text style={[styles.contactDetail, { color: colors.textSecondary }]}>{contact.chaveTipo}: {contact.chaveValor.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}</Text>
                 </View>
                 <TouchableOpacity onPress={() => toggleFavorite(contact.id)} hitSlop={8} style={styles.favBtn}>
-                  <Ionicons name={contact.isFavorite ? 'star' : 'star-outline'} size={18} color={contact.isFavorite ? '#F97316' : colors.textMuted} />
+                  <Ionicons name={contact.isFavorite ? 'star' : 'star-outline'} size={18} color={contact.isFavorite ? '#EF6C00' : colors.textMuted} />
                 </TouchableOpacity>
                 <Feather name="chevron-right" size={18} color={colors.textMuted} />
               </TouchableOpacity>

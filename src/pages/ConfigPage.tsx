@@ -218,6 +218,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg, borderRadius: BorderRadii.lg,
     borderWidth: 1,
   },
-  logoutText: { fontSize: FontSizes.lg, fontWeight: '600', color: '#EF4444' },
+  logoutText: { fontSize: FontSizes.lg, fontWeight: '600', color: '#E53935' },
   version: { textAlign: 'center', fontSize: FontSizes.sm, marginTop: Spacing.xl },
 });

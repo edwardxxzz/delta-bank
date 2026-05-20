@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Spacing, FontSizes, BorderRadii } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
+import { useVisibility } from '../contexts/VisibilityContext';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 interface CardItem {
@@ -39,6 +40,7 @@ interface CardsPageProps {
 
 export const CardsPage: React.FC<CardsPageProps> = ({ navigation }) => {
   const { colors } = useTheme();
+  const { balanceVisible, toggleBalanceVisible } = useVisibility();
   const insets = useSafeAreaInsets();
   const [selectedTab, setSelectedTab] = useState<'debito' | 'virtual' | 'credito'>('debito');
   const [showDetails, setShowDetails] = useState(false);
@@ -74,10 +76,24 @@ export const CardsPage: React.FC<CardsPageProps> = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.xl }]}>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Meus Cartões</Text>
-        <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.accent }]}>
-          <Feather name="plus" size={18} color={colors.white} />
-          <Text style={styles.addButtonText}>Adicionar</Text>
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.eyeButton}
+            onPress={toggleBalanceVisible}
+            hitSlop={8}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={balanceVisible ? 'eye' : 'eye-off'}
+              size={22}
+              color={balanceVisible ? colors.accent : colors.textMuted}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.accent }]}>
+            <Feather name="plus" size={18} color={colors.white} />
+            <Text style={styles.addButtonText}>Adicionar</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Tabs */}
@@ -128,13 +144,17 @@ export const CardsPage: React.FC<CardsPageProps> = ({ navigation }) => {
           </View>
 
           {/* Number */}
-          <Text style={styles.cardNumber}>{maskCardNumber(currentCard.number)}</Text>
+          <Text style={styles.cardNumber}>
+            {balanceVisible ? maskCardNumber(currentCard.number) : '•••• •••• •••• ••••'}
+          </Text>
 
           {/* Bottom row */}
           <View style={styles.cardFooter}>
             <View>
               <Text style={styles.cardLabel}>Validade</Text>
-              <Text style={styles.cardValue}>{currentCard.expirationDate}</Text>
+              <Text style={styles.cardValue}>
+                {balanceVisible ? currentCard.expirationDate : '••/••'}
+              </Text>
             </View>
             <Text style={styles.cardFlag}>
               {currentCard.flag === 'visa' ? 'VISA' : 'MASTERCARD'}
@@ -148,7 +168,7 @@ export const CardsPage: React.FC<CardsPageProps> = ({ navigation }) => {
             <View style={styles.limitHeader}>
               <Text style={[styles.limitTitle, { color: colors.textPrimary }]}>Limite do cartão</Text>
               <Text style={[styles.limitPercentage, { color: limitPercentage > 80 ? colors.negative : colors.accent }]}>
-                {limitPercentage.toFixed(0)}% utilizado
+                {balanceVisible ? `${limitPercentage.toFixed(0)}% utilizado` : '••••'}
               </Text>
             </View>
 
@@ -169,13 +189,17 @@ export const CardsPage: React.FC<CardsPageProps> = ({ navigation }) => {
               <View>
                 <Text style={[styles.limitLabel, { color: colors.textMuted }]}>Gasto</Text>
                 <Text style={[styles.limitValue, { color: colors.negative }]}>
-                  R$ {limitUsed.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  {balanceVisible
+                    ? `R$ ${limitUsed.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                    : 'R$ ••••'}
                 </Text>
               </View>
               <View style={styles.limitRight}>
                 <Text style={[styles.limitLabel, { color: colors.textMuted }]}>Disponível</Text>
                 <Text style={[styles.limitValue, { color: colors.accent }]}>
-                  R$ {limitAvailable.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  {balanceVisible
+                    ? `R$ ${limitAvailable.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                    : 'R$ ••••'}
                 </Text>
               </View>
             </View>
@@ -185,7 +209,9 @@ export const CardsPage: React.FC<CardsPageProps> = ({ navigation }) => {
             <View style={styles.limitTotalRow}>
               <Text style={[styles.limitLabel, { color: colors.textMuted }]}>Limite total</Text>
               <Text style={[styles.limitTotalValue, { color: colors.textPrimary }]}>
-                R$ {limitTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                {balanceVisible
+                  ? `R$ ${limitTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                  : 'R$ ••••'}
               </Text>
             </View>
           </View>
@@ -251,14 +277,18 @@ export const CardsPage: React.FC<CardsPageProps> = ({ navigation }) => {
             <View style={styles.detailRow}>
               <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Limite total</Text>
               <Text style={[styles.detailValue, { color: colors.textPrimary }]}>
-                {currentCard.limit > 0 ? `R$ ${currentCard.limit.toLocaleString('pt-BR')}` : 'N/A'}
+                {balanceVisible
+                  ? (currentCard.limit > 0 ? `R$ ${currentCard.limit.toLocaleString('pt-BR')}` : 'N/A')
+                  : 'R$ ••••'}
               </Text>
             </View>
             <View style={[styles.detailDivider, { backgroundColor: colors.menuDivider }]} />
             <View style={styles.detailRow}>
               <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Limite disponível</Text>
               <Text style={[styles.detailValue, { color: colors.textPrimary }]}>
-                {currentCard.limit > 0 ? `R$ ${(currentCard.limit - currentCard.used).toLocaleString('pt-BR')}` : 'N/A'}
+                {balanceVisible
+                  ? (currentCard.limit > 0 ? `R$ ${(currentCard.limit - currentCard.used).toLocaleString('pt-BR')}` : 'N/A')
+                  : 'R$ ••••'}
               </Text>
             </View>
             <View style={[styles.detailDivider, { backgroundColor: colors.menuDivider }]} />
@@ -282,6 +312,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xxl, paddingTop: Spacing.xl, paddingBottom: Spacing.lg,
   },
   headerTitle: { fontSize: FontSizes.xxl, fontWeight: '700' },
+  headerActions: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.md,
+  },
+  eyeButton: {
+    width: 40, height: 40, borderRadius: 20,
+    justifyContent: 'center', alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
   addButton: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.xs,
     borderRadius: BorderRadii.md,
@@ -311,7 +349,7 @@ const styles = StyleSheet.create({
     width: 0, height: 0,
     borderLeftWidth: 60, borderLeftColor: 'transparent',
     borderRightWidth: 60, borderRightColor: 'transparent',
-    borderBottomWidth: 100, borderBottomColor: '#10B981',
+    borderBottomWidth: 100, borderBottomColor: '#00A878',
     opacity: 0.15,
   },
   cardTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

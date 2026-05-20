@@ -26,9 +26,9 @@ const typeLabels: Record<string, string> = {
 const yieldLabels: Record<string, string> = { pre: 'Pré-fixado', pos: 'Pós-fixado', ipca: 'IPCA+' };
 
 const mockInvestments: Investment[] = [
-  { id: '1', name: 'CDB BlueBank 110% CDI', type: 'cdb', amount: 5234.67, yieldRate: 4.89, yieldType: 'pos', color: '#6366F1', iconName: 'bank', issuer: 'BlueBank', maturity: '30/04/2027' },
-  { id: '2', name: 'Tesouro Selic 2029', type: 'tesouro', amount: 3276.77, yieldRate: 3.21, yieldType: 'pos', color: '#10B981', iconName: 'chart-bar', issuer: 'Tesouro Nacional', maturity: '01/03/2029' },
-  { id: '3', name: 'Ações Magazine Luiza', type: 'acoes', amount: 2000.00, yieldRate: -2.15, yieldType: 'pos', color: '#F97316', iconName: 'chart-line-variant', issuer: 'B3', maturity: '' },
+  { id: '1', name: 'CDB BlueBank 110% CDI', type: 'cdb', amount: 5234.67, yieldRate: 4.89, yieldType: 'pos', color: '#5C6BC0', iconName: 'bank', issuer: 'BlueBank', maturity: '30/04/2027' },
+  { id: '2', name: 'Tesouro Selic 2029', type: 'tesouro', amount: 3276.77, yieldRate: 3.21, yieldType: 'pos', color: '#00A878', iconName: 'chart-bar', issuer: 'Tesouro Nacional', maturity: '01/03/2029' },
+  { id: '3', name: 'Ações Magazine Luiza', type: 'acoes', amount: 2000.00, yieldRate: -2.15, yieldType: 'pos', color: '#EF6C00', iconName: 'chart-line-variant', issuer: 'B3', maturity: '' },
 ];
 
 const totalInvested = mockInvestments.reduce((acc, inv) => acc + inv.amount, 0);

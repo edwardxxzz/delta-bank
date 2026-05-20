@@ -1,8 +1,11 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { LocalUserData, loginAPI, getSaldo, createAccount } from '../services/apiService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 const SESSION_KEY = 'delta_bank_session';
+const BIOMETRIC_CPF_KEY = 'delta_bank_biometric_cpf';
+const BIOMETRIC_ENABLED_KEY = 'delta_bank_biometric_enabled';
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -12,6 +15,8 @@ interface AuthContextType {
   register: (nome: string, cpf: string, senha: string) => Promise<void>;
   logout: () => void;
   refreshUserData: () => Promise<void>;
+  tryBiometricLogin: () => Promise<boolean>;
+  isBiometricAvailable: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -22,6 +27,8 @@ const AuthContext = createContext<AuthContextType>({
   register: async () => {},
   logout: () => {},
   refreshUserData: async () => {},
+  tryBiometricLogin: async () => false,
+  isBiometricAvailable: false,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -29,8 +36,40 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState<LocalUserData | null>(null);
-  // loading starts as false — no session restore, user must always log in
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
+
+  // On mount, try to restore session if biometric is enabled
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        // Check if biometric is available on device
+        const hasHardware = await LocalAuthentication.hasHardwareAsync();
+        const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+        const biometricAvailable = hasHardware && isEnrolled;
+        setIsBiometricAvailable(biometricAvailable);
+
+        // Check if biometric login is enabled and there's a stored session
+        const biometricEnabled = await AsyncStorage.getItem(BIOMETRIC_ENABLED_KEY);
+        const storedSession = await AsyncStorage.getItem(SESSION_KEY);
+        const storedCpf = await AsyncStorage.getItem(BIOMETRIC_CPF_KEY);
+
+        if (biometricEnabled === 'true' && storedSession && storedCpf && biometricAvailable) {
+          // Session exists and biometric is enabled - will try biometric login on LoginPage
+          // For now, just mark that we have a session to restore
+          setLoading(false);
+          return;
+        }
+
+        // No biometric session to restore
+        setLoading(false);
+      } catch (e) {
+        console.error('Auth initialization error:', e);
+        setLoading(false);
+      }
+    };
+    initializeAuth();
+  }, []);
 
   const refreshWithCpf = async (cpf: string) => {
     try {
@@ -80,6 +119,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUserData(user);
       setIsLoggedIn(true);
       await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(user));
+      // Store CPF for biometric login
+      await AsyncStorage.setItem(BIOMETRIC_CPF_KEY, cpf);
     } else {
       const saldoRes = await getSaldo(cpf);
       if (saldoRes.sucesso && saldoRes.dados) {
@@ -92,6 +133,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUserData(user);
         setIsLoggedIn(true);
         await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(user));
+        await AsyncStorage.setItem(BIOMETRIC_CPF_KEY, cpf);
       } else {
         throw new Error('Login realizado, mas não foi possível carregar seus dados.');
       }
@@ -132,6 +174,53 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const tryBiometricLogin = async (): Promise<boolean> => {
+    try {
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+
+      if (!hasHardware || !isEnrolled) {
+        return false;
+      }
+
+      // Check if biometric is enabled
+      const biometricEnabled = await AsyncStorage.getItem(BIOMETRIC_ENABLED_KEY);
+      if (biometricEnabled !== 'true') {
+        return false;
+      }
+
+      // Check if there's a stored session
+      const storedSession = await AsyncStorage.getItem(SESSION_KEY);
+      if (!storedSession) {
+        return false;
+      }
+
+      // Prompt biometric authentication
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: 'Autentique-se para acessar o Delta Bank',
+        fallbackLabel: 'Usar senha',
+        cancelLabel: 'Cancelar',
+      });
+
+      if (result.success) {
+        // Restore session from storage
+        const parsed = JSON.parse(storedSession) as LocalUserData;
+        setUserData(parsed);
+        setIsLoggedIn(true);
+        // Refresh user data from server
+        if (parsed.cpf) {
+          refreshWithCpf(parsed.cpf);
+        }
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Biometric login error:', error);
+      return false;
+    }
+  };
+
   const logout = async () => {
     setUserData(null);
     setIsLoggedIn(false);
@@ -140,7 +229,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ isLoggedIn, userData, loading, login, register, logout, refreshUserData }}
+      value={{ isLoggedIn, userData, loading, login, register, logout, refreshUserData, tryBiometricLogin, isBiometricAvailable }}
     >
       {children}
     </AuthContext.Provider>

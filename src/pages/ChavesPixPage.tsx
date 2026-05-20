@@ -53,10 +53,10 @@ const keyTypeOptions: {
 ];
 
 const keyTypeColors: Record<KeyTypeOption, string> = {
-  CPF: '#10B981',
-  Email: '#6366F1',
-  Telefone: '#F97316',
-  Aleatoria: '#8B5CF6',
+  CPF: '#00A878',
+  Email: '#5C6BC0',
+  Telefone: '#EF6C00',
+  Aleatoria: '#7E57C2',
 };
 
 // Gera uma chave aleatória no formato UUID v4

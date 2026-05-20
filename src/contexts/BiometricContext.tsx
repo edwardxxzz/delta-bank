@@ -30,10 +30,16 @@ export const BiometricProvider = ({ children }: { children: ReactNode }) => {
   // Check device biometric capabilities on mount
   useEffect(() => {
     const checkBiometrics = async () => {
-      const compatible = await LocalAuthentication.hasHardwareAsync();
-      const enrolled = await LocalAuthentication.isEnrolledAsync();
-      setHasHardware(compatible);
-      setIsEnrolled(enrolled);
+      try {
+        const compatible = await LocalAuthentication.hasHardwareAsync();
+        const enrolled = await LocalAuthentication.isEnrolledAsync();
+        setHasHardware(compatible);
+        setIsEnrolled(enrolled);
+      } catch (error) {
+        console.error('Biometric check error:', error);
+        setHasHardware(false);
+        setIsEnrolled(false);
+      }
     };
     checkBiometrics();
   }, []);
@@ -54,6 +60,25 @@ export const BiometricProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const setBiometricEnabled = async (enabled: boolean) => {
+    // If enabling, verify biometric works first
+    if (enabled) {
+      try {
+        const result = await LocalAuthentication.authenticateAsync({
+          promptMessage: 'Confirme sua identidade para ativar a biometria',
+          fallbackLabel: 'Usar senha',
+          cancelLabel: 'Cancelar',
+        });
+
+        if (!result.success) {
+          // User cancelled or failed - don't enable
+          return;
+        }
+      } catch (error) {
+        console.error('Biometric activation error:', error);
+        return;
+      }
+    }
+
     setBiometricEnabledState(enabled);
     try {
       await AsyncStorage.setItem(BIOMETRIC_ENABLED_KEY, String(enabled));
@@ -63,7 +88,7 @@ export const BiometricProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const authenticate = async (reason?: string): Promise<boolean> => {
-    if (!biometricEnabled || !hasHardware || !isEnrolled) {
+    if (!hasHardware || !isEnrolled) {
       return false;
     }
 

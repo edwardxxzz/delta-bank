@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, Platform, Alert, ActivityIndicator, ScrollView,
@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Spacing, FontSizes, BorderRadii } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useBiometric } from '../contexts/BiometricContext';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 // Validate CPF check digits
@@ -32,7 +33,8 @@ const validateCPF = (cpf: string): boolean => {
 
 export const LoginPage: React.FC = () => {
   const { colors } = useTheme();
-  const { login, register } = useAuth();
+  const { login, register, tryBiometricLogin, isBiometricAvailable } = useAuth();
+  const { biometricEnabled } = useBiometric();
   const insets = useSafeAreaInsets();
   const [isLogin, setIsLogin] = useState(true);
   const [cpf, setCpf] = useState('');
@@ -41,6 +43,28 @@ export const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [biometricLoading, setBiometricLoading] = useState(false);
+
+  // Try biometric login on mount if enabled
+  useEffect(() => {
+    if (biometricEnabled && isBiometricAvailable) {
+      const attemptBiometricLogin = async () => {
+        setBiometricLoading(true);
+        try {
+          const success = await tryBiometricLogin();
+          // If successful, the auth state will update automatically
+          // If not, user will see the manual login form
+        } catch (e) {
+          console.error('Auto biometric login error:', e);
+        } finally {
+          setBiometricLoading(false);
+        }
+      };
+      // Small delay to let the UI render first
+      const timer = setTimeout(attemptBiometricLogin, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [biometricEnabled, isBiometricAvailable]);
 
   const formatCPF = (value: string) => {
     const digits = value.replace(/\D/g, '').slice(0, 11);
@@ -103,15 +127,41 @@ export const LoginPage: React.FC = () => {
     setError('');
   };
 
+  const handleBiometricLogin = async () => {
+    setBiometricLoading(true);
+    try {
+      await tryBiometricLogin();
+    } catch (e) {
+      console.error('Biometric login error:', e);
+    } finally {
+      setBiometricLoading(false);
+    }
+  };
+
+  if (biometricLoading) {
+    return (
+      <View style={[styles.container, styles.biometricLoadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.accent} />
+        <Text style={[styles.biometricLoadingText, { color: colors.textSecondary }]}>
+          Verificando biometria...
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.inner}
       >
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top }]}>
-          {/* Logo */}
-          <View style={styles.logoContainer}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top }]}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Logo Section */}
+          <View style={styles.logoSection}>
             <View style={[styles.logoCircle, { backgroundColor: colors.primary }]}>
               <View style={[styles.logoTriangle, { borderBottomColor: colors.accent }]} />
             </View>
@@ -195,6 +245,20 @@ export const LoginPage: React.FC = () => {
             </TouchableOpacity>
           </View>
 
+          {/* Biometric Login Button */}
+          {isLogin && biometricEnabled && isBiometricAvailable && (
+            <TouchableOpacity
+              style={[styles.biometricButton, { borderColor: colors.accent }]}
+              onPress={handleBiometricLogin}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="finger-print" size={24} color={colors.accent} />
+              <Text style={[styles.biometricButtonText, { color: colors.accent }]}>
+                Entrar com biometria
+              </Text>
+            </TouchableOpacity>
+          )}
+
           {/* Toggle */}
           <View style={styles.toggleContainer}>
             <Text style={[styles.toggleText, { color: colors.textSecondary }]}>
@@ -216,25 +280,40 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   inner: { flex: 1 },
   scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: Spacing.xxl,
     paddingVertical: Spacing.xxxl,
   },
-  logoContainer: { alignItems: 'center', marginBottom: Spacing.huge },
+  logoSection: {
+    alignItems: 'center',
+    marginBottom: Spacing.huge,
+  },
   logoCircle: {
-    width: 80, height: 80, borderRadius: 40,
+    width: 88, height: 88, borderRadius: 44,
     justifyContent: 'center', alignItems: 'center',
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.xl,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
   },
   logoTriangle: {
     width: 0, height: 0,
-    borderLeftWidth: 18, borderLeftColor: 'transparent',
-    borderRightWidth: 18, borderRightColor: 'transparent',
-    borderBottomWidth: 30,
+    borderLeftWidth: 20, borderLeftColor: 'transparent',
+    borderRightWidth: 20, borderRightColor: 'transparent',
+    borderBottomWidth: 34,
     marginTop: 6,
   },
-  appName: { fontSize: FontSizes.huge, fontWeight: '700', marginBottom: Spacing.xs },
-  appSubtitle: { fontSize: FontSizes.lg },
+  appName: {
+    fontSize: 30, fontWeight: '700', marginBottom: Spacing.sm,
+    letterSpacing: -0.5,
+  },
+  appSubtitle: {
+    fontSize: FontSizes.lg,
+    textAlign: 'center',
+  },
   // Error
   errorBanner: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
@@ -248,17 +327,45 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row', alignItems: 'center',
     borderRadius: BorderRadii.lg, borderWidth: 1,
-    paddingHorizontal: Spacing.lg, height: 54,
+    paddingHorizontal: Spacing.lg, height: 56,
   },
   inputIcon: { marginRight: Spacing.md },
   input: { flex: 1, fontSize: FontSizes.lg },
   eyeButton: { padding: Spacing.sm },
   primaryButton: {
-    borderRadius: BorderRadii.lg, height: 54,
+    borderRadius: BorderRadii.lg, height: 56,
     justifyContent: 'center', alignItems: 'center', marginTop: Spacing.sm,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  primaryButtonText: { color: '#FFFFFF', fontSize: FontSizes.xxl, fontWeight: '600' },
-  toggleContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: Spacing.xxl },
+  primaryButtonText: { color: '#FFFFFF', fontSize: FontSizes.xxl, fontWeight: '700' },
+  // Biometric
+  biometricButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: Spacing.md,
+    marginTop: Spacing.xl,
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadii.lg,
+    borderWidth: 1.5,
+  },
+  biometricButtonText: {
+    fontSize: FontSizes.lg, fontWeight: '600',
+  },
+  // Biometric loading
+  biometricLoadingContainer: {
+    justifyContent: 'center', alignItems: 'center',
+  },
+  biometricLoadingText: {
+    marginTop: Spacing.lg, fontSize: FontSizes.lg,
+  },
+  // Toggle
+  toggleContainer: {
+    flexDirection: 'row', justifyContent: 'center',
+    marginTop: Spacing.xxl, marginBottom: Spacing.xl,
+  },
   toggleText: { fontSize: FontSizes.md },
-  toggleLink: { fontSize: FontSizes.md, fontWeight: '600' },
+  toggleLink: { fontSize: FontSizes.md, fontWeight: '700' },
 });
