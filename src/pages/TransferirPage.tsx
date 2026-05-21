@@ -159,9 +159,11 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
     setTimeout(() => setShowError(false), 5000);
   };
 
-  const handleConfirmPix = async (senhaInput?: string) => {
+  const handleConfirmPix = async (senhaInput?: string, isBiometric: boolean = false) => {
     const senhaToUse = senhaInput ?? senha;
-    if (!senhaToUse) {
+    
+    // Só exige a senha se NÃO for via biometria
+    if (!isBiometric && !senhaToUse) {
       showErrorMsg('Atenção', 'Digite sua senha para confirmar a transação.');
       return;
     }
@@ -179,7 +181,8 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
         validatedDest?.cpf ??
         (keyType === 'cpf' ? chavePix.replace(/\D/g, '') : chavePix.trim());
 
-      const res = await makePix(userData.cpf, cpfDestino, valorBRL, senhaToUse);
+      // Passando uma flag/senha vazia ou tratada no backend se for biometria
+      const res = await makePix(userData.cpf, cpfDestino, valorBRL, isBiometric ? 'biometria_bypass' : senhaToUse);
 
       if (res.sucesso) {
         await refreshUserData();
@@ -239,7 +242,7 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
     if (!canUseBiometric) return;
     const success = await authenticate('Confirme o envio do Pix com biometria');
     if (success) {
-      await handleConfirmPix(senha);
+      await handleConfirmPix('', true); // Passa true avisando que é biometria
     }
   };
 
@@ -338,7 +341,6 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
                     onChangeText={handleChaveChange}
                     autoCapitalize="none"
                     autoCorrect={false}
-                    // O Segredo: Teclado padrão sempre, permitindo letras e números livremente
                     keyboardType="default" 
                   />
                 </View>
@@ -600,7 +602,7 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
                     loading && styles.btnDisabled,
                   ]}
                   onPress={handleBiometricConfirm}
-                  disabled={loading || !senha}
+                  disabled={loading} // REMOVIDO: !senha
                   activeOpacity={0.8}
                 >
                   {loading ? (

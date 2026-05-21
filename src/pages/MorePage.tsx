@@ -45,6 +45,7 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
         { icon: 'cash', iconSet: 'MaterialCommunityIcons' as const, label: 'Empréstimos' },
       ],
     },
+    
     {
       title: 'CONFIGURAÇÕES',
       items: [
