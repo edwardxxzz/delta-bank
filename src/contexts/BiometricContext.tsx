@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as LocalAuthentication from 'expo-local-authentication';
 
@@ -26,6 +27,7 @@ export const BiometricProvider = ({ children }: { children: ReactNode }) => {
   const [biometricEnabled, setBiometricEnabledState] = useState(false);
   const [hasHardware, setHasHardware] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const authenticatingRef = useRef(false);
 
   // Check device biometric capabilities on mount
   useEffect(() => {
@@ -60,17 +62,24 @@ export const BiometricProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const setBiometricEnabled = async (enabled: boolean) => {
-    // If enabling, verify biometric works first
     if (enabled) {
+      if (!hasHardware || !isEnrolled) {
+        Alert.alert('Aviso', 'Seu dispositivo não possui biometria cadastrada nas configurações.');
+        return;
+      }
+
+      // IMPORTANTE: Atraso de 200ms para evitar o bug de 'app_cancel' do Android 
+      // causado pela mudança de layout (ActivityIndicator carregando)
+      await new Promise(resolve => setTimeout(resolve, 200));
+
       try {
         const result = await LocalAuthentication.authenticateAsync({
           promptMessage: 'Confirme sua identidade para ativar a biometria',
-          fallbackLabel: 'Usar senha',
           cancelLabel: 'Cancelar',
+          disableDeviceFallback: true,
         });
 
         if (!result.success) {
-          // User cancelled or failed - don't enable
           return;
         }
       } catch (error) {
@@ -88,20 +97,38 @@ export const BiometricProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const authenticate = async (reason?: string): Promise<boolean> => {
-    if (!hasHardware || !isEnrolled) {
+    if (authenticatingRef.current) {
       return false;
     }
 
+    const compatible = await LocalAuthentication.hasHardwareAsync();
+    const enrolled = await LocalAuthentication.isEnrolledAsync();
+    setHasHardware(compatible);
+    setIsEnrolled(enrolled);
+
+    if (!compatible || !enrolled) {
+      Alert.alert('Aviso', 'Seu dispositivo não possui biometria cadastrada ou configurada.');
+      return false;
+    }
+
+    // IMPORTANTE: Atraso de 200ms para evitar o bug de 'app_cancel' do Android 
+    // causado pela mudança de layout (ActivityIndicator carregando)
+    await new Promise(resolve => setTimeout(resolve, 200));
+
     try {
+      authenticatingRef.current = true;
+      await LocalAuthentication.cancelAuthenticate().catch(() => {});
       const result = await LocalAuthentication.authenticateAsync({
         promptMessage: reason || 'Autentique-se para continuar',
-        fallbackLabel: 'Usar senha',
         cancelLabel: 'Cancelar',
+        disableDeviceFallback: true,
       });
       return result.success;
     } catch (error) {
       console.error('Biometric authentication error:', error);
       return false;
+    } finally {
+      authenticatingRef.current = false;
     }
   };
 

@@ -11,6 +11,7 @@ import { makePix, centsToBRL, formatBRL, validatePixKey } from '../services/apiS
 import { maskSensitiveKey } from '../utils';
 import { useBiometric } from '../contexts/BiometricContext';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { detectPixKeyType } from '../utils/pixKey';
 
 interface TransferirPageProps {
   navigation?: any;
@@ -20,7 +21,6 @@ interface TransferirPageProps {
 type KeyType = 'cpf' | 'email' | 'telefone' | 'aleatoria';
 type Step = 'select' | 'form' | 'confirm';
 
-// Alias for readability in this page
 const maskKey = maskSensitiveKey;
 
 export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, route }) => {
@@ -29,8 +29,9 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
   const { biometricEnabled, hasHardware, isEnrolled, authenticate } = useBiometric();
   const insets = useSafeAreaInsets();
 
+  const initialKeyType = (route?.params?.tipoChave || (route?.params?.chaveDestino ? detectPixKeyType(route.params.chaveDestino) : 'cpf')) as KeyType;
   const [step, setStep] = useState<Step>('select');
-  const [keyType, setKeyType] = useState<KeyType>('cpf');
+  const [keyType, setKeyType] = useState<KeyType>(initialKeyType);
   const [chavePix, setChavePix] = useState<string>(route?.params?.chaveDestino || '');
   const [nomeDest, setNomeDest] = useState('');
   const [valor, setValor] = useState('');
@@ -44,33 +45,43 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
 
   const balance = userData ? centsToBRL(userData.saldo_centavos) : 0;
 
-  const keyTypes: { key: KeyType; label: string; note?: string }[] = [
-    { key: 'cpf', label: 'CPF' },
-    { key: 'email', label: 'E-mail', note: 'apenas contas Delta Bank' },
-    { key: 'telefone', label: 'Telefone', note: 'apenas contas Delta Bank' },
-    { key: 'aleatoria', label: 'Chave aleatória', note: 'apenas contas Delta Bank' },
-  ];
+  // ── DETECÇÃO AUTOMÁTICA DA CHAVE ──
+  const handleChaveChange = (value: string) => {
+    let newType: KeyType = 'cpf';
+    const rawValue = value; 
 
-  const getPlaceholder = () => {
-    switch (keyType) {
-      case 'cpf': return 'Digite o CPF do destinatário';
-      case 'email': return 'Digite o e-mail cadastrado';
-      case 'telefone': return 'Digite o telefone cadastrado';
-      case 'aleatoria': return 'Cole a chave aleatória';
+    if (rawValue.includes('@')) {
+      newType = 'email';
+    } else if (/[a-zA-Z]/.test(rawValue) && !rawValue.includes('@')) {
+      newType = 'aleatoria';
+    } else if (rawValue.startsWith('+') || rawValue.includes('(') || rawValue.includes(')')) {
+      newType = 'telefone';
+    } else {
+      const digits = rawValue.replace(/\D/g, '');
+      if (digits.length > 11) {
+        newType = 'telefone'; 
+      } else {
+        newType = 'cpf';
+      }
     }
+
+    setKeyType(newType);
+
+    let formattedValue = value;
+    if (newType === 'cpf') {
+      const digits = value.replace(/\D/g, '').slice(0, 11);
+      if (digits.length === 0) formattedValue = '';
+      else if (digits.length <= 3) formattedValue = digits;
+      else if (digits.length <= 6) formattedValue = `${digits.slice(0, 3)}.${digits.slice(3)}`;
+      else if (digits.length <= 9) formattedValue = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+      else formattedValue = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+    }
+
+    setChavePix(formattedValue);
+    setValidatedDest(null);
+    setNomeDest('');
   };
 
-  const formatCPFInput = (value: string) => {
-    if (keyType !== 'cpf') return value;
-    const digits = value.replace(/\D/g, '').slice(0, 11);
-    if (digits.length <= 3) return digits;
-    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-    if (digits.length <= 9)
-      return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
-  };
-
-  // Valida a chave Pix e resolve o CPF do destinatário
   const validateAndResolveDestination = async (): Promise<string | null> => {
     const raw = chavePix.trim();
 
@@ -113,13 +124,6 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
       }
     }
 
-    // Para outros tipos de chave: o backend /api/pix aceita apenas cpf_destino.
-    // A chave (email, telefone, aleatória) é usada para localizar o dono da conta no banco,
-    // mas essa consulta não tem endpoint público exposto ainda.
-    // Por enquanto passamos a chave como cpf_destino — o backend retornará erro caso
-    // não seja um CPF válido, e o usuário verá a mensagem de erro normalmente.
-    // Nota: para chaves não-CPF, não conseguimos validar previamente se a conta existe,
-    // mas o erro será detectado ao confirmar o Pix.
     setValidatedDest(null);
     setNomeDest('');
     return raw;
@@ -152,7 +156,6 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
   const showErrorMsg = (title: string, msg: string) => {
     setErrorMessage(msg);
     setShowError(true);
-    // Auto-hide after 5 seconds
     setTimeout(() => setShowError(false), 5000);
   };
 
@@ -170,8 +173,6 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
     setLoading(true);
     setShowError(false);
     try {
-      // FIX: backend espera "valor" em R$ float (ex: 50.00), não em centavos.
-      // Antes estava passando brlToCents(valorBRL) = 5000 quando deveria ser 50.00
       const valorBRL = parseFloat(valor.replace(',', '.'));
 
       const cpfDestino =
@@ -182,7 +183,6 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
 
       if (res.sucesso) {
         await refreshUserData();
-        // Navigate to success screen instead of Alert
         navigation?.replace('PixEnviado', {
           nomeDest: nomeDest || cpfDestino,
           chavePix,
@@ -192,7 +192,6 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
           tipoChave: keyType.toUpperCase(),
         });
       } else {
-        // Identify specific error types for better user feedback
         const msg = (res.mensagem || '').toLowerCase();
 
         if (msg.includes('senha') || msg.includes('password') || msg.includes('incorreta') || msg.includes('invalida')) {
@@ -244,7 +243,6 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
     }
   };
 
-  // Whether biometric should be offered
   const canUseBiometric = biometricEnabled && hasHardware && isEnrolled;
 
   const getStepProgress = () => {
@@ -291,45 +289,8 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
           {/* ── Step 1: Chave ── */}
           {step === 'select' && (
             <>
-              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-                Tipo de chave
-              </Text>
-
-              <View style={styles.keyTypesRow}>
-                {keyTypes.map((kt) => (
-                  <TouchableOpacity
-                    key={kt.key}
-                    style={[
-                      styles.keyTypeBtn,
-                      { backgroundColor: colors.cardBg, borderColor: colors.border },
-                      keyType === kt.key && {
-                        backgroundColor: colors.accent,
-                        borderColor: colors.accent,
-                      },
-                    ]}
-                    onPress={() => {
-                      setKeyType(kt.key);
-                      setValidatedDest(null);
-                      setNomeDest('');
-                      setChavePix('');
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Text
-                      style={[
-                        styles.keyTypeText,
-                        { color: colors.textSecondary },
-                        keyType === kt.key && styles.keyTypeTextActive,
-                      ]}
-                    >
-                      {kt.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              {/* Nota para tipos não-CPF */}
-              {keyType !== 'cpf' && (
+              {/* Nota para tipos não-CPF dinâmica */}
+              {chavePix.length > 0 && keyType !== 'cpf' && (
                 <View
                   style={[
                     styles.infoBanner,
@@ -342,14 +303,21 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
                     color={colors.accent}
                   />
                   <Text style={[styles.infoBannerText, { color: colors.accent }]}>
-                    Para este tipo de chave, o destinatário deve ter conta no Delta Bank com essa
-                    chave cadastrada.
+                    Para este tipo de chave, o destinatário deve ter conta no Delta Bank.
                   </Text>
                 </View>
               )}
 
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.textPrimary }]}>Chave Pix</Text>
+                <View style={styles.labelRow}>
+                  <Text style={[styles.label, { color: colors.textPrimary }]}>Chave Pix</Text>
+                  {chavePix.length > 0 && (
+                    <Text style={[styles.detectedBadge, { color: colors.accent }]}>
+                      {keyType === 'cpf' ? 'CPF' : keyType === 'email' ? 'E-mail' : keyType === 'telefone' ? 'Telefone' : 'Aleatória'} detectado
+                    </Text>
+                  )}
+                </View>
+
                 <View
                   style={[
                     styles.inputContainer,
@@ -364,17 +332,14 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
                   />
                   <TextInput
                     style={[styles.input, { color: colors.textPrimary }]}
-                    placeholder={getPlaceholder()}
+                    placeholder="CPF, e-mail, celular ou chave..."
                     placeholderTextColor={colors.textMuted}
                     value={chavePix}
-                    onChangeText={(v) => {
-                      setChavePix(formatCPFInput(v));
-                      setValidatedDest(null);
-                    }}
+                    onChangeText={handleChaveChange}
                     autoCapitalize="none"
-                    keyboardType={
-                      keyType === 'cpf' || keyType === 'telefone' ? 'numeric' : 'default'
-                    }
+                    autoCorrect={false}
+                    // O Segredo: Teclado padrão sempre, permitindo letras e números livremente
+                    keyboardType="default" 
                   />
                 </View>
               </View>
@@ -403,10 +368,10 @@ export const TransferirPage: React.FC<TransferirPageProps> = ({ navigation, rout
                 style={[
                   styles.continueBtn,
                   { backgroundColor: colors.accent, shadowColor: colors.accent },
-                  validating && styles.btnDisabled,
+                  (validating || chavePix.length < 5) && styles.btnDisabled,
                 ]}
                 onPress={handleContinue}
-                disabled={validating}
+                disabled={validating || chavePix.length < 5}
                 activeOpacity={0.8}
               >
                 {validating ? (
@@ -672,15 +637,7 @@ const styles = StyleSheet.create({
   },
   progressFill: { height: '100%', borderRadius: 2 },
   content: { flex: 1 },
-  scrollContent: { paddingHorizontal: Spacing.xxl, paddingBottom: 40 },
-  sectionTitle: { fontSize: FontSizes.lg, fontWeight: '600', marginBottom: Spacing.lg },
-  keyTypesRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginBottom: Spacing.lg },
-  keyTypeBtn: {
-    paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md,
-    borderRadius: BorderRadii.lg, borderWidth: 1,
-  },
-  keyTypeText: { fontSize: FontSizes.md, fontWeight: '500' },
-  keyTypeTextActive: { color: '#FFFFFF', fontWeight: '600' },
+  scrollContent: { paddingHorizontal: Spacing.xxl, paddingBottom: 40, paddingTop: Spacing.lg },
   infoBanner: {
     flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm,
     padding: Spacing.md, borderRadius: BorderRadii.md, borderWidth: 1,
@@ -688,7 +645,9 @@ const styles = StyleSheet.create({
   },
   infoBannerText: { flex: 1, fontSize: FontSizes.sm, lineHeight: 18 },
   inputGroup: { marginBottom: Spacing.lg },
-  label: { fontSize: FontSizes.md, fontWeight: '600', marginBottom: Spacing.sm },
+  labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: Spacing.sm },
+  label: { fontSize: FontSizes.md, fontWeight: '600' },
+  detectedBadge: { fontSize: FontSizes.sm, fontWeight: '700' },
   inputContainer: {
     flexDirection: 'row', alignItems: 'center',
     borderRadius: BorderRadii.lg, borderWidth: 1,

@@ -176,6 +176,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const tryBiometricLogin = async (): Promise<boolean> => {
     try {
+      await LocalAuthentication.cancelAuthenticate().catch(() => {});
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
       const isEnrolled = await LocalAuthentication.isEnrolledAsync();
 
@@ -224,7 +225,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     setUserData(null);
     setIsLoggedIn(false);
-    await AsyncStorage.removeItem(SESSION_KEY);
+    const biometricEnabled = await AsyncStorage.getItem(BIOMETRIC_ENABLED_KEY);
+    if (biometricEnabled !== 'true') {
+      await AsyncStorage.removeItem(SESSION_KEY);
+    }
   };
 
   return (

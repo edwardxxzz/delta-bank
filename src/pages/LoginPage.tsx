@@ -138,17 +138,6 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  if (biometricLoading) {
-    return (
-      <View style={[styles.container, styles.biometricLoadingContainer, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.accent} />
-        <Text style={[styles.biometricLoadingText, { color: colors.textSecondary }]}>
-          Verificando biometria...
-        </Text>
-      </View>
-    );
-  }
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
@@ -232,7 +221,7 @@ export const LoginPage: React.FC = () => {
             <TouchableOpacity
               style={[styles.primaryButton, { backgroundColor: colors.accent }]}
               onPress={handleSubmit}
-              disabled={loading}
+              disabled={loading || biometricLoading}
               activeOpacity={0.8}
             >
               {loading ? (
@@ -248,14 +237,29 @@ export const LoginPage: React.FC = () => {
           {/* Biometric Login Button */}
           {isLogin && biometricEnabled && isBiometricAvailable && (
             <TouchableOpacity
-              style={[styles.biometricButton, { borderColor: colors.accent }]}
+              style={[
+                styles.biometricButton, 
+                { borderColor: colors.accent, opacity: biometricLoading || loading ? 0.6 : 1 }
+              ]}
               onPress={handleBiometricLogin}
               activeOpacity={0.7}
+              disabled={biometricLoading || loading}
             >
-              <Ionicons name="finger-print" size={24} color={colors.accent} />
-              <Text style={[styles.biometricButtonText, { color: colors.accent }]}>
-                Entrar com biometria
-              </Text>
+              {biometricLoading ? (
+                <>
+                  <ActivityIndicator color={colors.accent} />
+                  <Text style={[styles.biometricButtonText, { color: colors.accent }]}>
+                    Verificando...
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Ionicons name="finger-print" size={24} color={colors.accent} />
+                  <Text style={[styles.biometricButtonText, { color: colors.accent }]}>
+                    Entrar com biometria
+                  </Text>
+                </>
+              )}
             </TouchableOpacity>
           )}
 
@@ -353,13 +357,6 @@ const styles = StyleSheet.create({
   },
   biometricButtonText: {
     fontSize: FontSizes.lg, fontWeight: '600',
-  },
-  // Biometric loading
-  biometricLoadingContainer: {
-    justifyContent: 'center', alignItems: 'center',
-  },
-  biometricLoadingText: {
-    marginTop: Spacing.lg, fontSize: FontSizes.lg,
   },
   // Toggle
   toggleContainer: {
