@@ -22,11 +22,7 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({ visible, onClose, onPaga
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
             <View style={[styles.menuCard, { backgroundColor: colors.sectionCardBg }]}>
-              {/* Triangle pointer at top */}
-              <View style={styles.pointerContainer}>
-                <View style={[styles.pointer, { borderBottomColor: colors.sectionCardBg }]} />
-              </View>
-
+              
               <Text style={[styles.menuTitle, { color: colors.textPrimary }]}>Ações rápidas</Text>
 
               <TouchableOpacity style={styles.menuItem} onPress={onTransferir} activeOpacity={0.7}>
@@ -78,6 +74,13 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({ visible, onClose, onPaga
                 </View>
                 <Feather name="chevron-right" size={18} color={colors.textMuted} />
               </TouchableOpacity>
+
+              {/* Triangle pointer at bottom */}
+              <View style={styles.pointerContainer}>
+                {/* Agora usando borderTopColor para acompanhar a mudança no estilo */}
+                <View style={[styles.pointer, { borderTopColor: colors.sectionCardBg }]} />
+              </View>
+
             </View>
           </TouchableWithoutFeedback>
         </View>
@@ -91,12 +94,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'flex-end',
-    paddingBottom: 90,
-    paddingHorizontal: Spacing.lg,
+    paddingBottom: 76,
+    paddingHorizontal: Spacing.xxl,
   },
   menuCard: {
-    borderRadius: BorderRadii.xl,
-    padding: Spacing.xl,
+    borderRadius: BorderRadii.lg,
+    padding: Spacing.lg,
     elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
@@ -105,31 +108,32 @@ const styles = StyleSheet.create({
   },
   pointerContainer: {
     alignItems: 'center',
-    marginBottom: -8,
-    marginTop: -32,
+    marginTop: 4,      // Um leve espaço do último item
+    marginBottom: -28, // Empurra o triângulo para fora da parte de baixo do card
   },
   pointer: {
     width: 0,
     height: 0,
-    borderLeftWidth: 16,
+    borderLeftWidth: 12,
     borderLeftColor: 'transparent',
-    borderRightWidth: 16,
+    borderRightWidth: 12,
     borderRightColor: 'transparent',
-    borderBottomWidth: 20,
+    borderTopWidth: 16, // Alterado para TopWidth (faz o triângulo apontar para baixo)
   },
   menuTitle: {
     fontSize: FontSizes.xxl,
-    fontWeight: '700',
-    marginBottom: Spacing.lg,
+    fontWeight: '500',
+    marginBottom: Spacing.md,
+    // Removido o marginTop enorme que servia para afastar da seta de cima
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.sm,
   },
   menuIcon: {
-    width: 48,
-    height: 48,
+    width: 42,
+    height: 42,
     borderRadius: BorderRadii.md,
     justifyContent: 'center',
     alignItems: 'center',

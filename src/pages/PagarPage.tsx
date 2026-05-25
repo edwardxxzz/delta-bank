@@ -10,6 +10,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { makePix, brlToCents, centsToBRL, formatBRL } from '../services/apiService';
 import { useAuth } from '../contexts/AuthContext';
+import { detectPixKeyType, pixKeyTypeLabel } from '../utils/pixKey';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -27,6 +28,21 @@ export const PagarPage: React.FC<PagarPageProps> = ({ navigation }) => {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [facing, setFacing] = useState<CameraType>('back');
+  const detectedKeyType = chavePix.trim() ? detectPixKeyType(chavePix) : null;
+
+  const handlePixKeyChange = (value: string) => {
+    setChavePix(value);
+  };
+
+  const goToTransfer = () => {
+    const key = chavePix.trim();
+    if (key) {
+      navigation?.navigate?.('Transferir', {
+        chaveDestino: key,
+        tipoChave: detectPixKeyType(key),
+      });
+    }
+  };
 
   const handleBarCodeScanned = (result: BarcodeScanningResult) => {
     if (scanned) return;
@@ -88,17 +104,18 @@ export const PagarPage: React.FC<PagarPageProps> = ({ navigation }) => {
                 placeholder="Digite a chave Pix"
                 placeholderTextColor={colors.textMuted}
                 value={chavePix}
-                onChangeText={setChavePix}
+                onChangeText={handlePixKeyChange}
                 autoCapitalize="none"
               />
             </View>
+            {detectedKeyType && (
+              <Text style={[styles.detectedKeyText, { color: colors.accent }]}>
+                Tipo detectado: {pixKeyTypeLabel(detectedKeyType)}
+              </Text>
+            )}
             <TouchableOpacity
               style={[styles.continueBtn, !chavePix && styles.continueBtnDisabled, { backgroundColor: chavePix ? colors.accent : colors.surfaceHover }]}
-              onPress={() => {
-                if (chavePix) {
-                  navigation?.navigate?.('Transferir', { chaveDestino: chavePix });
-                }
-              }}
+              onPress={goToTransfer}
               disabled={!chavePix}
               activeOpacity={0.8}
             >
@@ -170,7 +187,7 @@ export const PagarPage: React.FC<PagarPageProps> = ({ navigation }) => {
 
       {/* Manual input overlay */}
       {showManualInput && (
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.manualOverlay}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={[styles.manualOverlay, { paddingTop: insets.top + Spacing.md }]}>
           <View style={[styles.manualCard, { backgroundColor: isDark ? '#111D32' : '#FFFFFF' }]}>
             <View style={styles.manualCardHeader}>
               <Text style={[styles.manualCardTitle, { color: colors.textPrimary }]}>Digitar chave Pix</Text>
@@ -186,18 +203,19 @@ export const PagarPage: React.FC<PagarPageProps> = ({ navigation }) => {
                 placeholder="Digite a chave Pix"
                 placeholderTextColor={colors.textMuted}
                 value={chavePix}
-                onChangeText={setChavePix}
+                onChangeText={handlePixKeyChange}
                 autoCapitalize="none"
                 autoFocus
               />
             </View>
+            {detectedKeyType && (
+              <Text style={[styles.detectedKeyText, { color: colors.accent }]}>
+                Tipo detectado: {pixKeyTypeLabel(detectedKeyType)}
+              </Text>
+            )}
             <TouchableOpacity
               style={[styles.continueBtn, !chavePix && styles.continueBtnDisabled, { backgroundColor: chavePix ? colors.accent : colors.surfaceHover }]}
-              onPress={() => {
-                if (chavePix) {
-                  navigation?.navigate?.('Transferir', { chaveDestino: chavePix });
-                }
-              }}
+              onPress={goToTransfer}
               disabled={!chavePix}
               activeOpacity={0.8}
             >
@@ -306,13 +324,13 @@ const styles = StyleSheet.create({
   // Manual overlay (when camera is available)
   manualOverlay: {
     position: 'absolute',
-    bottom: 0,
+    top: 0,
     left: 0,
     right: 0,
   },
   manualCard: {
-    borderTopLeftRadius: BorderRadii.xxl,
-    borderTopRightRadius: BorderRadii.xxl,
+    borderBottomLeftRadius: BorderRadii.xxl,
+    borderBottomRightRadius: BorderRadii.xxl,
     padding: Spacing.xxl,
     paddingBottom: Spacing.xxxl,
   },
@@ -329,6 +347,7 @@ const styles = StyleSheet.create({
   },
   inputIcon: { marginRight: Spacing.md },
   input: { flex: 1, fontSize: FontSizes.lg },
+  detectedKeyText: { fontSize: FontSizes.sm, fontWeight: '600', marginTop: Spacing.sm },
   continueBtn: {
     flexDirection: 'row', borderRadius: BorderRadii.lg,
     height: 56, justifyContent: 'center', alignItems: 'center', gap: Spacing.md,

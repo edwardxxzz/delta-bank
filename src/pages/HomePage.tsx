@@ -183,13 +183,24 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
         {/* Header */}
         <View style={[styles.header, { paddingTop: insets.top + Spacing.lg }]}>
           <Text style={[styles.greeting, { color: colors.textPrimary }]}>Olá {firstName}</Text>
-          <TouchableOpacity
-            style={[styles.profileButton, { backgroundColor: colors.surfaceLight }]}
-            onPress={() => navigation?.navigate?.('Profile', { scrollToLogout: true })}
-          >
-            <Ionicons name="person" size={22} color={colors.primary} />
-            <View style={[styles.onlineDot, { backgroundColor: colors.accent }]} />
-          </TouchableOpacity>
+          
+          {/* Container agrupando o ícone de visualização e o perfil */}
+          <View style={styles.headerRight}>
+            <TouchableOpacity onPress={toggleBalanceVisible} hitSlop={8} style={styles.eyeButton}>
+              <Ionicons
+                name={balanceVisible ? 'eye' : 'eye-off'}
+                size={24}
+                color={colors.textPrimary}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.profileButton, { backgroundColor: colors.surfaceLight }]}
+              onPress={() => navigation?.navigate?.('Profile', { scrollToLogout: true })}
+            >
+              <Ionicons name="person" size={22} color={colors.textPrimary} />
+              <View style={[styles.onlineDot, { backgroundColor: colors.accent, borderColor: colors.background }]} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Balance Card */}
@@ -208,13 +219,6 @@ export const HomePage: React.FC<HomePageProps> = ({ navigation }) => {
 
           <View style={styles.balanceHeader}>
             <Text style={styles.balanceLabel}>Saldo em conta</Text>
-            <TouchableOpacity onPress={toggleBalanceVisible} hitSlop={8}>
-              <Ionicons
-                name={balanceVisible ? 'eye' : 'eye-off'}
-                size={20}
-                color="rgba(255,255,255,0.7)"
-              />
-            </TouchableOpacity>
           </View>
 
           <Text style={styles.balanceAmount}>
@@ -345,6 +349,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: Spacing.xxl, paddingTop: Spacing.lg, paddingBottom: Spacing.md,
   },
+  headerRight: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.md || 16,
+  },
+  eyeButton: {
+    marginRight: 4,
+  },
   greeting: { fontSize: FontSizes.xxl, fontWeight: '700' },
   profileButton: {
     width: 44, height: 44, borderRadius: 22,
@@ -354,7 +364,7 @@ const styles = StyleSheet.create({
   onlineDot: {
     position: 'absolute', top: 2, right: 2,
     width: 10, height: 10, borderRadius: 5,
-    borderWidth: 2, borderColor: '#FFFFFF',
+    borderWidth: 2,
   },
   balanceCard: {
     borderRadius: BorderRadii.xl, padding: Spacing.xxl, paddingTop: Spacing.xl,

@@ -31,7 +31,18 @@ export const MorePage: React.FC<{ navigation?: any }> = ({ navigation }) => {
         { icon: 'person-outline', iconSet: 'Ionicons' as const, label: 'Dados da conta', navigate: 'Conta' },
         { icon: 'cash-plus', iconSet: 'MaterialCommunityIcons' as const, label: 'Depositar', navigate: 'Depositar' },
         { icon: 'cash-minus', iconSet: 'MaterialCommunityIcons' as const, label: 'Sacar', navigate: 'Sacar' },
-        { icon: 'file-text-outline', iconSet: 'MaterialCommunityIcons' as const, label: 'Extrato completo', navigate: 'Extrato' },
+        { icon: 'file-document-outline', iconSet: 'MaterialCommunityIcons' as const, label: 'Extrato completo', navigate: 'Extrato' },
+        { icon: 'trending-up', iconSet: 'Feather' as const, label: 'Investimentos', navigate: 'invest' },
+        { icon: 'card-outline', iconSet: 'Ionicons' as const, label: 'Cartões', navigate: 'cards' },
+      ],
+    },
+    {
+      title: 'SERVIÇOS',
+      items: [
+        { icon: 'cellphone', iconSet: 'MaterialCommunityIcons' as const, label: 'Recarga de celular' },
+        { icon: 'swap-horizontal', iconSet: 'MaterialCommunityIcons' as const, label: 'Câmbio' },
+        { icon: 'shield-checkmark-outline', iconSet: 'Ionicons' as const, label: 'Seguros' },
+        { icon: 'cash', iconSet: 'MaterialCommunityIcons' as const, label: 'Empréstimos' },
       ],
     },
     

@@ -41,7 +41,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation, route }) =
 
   const menuItems = [
     { icon: 'person-outline', iconSet: 'Ionicons' as const, label: 'Dados pessoais', subtitle: 'Nome, email, telefone', navigate: 'Conta' },
-    { icon: 'shield-check-outline', iconSet: 'Ionicons' as const, label: 'Segurança', subtitle: 'Senha, 2FA, biometria', navigate: 'Config' },
+    { icon: 'shield-outline', iconSet: 'Ionicons' as const, label: 'Segurança', subtitle: 'Senha, 2FA, biometria', navigate: 'Config' },
     { icon: 'key-outline', iconSet: 'Ionicons' as const, label: 'Alterar senha', subtitle: 'Mudar senha de acesso', navigate: 'Config' },
     { icon: 'notifications-outline', iconSet: 'Ionicons' as const, label: 'Notificações', subtitle: 'Alertas e Push', navigate: 'Config' },
     { icon: 'phone-portrait-outline', iconSet: 'Ionicons' as const, label: 'Aparência', subtitle: 'Tema e idioma', navigate: 'Config' },
@@ -93,7 +93,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigation, route }) =
               {userData?.nome?.charAt(0)?.toUpperCase() || 'U'}
             </Text>
           </View>
-          <Text style={[styles.name, { color: colors.textPrimary }]}>{userData?.nome || 'Usuário'}</Text>
+          <Text style={[styles.name, { color: colors.textPrimary }]} numberOfLines={2}>
+            {userData?.nome || 'Usuário'}
+          </Text>
           <Text style={[styles.cpf, { color: colors.textSecondary }]}>CPF: {formattedCPF}</Text>
         </View>
 
@@ -172,10 +174,18 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg, borderWidth: 2,
   },
   avatarText: { fontSize: 32, fontWeight: '700' },
-  name: { fontSize: FontSizes.xxl, fontWeight: '700', marginBottom: Spacing.xs },
+  name: {
+    fontSize: FontSizes.xxl,
+    fontWeight: '700',
+    marginBottom: Spacing.xs,
+    paddingHorizontal: Spacing.xxl,
+    textAlign: 'center',
+    flexShrink: 1,
+  },
   cpf: { fontSize: FontSizes.md },
   balanceCard: {
-    marginHorizontal: Spacing.xxl, marginTop: -Spacing.xl,
+    marginHorizontal: Spacing.xxl, 
+    marginTop: Spacing.xl, // <-- Ajustado aqui (removido o sinal de negativo)
     borderRadius: BorderRadii.xl, padding: Spacing.xxl,
     borderWidth: 1,
     elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
